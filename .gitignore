@@ -6,8 +6,11 @@ data/raw/
 data/prep/
 web/node_modules/
 web/dist/
-api/static/
-runs/
 *.sqlite
 *.duckdb
 .DS_Store
+# runtime artefacts: keep the investigation traces and ring summary as evidence, ignore caches and logs
+runs/*
+!runs/traces/
+!runs/rings.json
+!runs/last_run.txt

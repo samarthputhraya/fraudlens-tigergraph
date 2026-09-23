@@ -1,0 +1,557 @@
+{
+  "case_id": "HHG-018",
+  "events": [
+    {
+      "t": 1790183270.05,
+      "kind": "trigger",
+      "case_id": "HHG-018",
+      "trigger_type": "customer_report",
+      "text": "Customer C02354 message: 'I never made this $39.08 purchase. Please check my card.' Refers to 3491361.",
+      "opened_at": "2016-11-27 14:41:26"
+    },
+    {
+      "t": 1790183270.05,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790183282.63,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is unauthorized (card cloning or account takeover), consistent with the account's history of 11 prior fraud transactions.",
+        "The transaction is legitimate, representing a recurring charge or subscription that the customer did not recognize.",
+        "The transaction is a legitimate card-present purchase in the customer's highly active home region (126.0) that the customer has forgotten or misidentified."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the card's recent transaction history for other suspicious activity or patterns leading up to the flagged transaction.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if there are prior transactions of approximately $39.08 on this card, which would suggest a recurring subscription.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1790183283.7,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790183336.56,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The customer C02354 has explicitly disputed the in-person transaction 3491361 ($39.08), indicating a high likelihood of physical card compromise or cloning. The transaction occurred with an address code of 126.0, which matches some historical transactions in the 72-hour window (e.g., 3483447 and 3483772), but the customer denies this specific charge.",
+      "key_points": [
+        "Customer C02354 reported transaction 3491361 ($39.08) as unauthorized.",
+        "The disputed transaction 3491361 was conducted in-person (channel: in_person) with a elevated risk score of 0.48.",
+        "The transaction utilized address codes addr1: 126.0 and addr2: 87.0, with a long-standing card history indicated by d15 of 535."
+      ]
+    },
+    {
+      "t": 1790183336.56,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The cardholder account has a severe, persistent history of confirmed fraud spanning multiple months and closed cases, with patterns of out of region use and account takeover. Given this extensive history of unauthorized activity and the customer's direct report, the transaction is highly likely to be fraudulent.",
+      "key_points": [
+        "Customer C02354 reported transaction 3491361 ($39.08) as unauthorized.",
+        "The associated card C02354-K2 has 11 previous transactions confirmed as fraud across 7 closed cases (including CC-0631, CC-1450, CC-2589, CC-3537, CC-4436, CC-4721, and CC-4942).",
+        "No device information is available for the flagged transaction or the historical transactions, as they were conducted in-person (channel: in_person)."
+      ]
+    },
+    {
+      "t": 1790183336.56,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The customer reported an unauthorized transaction of $39.08 on transaction 3491361. Network analysis shows no shared device profiles or connected fraud cases, indicating this is an isolated incident rather than part of a coordinated fraud ring.",
+      "key_points": [
+        "No device neighbors or shared device profiles were found for the transaction or customer card.",
+        "The transaction region contains 95 cards, including 15 new cards (such as C00749-K1 and C10782-K1), but none of these have associated fraud cases.",
+        "There are no connected fraud cases linked to this customer or card in the network database."
+      ]
+    },
+    {
+      "t": 1790183336.56,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Customer C02354 has reported unrecognized activity on transaction 3491361 ($39.08). The customer has an extensive history of confirmed fraud cases on card C02354-K2, including multiple instances of account takeover and out-of-region use. Given this highly repetitive fraud pattern, the current claim is highly credible and consistent with prior compromised states.",
+      "key_points": [
+        "Customer C02354 has 8+ prior confirmed fraud cases on card C02354-K2, including CC-2187, CC-2432, CC-3085, CC-3634, and CC-3899 classified as account takeover.",
+        "Prior cases CC-2589, CC-4721, and CC-5441 were confirmed as out-of-region use, indicating chronic exposure of the customer's card details or credentials.",
+        "The customer has been repeatedly reimbursed and cards have been blocked/reissued, yet fraudulent activity continues to recur frequently."
+      ]
+    },
+    {
+      "t": 1790183336.57,
+      "kind": "finding",
+      "key": "account_prior_fraud",
+      "claim": "The resolved cardholder account behind this card (C02354-K2|126.0|-185) already had 11 transaction(s) confirmed as fraud in closed case(s) CC-0631, CC-1450, CC-2589, CC-3537, CC-4436, most recently 2016-10-14; accounts with prior confirmed fraud were fraud 42% of the time in October vs a 2.7% base rate",
+      "lr": 12.0,
+      "family": "account",
+      "ref": "query:account_history(txn=3491361, lookback_days=200)",
+      "entity_ids": [
+        "CC-0631",
+        "CC-1450",
+        "CC-2589",
+        "CC-3537",
+        "CC-4436",
+        "CC-4721",
+        "3364912"
+      ]
+    },
+    {
+      "t": 1790183336.57,
+      "kind": "finding",
+      "key": "region_known",
+      "claim": "This card has 565 earlier card-present purchases in billing region 126.0 (first on 2016-07-02)",
+      "lr": 0.65,
+      "family": "region",
+      "ref": "query:card_profile(card=C02354-K2, before_ts=2016-11-27 13:41:26, recent_days=30)",
+      "entity_ids": [
+        "3491361"
+      ]
+    },
+    {
+      "t": 1790183336.57,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0405; latest note: \"Case CC-0405: model scored a $22.30 transaction at 0.94. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C02354-K2)",
+      "entity_ids": [
+        "CC-0405"
+      ]
+    },
+    {
+      "t": 1790183336.57,
+      "kind": "assessment",
+      "p": 0.9,
+      "prior": 0.6,
+      "verdict": "fraud",
+      "pattern": "out_of_region_use",
+      "contributions": [
+        {
+          "key": "account_prior_fraud",
+          "family": "account",
+          "lr": 12.0,
+          "delta_logodds": 2.485
+        },
+        {
+          "key": "region_known",
+          "family": "region",
+          "lr": 0.65,
+          "delta_logodds": -0.431
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 39.08,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $39.08 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $39.08 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $39.08 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $39.08 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790183336.57,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.9,
+      "pattern": "out_of_region_use",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $39.08 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "status": "closed_fraud",
+      "exposure": 39.08,
+      "episode": [
+        "3491361"
+      ]
+    },
+    {
+      "t": 1790183338.65,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-0631",
+        "CC-1450",
+        "CC-2589",
+        "CC-3537",
+        "CC-4436",
+        "CC-4721",
+        "CC-4942",
+        "CC-5441"
+      ],
+      "knowledge": [
+        "Card-not-present fraud from a new device",
+        "The five known fraud patterns",
+        "The five known fraud patterns",
+        "Card-not-present fraud",
+        "Account takeover",
+        "Out-of-region use"
+      ]
+    },
+    {
+      "t": 1790183385.32,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "The draft is compliant with the Fraud Policy. The customer denied the transaction, triggering R2 (BLOCK_CARD + CREATE_CASE). The exposure is under $2,500, so L1 is the correct route for the block. No SAR/FILE_REPORT is required since the exposure is low and there is no evidence of a shared device or another customer's fraud. The stop rule is correctly applied as the probability is >= 0.85."
+    },
+    {
+      "t": 1790183431.3,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-018",
+        "n_vertices": 6,
+        "n_edges": 17
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3491361)",
+      "params": {
+        "txn": "3491361"
+      },
+      "rows": 2,
+      "ms": 791.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02354-K2, start_ts=2016-11-13 13:41:26, end_ts=2016-11-27 14:41:26)",
+      "params": {
+        "card": "C02354-K2",
+        "start_ts": "2016-11-13 13:41:26",
+        "end_ts": "2016-11-27 14:41:26"
+      },
+      "rows": 515,
+      "ms": 2976.2,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C02354-K2, before_ts=2016-11-27 13:41:26, recent_days=30)",
+      "params": {
+        "card": "C02354-K2",
+        "before_ts": "2016-11-27 13:41:26",
+        "recent_days": 30
+      },
+      "rows": 5860,
+      "ms": 1057.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02354-K2, amt=39.08, tol=0.39, before_ts=2016-11-27 13:41:26)",
+      "params": {
+        "card": "C02354-K2",
+        "amt": 39.08,
+        "tol": 0.39,
+        "before_ts": "2016-11-27 13:41:26"
+      },
+      "rows": 143,
+      "ms": 458.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3491361, lookback_days=200)",
+      "params": {
+        "txn": "3491361",
+        "lookback_days": 200
+      },
+      "rows": 14,
+      "ms": 64.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=126.0, start_ts=2016-11-24 13:41:26, end_ts=2016-11-27 14:41:26, max_cards=50)",
+      "params": {
+        "region": "126.0",
+        "start_ts": "2016-11-24 13:41:26",
+        "end_ts": "2016-11-27 14:41:26",
+        "max_cards": 50
+      },
+      "rows": 15,
+      "ms": 115.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C02354-K2)",
+      "params": {
+        "card": "C02354-K2"
+      },
+      "rows": 22,
+      "ms": 1197.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02354-K2, start_ts=2016-10-28 13:41:26, end_ts=2016-11-27 14:41:26)",
+      "params": {
+        "card": "C02354-K2",
+        "start_ts": "2016-10-28 13:41:26",
+        "end_ts": "2016-11-27 14:41:26"
+      },
+      "rows": 1160,
+      "ms": 897.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02354-K2, amt=39.08, tol=0.39, before_ts=2016-11-27 13:41:26)",
+      "params": {
+        "card": "C02354-K2",
+        "amt": 39.08,
+        "tol": 0.39,
+        "before_ts": "2016-11-27 13:41:26"
+      },
+      "rows": 143,
+      "ms": 168.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C02354-K2'], k=8, pattern=)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C02354-K2"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 21,
+      "ms": 1719.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 339.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3491361'], card_ids=[], case_ids=['CC-0631', 'CC-1450', 'CC-2589', 'CC-3537', 'CC-4436', 'CC-4721', 'CC-4942', 'CC-5441'], customer_ids=['C02354'])",
+      "params": {
+        "txn_ids": [
+          "3491361"
+        ],
+        "card_ids": [],
+        "case_ids": [
+          "CC-0631",
+          "CC-1450",
+          "CC-2589",
+          "CC-3537",
+          "CC-4436",
+          "CC-4721",
+          "CC-4942",
+          "CC-5441"
+        ],
+        "customer_ids": [
+          "C02354"
+        ]
+      },
+      "rows": 10,
+      "ms": 967.7,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The customer C02354 has explicitly disputed the in-person transaction 3491361 ($39.08), indicating a high likelihood of physical card compromise or cloning. The transaction occurred with an address code of 126.0, which matches some historical transactions in the 72-hour window (e.g., 3483447 and 3483772), but the customer denies this specific charge.",
+      "risk": "high",
+      "key_points": [
+        "Customer C02354 reported transaction 3491361 ($39.08) as unauthorized.",
+        "The disputed transaction 3491361 was conducted in-person (channel: in_person) with a elevated risk score of 0.48.",
+        "The transaction utilized address codes addr1: 126.0 and addr2: 87.0, with a long-standing card history indicated by d15 of 535."
+      ],
+      "open_questions": [
+        "Was the physical card lost or stolen, or is this a case of card cloning?",
+        "Are any other transactions in the 72-hour window associated with card C02354-K2, given the shared addr1 of 126.0 in transactions like 3483447 and 3483772?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "identity": {
+      "assessment": "The cardholder account has a severe, persistent history of confirmed fraud spanning multiple months and closed cases, with patterns of out of region use and account takeover. Given this extensive history of unauthorized activity and the customer's direct report, the transaction is highly likely to be fraudulent.",
+      "risk": "high",
+      "key_points": [
+        "Customer C02354 reported transaction 3491361 ($39.08) as unauthorized.",
+        "The associated card C02354-K2 has 11 previous transactions confirmed as fraud across 7 closed cases (including CC-0631, CC-1450, CC-2589, CC-3537, CC-4436, CC-4721, and CC-4942).",
+        "No device information is available for the flagged transaction or the historical transactions, as they were conducted in-person (channel: in_person)."
+      ],
+      "open_questions": [
+        "Why was the card not blocked or replaced earlier despite multiple confirmed fraud cases (e.g., CC-4942 in October)?",
+        "Are transactions 3484403 and 3485990 from late November also fraudulent, as they remain unresolved?"
+      ],
+      "suggested_pattern": "out_of_region_use"
+    },
+    "network": {
+      "assessment": "The customer reported an unauthorized transaction of $39.08 on transaction 3491361. Network analysis shows no shared device profiles or connected fraud cases, indicating this is an isolated incident rather than part of a coordinated fraud ring.",
+      "risk": "low",
+      "key_points": [
+        "No device neighbors or shared device profiles were found for the transaction or customer card.",
+        "The transaction region contains 95 cards, including 15 new cards (such as C00749-K1 and C10782-K1), but none of these have associated fraud cases.",
+        "There are no connected fraud cases linked to this customer or card in the network database."
+      ],
+      "open_questions": [
+        "What are the specific merchant details and unnamed model features associated with transaction 3491361?",
+        "Are there other transactions on card C02354 that have not yet been reported by the customer?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "precedent": {
+      "assessment": "Customer C02354 has reported unrecognized activity on transaction 3491361 ($39.08). The customer has an extensive history of confirmed fraud cases on card C02354-K2, including multiple instances of account takeover and out-of-region use. Given this highly repetitive fraud pattern, the current claim is highly credible and consistent with prior compromised states.",
+      "risk": "high",
+      "key_points": [
+        "Customer C02354 has 8+ prior confirmed fraud cases on card C02354-K2, including CC-2187, CC-2432, CC-3085, CC-3634, and CC-3899 classified as account takeover.",
+        "Prior cases CC-2589, CC-4721, and CC-5441 were confirmed as out-of-region use, indicating chronic exposure of the customer's card details or credentials.",
+        "The customer has been repeatedly reimbursed and cards have been blocked/reissued, yet fraudulent activity continues to recur frequently."
+      ],
+      "open_questions": [
+        "How are the customer's credentials or newly reissued cards repeatedly compromised so quickly after reissue?",
+        "Is transaction 3491361 associated with card C02354-K2 or a newly reissued card?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is unauthorized (card cloning or account takeover), consistent with the account's history of 11 prior fraud transactions.",
+      "The transaction is legitimate, representing a recurring charge or subscription that the customer did not recognize.",
+      "The transaction is a legitimate card-present purchase in the customer's highly active home region (126.0) that the customer has forgotten or misidentified."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the card's recent transaction history for other suspicious activity or patterns leading up to the flagged transaction.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if there are prior transactions of approximately $39.08 on this card, which would suggest a recurring subscription.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Determine if the transaction is part of a recurring billing pattern or if there is a cluster of unauthorized activity on the card."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "The draft is compliant with the Fraud Policy. The customer denied the transaction, triggering R2 (BLOCK_CARD + CREATE_CASE). The exposure is under $2,500, so L1 is the correct route for the block. No SAR/FILE_REPORT is required since the exposure is low and there is no evidence of a shared device or another customer's fraud. The stop rule is correctly applied as the probability is >= 0.85."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-018",
+    "n_vertices": 6,
+    "n_edges": 17
+  }
+}

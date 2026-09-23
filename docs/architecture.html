@@ -2,37 +2,52 @@
 <html><head><meta charset="utf-8"><title>FraudLens architecture</title>
 <style>
   body{margin:0;background:#0b0f17;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#e5e7eb}
-  .wrap{width:1600px;padding:36px 40px}
-  h1{font-size:30px;margin:0 0 4px;font-weight:700} h1 span{color:#F58025}
-  p{margin:0 0 18px;color:#9ca3af;font-size:16px}
+  .wrap{width:1500px;padding:36px 44px}
+  h1{font-size:34px;margin:0 0 6px;font-weight:700} h1 span{color:#F58025}
+  p{margin:0 0 22px;color:#9ca3af;font-size:17px}
+  .mermaid{display:flex;justify-content:center}
 </style></head>
 <body><div class="wrap">
 <h1>FraudLens <span>·</span> agentic fraud investigation on TigerGraph</h1>
-<p>The model predicts. TigerGraph proves. — LLMs reason and write; code owns numbers, IDs, policy and routes; only the case writer writes to the graph.</p>
+<p>The model predicts. TigerGraph proves. LLMs reason, choose tools and write; code owns numbers, IDs, policy and routes; only the case writer writes to the graph.</p>
 <pre class="mermaid">
-%%{init: {'theme':'dark','themeVariables':{'fontSize':'17px','primaryColor':'#111827','primaryBorderColor':'#F58025','lineColor':'#9ca3af','primaryTextColor':'#e5e7eb'}}}%%
-flowchart LR
-  T["Trigger<br/>risk score · customer report<br/>analyst request · autonomous monitor"] --> L["Lead Investigator<br/>Gemini 3.1 Pro<br/>hypotheses + tool choice"]
-  subgraph TEAM["Specialist agents (parallel, narrow tool scopes)"]
-    A1["Transaction<br/>velocity · recurrence<br/>card testing · structuring"]
-    A2["Identity & Device<br/>new device · proxy<br/>resolved Account lineage"]
-    A3["Network & Ring<br/>other cards on the device<br/>region clusters · rings"]
-    A4["Precedent<br/>case memory · policy<br/>FinCEN guidance"]
+%%{init: {'theme':'dark','flowchart':{'nodeSpacing':38,'rankSpacing':46,'curve':'basis'},'themeVariables':{'fontSize':'19px','primaryColor':'#111827','primaryBorderColor':'#F58025','lineColor':'#9ca3af','primaryTextColor':'#e5e7eb','clusterBkg':'#0f1623','clusterBorder':'#2b3544'}}}%%
+flowchart TB
+  T["<b>Trigger</b><br/>risk score · customer report<br/>analyst request · autonomous monitor"]
+  subgraph INV["1 · Investigate: virtual fraud team"]
+    direction LR
+    L["<b>Lead Investigator</b><br/>Gemini 3.1 Pro<br/>hypotheses + query choice"]
+    A1["<b>Transaction</b><br/>velocity · recurrence<br/>card testing · structuring"]
+    A2["<b>Identity & Device</b><br/>new device · proxy<br/>resolved Account lineage"]
+    A3["<b>Network & Ring</b><br/>other cards on the device<br/>rings · shared origin"]
+    A4["<b>Precedent</b><br/>case memory<br/>policy · FinCEN"]
   end
-  L --> TEAM
-  TEAM -->|"tigergraph__run_installed_query<br/>read-only allowlist"| MCP[["TigerGraph MCP"]]
-  MCP --> TG[("TigerGraph Savanna<br/>Fraud graph · 17 GSQL queries<br/>TigerVector · GDBMS_ALGO WCC")]
-  TEAM --> D["Detectors<br/>typed findings + LR<br/>+ replayable query ref"]
-  D --> LED["Calibrated log-odds ledger<br/>fitted on 14k fraud / 402k background"]
-  LED --> P["Policy engine (code)<br/>R1–R10 · §3a case vs SAR · §6 stop<br/>routes auto / L1 / L2"]
-  P -->|"VERIFY / STEP_UP"| C["Evidence request<br/>simulated reply, assumption stated"]
-  C -->|"confirm · deny · no reply"| P
-  P --> RV["Compliance Reviewer<br/>red-team vs policy"]
-  RV --> W["Writer<br/>summary · FinCEN-style SAR"]
-  W --> V["Validator<br/>schema · IDs exist · policy lint"]
-  V --> CW["Case writer<br/>only write path"] -->|"InvestigationCase · ActionRecord<br/>EvidenceRequest + edges"| TG
-  V --> UI["Command Center UI<br/>live SSE · re-prove · approval inbox"]
+  MCP[["<b>TigerGraph MCP</b><br/>tigergraph__run_installed_query<br/>least-privilege allowlist"]]
+  TG[("<b>TigerGraph Savanna</b><br/>590k txns · 221k resolved accounts<br/>17 installed GSQL queries<br/>TigerVector · GDBMS_ALGO WCC")]
+  subgraph DEC["2 · Decide: code, not the LLM"]
+    direction LR
+    D["<b>Detectors</b><br/>typed findings<br/>LR + query ref + IDs"]
+    LED["<b>Calibrated ledger</b><br/>log-odds, LRs fitted on<br/>14k fraud / 402k background"]
+    P["<b>Policy engine</b><br/>R1–R10 · §3a case vs SAR<br/>§6 stop · routes auto/L1/L2"]
+    C["<b>Evidence request</b><br/>verify / step-up<br/>confirm · deny · no reply"]
+  end
+  subgraph GOV["3 · Govern, explain, remember"]
+    direction LR
+    RV["<b>Compliance Reviewer</b><br/>red-team vs policy"]
+    W["<b>Writer</b><br/>summary · FinCEN SAR"]
+    V["<b>Validator</b><br/>schema · IDs exist · lint"]
+    CW["<b>Case writer</b><br/>only write path"]
+    UI["<b>Command Center</b><br/>live SSE · re-prove<br/>approval inbox"]
+  end
+  T --> L
+  L --> A1 & A2 & A3 & A4
+  A1 & A2 & A3 & A4 --> MCP --> TG
+  A1 & A2 & A3 & A4 --> D --> LED --> P
+  P <--> C
+  P --> RV --> W --> V --> CW
+  V --> UI
   UI -->|"L1 / L2 approvals"| CW
+  CW -->|"InvestigationCase + edges<br/>(case memory)"| TG
 </pre>
 </div>
 <script type="module">

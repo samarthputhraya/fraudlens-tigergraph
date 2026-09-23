@@ -13,7 +13,6 @@ export default defineConfig({
     outDir: "../api/static",
     emptyOutDir: true,
     chunkSizeWarningLimit: 2500,
-    sourcemap: true,
   },
   server: {
     port: 5173,

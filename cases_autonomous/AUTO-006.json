@@ -1,0 +1,191 @@
+{
+  "row": {
+    "case_id": "AUTO-006",
+    "opened_at": "2016-12-15 08:20:48",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: 7 online authorisations under $5 within an hour on card C04597-K2. Investigate transaction 3544752 and related activity.",
+    "flagged_txn_id": "3544752",
+    "card_id": "C04597-K2",
+    "customer_id": "C04597",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "card_testing",
+    "card_id": "C04597-K2",
+    "customer_id": "C04597",
+    "flagged": "3544752",
+    "ts": "2016-12-15 07:20:48",
+    "txns": [
+      "3544739",
+      "3544740",
+      "3544741",
+      "3544742",
+      "3544747",
+      "3544751",
+      "3544752"
+    ],
+    "amount": 6.26
+  },
+  "answer": {
+    "case_id": "AUTO-006",
+    "case": {
+      "status": "open",
+      "verdict": "uncertain",
+      "fraud_probability": 0.53,
+      "pattern": "card_not_present_fraud",
+      "pattern_description": "",
+      "affected_txn_ids": [
+        "3540892",
+        "3541059",
+        "3541414",
+        "3541448",
+        "3541496",
+        "3541497",
+        "3541500",
+        "3541508",
+        "3542507",
+        "3542882",
+        "3542994",
+        "3543274",
+        "3543377",
+        "3544739",
+        "3544740",
+        "3544741",
+        "3544742",
+        "3544747",
+        "3544751",
+        "3544752"
+      ],
+      "first_suspicious_txn_id": "3540892",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 319.25,
+      "evidence": [
+        {
+          "claim": "Another transaction on the same resolved account 12.5 hours earlier (3542994, $15.90) was also scored 0.91 by the model",
+          "source": "graph",
+          "ref": "query:account_history(txn=3544752, lookback_days=200)",
+          "entity_ids": [
+            "3542994"
+          ]
+        },
+        {
+          "claim": "The resolved account (C04597-K2||165) has 19 earlier transactions and none were ever part of a fraud case",
+          "source": "graph",
+          "ref": "query:account_history(txn=3544752, lookback_days=200)",
+          "entity_ids": [
+            "3544742",
+            "3544747",
+            "3544751"
+          ]
+        },
+        {
+          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0015; latest note: \"Case CC-0015: model scored a $93.80 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+          "source": "graph",
+          "ref": "query:prior_cases(card=C04597-K2)",
+          "entity_ids": [
+            "CC-0015"
+          ]
+        },
+        {
+          "claim": "The device profile (Windows |  | opera 53.0 | ) was already used 11 times on this card before the alert",
+          "source": "graph",
+          "ref": "query:card_profile(card=C04597-K2, before_ts=2016-12-15 07:20:48, recent_days=30)",
+          "entity_ids": [
+            "3544752"
+          ]
+        },
+        {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0583 (confirmed_fraud, card_not_present_fraud); CC-0688 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud); CC-2593 (confirmed_fraud, card_not_present_fraud)",
+          "source": "graph",
+          "ref": "query:similar_cases(devices=['Windows |  | opera 53.0 | '], cards=['C04597-K2'], k=8, pattern=)",
+          "entity_ids": [
+            "CC-0583",
+            "CC-0688",
+            "CC-2655",
+            "CC-2593",
+            "CC-2573",
+            "CC-0015"
+          ]
+        },
+        {
+          "claim": "Fraud Policy rules applied to this case: R1, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+          "source": "document",
+          "ref": "document:Fraud Policy v1.0 section 3 R1/R4",
+          "entity_ids": []
+        },
+        {
+          "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+          "source": "customer",
+          "ref": "evidence_request:1",
+          "entity_ids": [
+            "3544752"
+          ]
+        }
+      ],
+      "similar_prior_cases": [
+        "CC-0583",
+        "CC-0688",
+        "CC-2655",
+        "CC-2593",
+        "CC-2573",
+        "CC-0015"
+      ],
+      "summary": "The alert was triggered by an autonomous monitor detecting 7 online authorizations under $5 within an hour on card C04597-K2, specifically flagging transaction 3544752 for $0.97. Graph evidence revealed that the account has 19 prior non-fraudulent transactions, the device profile was already used 11 times on this card, and a previous alert was cleared as a false alarm. The cardholder did not reply to a verification request within 24 hours. Consequently, the verdict is uncertain. The final actions taken are MONITOR_CARD and DECLINE_TRANSACTION.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-006"
+    },
+    "evidence_requests": [
+      {
+        "type": "step_up_auth",
+        "asked_after_step": 9,
+        "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+      }
+    ],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.53)"
+        },
+        {
+          "action": "STEP_UP_AUTH",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.53 < 0.70); verify before any block"
+        }
+      ],
+      "final": [
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R4: decline the pending authorisation"
+        }
+      ],
+      "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.53; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
+    },
+    "sar": {
+      "file": false,
+      "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
+      "narrative": "",
+      "subjects": [],
+      "total_amount_usd": 0,
+      "activity_dates": []
+    },
+    "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
+    "tool_calls": 12,
+    "tokens": 12006,
+    "latency_s": 183.1
+  }
+}

@@ -1,0 +1,605 @@
+{
+  "case_id": "HHG-020",
+  "events": [
+    {
+      "t": 1790183833.66,
+      "kind": "trigger",
+      "case_id": "HHG-020",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3509359 ($125.08, online) at 0.52. Review and decide.",
+      "opened_at": "2016-12-03 12:04:26"
+    },
+    {
+      "t": 1790183833.66,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790183863.34,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Account Takeover (ATO) / Card-Not-Present (CNP) fraud where an unauthorized actor is using the card details online with a new device and product code (R).",
+        "Legitimate cardholder behavior where the customer is making an unusual online purchase using a new device or browser."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the card's recent transaction history for other signs of compromise, channel shifts, or suspicious activity around the flagged transaction date.",
+          "days_back": 30
+        },
+        {
+          "tool": "device_neighbors",
+          "why": "To check if this specific device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) has been used by other cards or is associated with known fraud cases.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To determine if the amount of $125.08 matches any previous recurring transactions on this card, which would support a legitimate transaction hypothesis.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1790183865.83,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3509359 is highly suspicious as it represents a sudden shift in behavior for card C12265-K2. The card's baseline is overwhelmingly in-person (78 out of 82 transactions), but the flagged transaction is an online purchase using a 'New' device profile that has been linked to 462 other transactions, indicating a shared or compromised device environment.",
+      "key_points": [
+        "Transaction 3509359 ($125.08) was conducted online using a 'New' device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) that is associated with 462 other transactions, indicating a non-unique, potentially compromised device environment.",
+        "The card's historical baseline is heavily dominated by in-person transactions (78 out of 82), making this sudden online transaction highly anomalous.",
+        "The transaction introduces a new recipient email domain (cox.net) which has not been seen in the card's recent history."
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction is flagged due to an elevated risk score of 0.52 on a device profile that is entirely new to this card. The associated account has an extremely limited history, showing only one previous transaction, which increases the difficulty of establishing a normal purchasing pattern.",
+      "key_points": [
+        "Transaction 3509359 was attempted using a new device profile ('Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080') that has never been seen on card C12265-K2.",
+        "The account 'C12265-K2|264.0|154' has a minimal history consisting of only 1 transaction recorded on 2016-12-03.",
+        "The real-time model scored this transaction at 0.52, indicating moderate to high risk."
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "The transaction 3509359 is flagged with a real-time risk score of 0.52. While it shares a device profile with 253 other cards, this extremely high volume of connections indicates a generic browser signature rather than a coordinated fraud ring or account takeover. Furthermore, none of the neighboring transactions have associated open or closed fraud cases.",
+      "key_points": [
+        "Transaction 3509359 is linked to a device profile shared by 253 cards all-time, including C03089-K1, C09436-K1, and C12865-K1.",
+        "The sharing of this device profile is not indicative of a fraud ring, as it represents a generic browser signature shared by many unrelated users.",
+        "There are no active or closed fraud cases associated with any of the neighboring transactions listed in the network."
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Transaction 3509359 is highly suspicious given the customer's history of confirmed account takeover fraud on card C12265-K2. Previous cases CC-2277 and CC-2447 established a pattern of unauthorized mixed-channel activity on this account, suggesting this new online transaction may be a continuation of that compromise.",
+      "key_points": [
+        "The customer has two prior closed cases of confirmed fraud, CC-2277 and CC-2447, both classified as account takeover on card C12265-K2.",
+        "Previous fraudulent transactions occurred in August 2016, resulting in card blocks and customer reimbursement.",
+        "The current transaction 3509359 is an online transaction for $125.08 with a elevated risk score of 0.52."
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "finding",
+      "key": "new_device",
+      "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080)",
+      "lr": 1.4,
+      "family": "device",
+      "ref": "query:txn_context(txn=3509359)",
+      "entity_ids": [
+        "3509359"
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$125.08 is a typical amount for this card (percentile 59%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+      "entity_ids": [
+        "3509359"
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "finding",
+      "key": "new_product",
+      "claim": "This card has never used product code R before",
+      "lr": 1.8,
+      "family": "behaviour",
+      "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+      "entity_ids": [
+        "3509359"
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "finding",
+      "key": "channel_shift",
+      "claim": "This card is used almost only in person (4 of 82 earlier transactions online); this purchase is online",
+      "lr": 2.7,
+      "family": "behaviour",
+      "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+      "entity_ids": [
+        "3509359"
+      ]
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "assessment",
+      "p": 0.59,
+      "prior": 0.1753175795656331,
+      "verdict": "uncertain",
+      "pattern": "card_not_present_new_device",
+      "contributions": [
+        {
+          "key": "new_device",
+          "family": "device",
+          "lr": 1.4,
+          "delta_logodds": 0.336
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "new_product",
+          "family": "behaviour",
+          "lr": 1.8,
+          "delta_logodds": 0.588
+        },
+        {
+          "key": "channel_shift",
+          "family": "behaviour",
+          "lr": 2.7,
+          "delta_logodds": 0.993
+        }
+      ],
+      "exposure": 125.08,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.59)"
+        },
+        {
+          "action": "STEP_UP_AUTH",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.59 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $125.08 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "evidence_request",
+      "type": "step_up_auth",
+      "branch": "no_reply",
+      "assumed_response": "No reply from the cardholder within 24 hours of the verification request",
+      "asked_after_step": 10
+    },
+    {
+      "t": 1790183883.17,
+      "kind": "decision",
+      "verdict": "uncertain",
+      "p": 0.59,
+      "pattern": "card_not_present_new_device",
+      "final": [
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R4: decline the pending authorisation"
+        }
+      ],
+      "status": "open",
+      "exposure": 125.08,
+      "episode": [
+        "3509359"
+      ]
+    },
+    {
+      "t": 1790183884.49,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-3368",
+        "CC-2910",
+        "CC-0031",
+        "CC-5111",
+        "CC-2636",
+        "CC-2079"
+      ],
+      "knowledge": [
+        "Card-not-present fraud from a new device",
+        "The five known fraud patterns",
+        "Card-not-present fraud",
+        "The five known fraud patterns",
+        "Account takeover",
+        "Out-of-region use"
+      ]
+    },
+    {
+      "t": 1790183911.41,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The initial actions include DECLINE_TRANSACTION, which is not authorized by R1. R1 only permits VERIFY_WITH_CUSTOMER or STEP_UP_AUTH before any block. DECLINE_TRANSACTION should only be applied in the final actions under R4 after 24 hours of no reply."
+      ],
+      "what_would_change_verdict": "Remove DECLINE_TRANSACTION from the initial actions to comply with R1."
+    },
+    {
+      "t": 1790183948.69,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-020",
+        "n_vertices": 8,
+        "n_edges": 19
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3509359)",
+      "params": {
+        "txn": "3509359"
+      },
+      "rows": 2,
+      "ms": 556.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C12265-K2, start_ts=2016-11-19 06:04:26, end_ts=2016-12-03 12:04:26)",
+      "params": {
+        "card": "C12265-K2",
+        "start_ts": "2016-11-19 06:04:26",
+        "end_ts": "2016-12-03 12:04:26"
+      },
+      "rows": 13,
+      "ms": 161.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+      "params": {
+        "card": "C12265-K2",
+        "before_ts": "2016-12-03 06:04:26",
+        "recent_days": 30
+      },
+      "rows": 82,
+      "ms": 92.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C12265-K2, amt=125.08, tol=1.25, before_ts=2016-12-03 06:04:26)",
+      "params": {
+        "card": "C12265-K2",
+        "amt": 125.08,
+        "tol": 1.25,
+        "before_ts": "2016-12-03 06:04:26"
+      },
+      "rows": 0,
+      "ms": 71.2,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3509359, lookback_days=200)",
+      "params": {
+        "txn": "3509359",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 103.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080, start_ts=2016-11-03 06:04:26, end_ts=2016-12-03 12:04:26)",
+      "params": {
+        "dev": "Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080",
+        "start_ts": "2016-11-03 06:04:26",
+        "end_ts": "2016-12-03 12:04:26"
+      },
+      "rows": 55,
+      "ms": 225.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C12265-K2)",
+      "params": {
+        "card": "C12265-K2"
+      },
+      "rows": 4,
+      "ms": 101.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C12265-K2, start_ts=2016-11-03 06:04:26, end_ts=2016-12-03 12:04:26)",
+      "params": {
+        "card": "C12265-K2",
+        "start_ts": "2016-11-03 06:04:26",
+        "end_ts": "2016-12-03 12:04:26"
+      },
+      "rows": 25,
+      "ms": 903.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080, start_ts=2016-11-03 06:04:26, end_ts=2016-12-03 12:04:26)",
+      "params": {
+        "dev": "Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080",
+        "start_ts": "2016-11-03 06:04:26",
+        "end_ts": "2016-12-03 12:04:26"
+      },
+      "rows": 55,
+      "ms": 1512.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C12265-K2, amt=125.08, tol=1.25, before_ts=2016-12-03 06:04:26)",
+      "params": {
+        "card": "C12265-K2",
+        "amt": 125.08,
+        "tol": 1.25,
+        "before_ts": "2016-12-03 06:04:26"
+      },
+      "rows": 0,
+      "ms": 64.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080'], cards=['C12265-K2'], k=8, pattern=)",
+      "params": {
+        "devices": [
+          "Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080"
+        ],
+        "cards": [
+          "C12265-K2"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 17,
+      "ms": 1183.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 126.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3509359'], card_ids=[], case_ids=['CC-3368', 'CC-2910', 'CC-0031', 'CC-5111', 'CC-2636', 'CC-2079'], customer_ids=['C12265'])",
+      "params": {
+        "txn_ids": [
+          "3509359"
+        ],
+        "card_ids": [],
+        "case_ids": [
+          "CC-3368",
+          "CC-2910",
+          "CC-0031",
+          "CC-5111",
+          "CC-2636",
+          "CC-2079"
+        ],
+        "customer_ids": [
+          "C12265"
+        ]
+      },
+      "rows": 8,
+      "ms": 220.5,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3509359 is highly suspicious as it represents a sudden shift in behavior for card C12265-K2. The card's baseline is overwhelmingly in-person (78 out of 82 transactions), but the flagged transaction is an online purchase using a 'New' device profile that has been linked to 462 other transactions, indicating a shared or compromised device environment.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3509359 ($125.08) was conducted online using a 'New' device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) that is associated with 462 other transactions, indicating a non-unique, potentially compromised device environment.",
+        "The card's historical baseline is heavily dominated by in-person transactions (78 out of 82), making this sudden online transaction highly anomalous.",
+        "The transaction introduces a new recipient email domain (cox.net) which has not been seen in the card's recent history."
+      ],
+      "open_questions": [
+        "Who is the owner of the cox.net email address used in the flagged transaction?",
+        "Are the other 462 transactions associated with the same device profile also fraudulent?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The transaction is flagged due to an elevated risk score of 0.52 on a device profile that is entirely new to this card. The associated account has an extremely limited history, showing only one previous transaction, which increases the difficulty of establishing a normal purchasing pattern.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3509359 was attempted using a new device profile ('Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080') that has never been seen on card C12265-K2.",
+        "The account 'C12265-K2|264.0|154' has a minimal history consisting of only 1 transaction recorded on 2016-12-03.",
+        "The real-time model scored this transaction at 0.52, indicating moderate to high risk."
+      ],
+      "open_questions": [
+        "Are there any other transactions or authorization attempts on card C12265-K2 that occurred outside the window of this query?",
+        "Does the IP address or physical location of the transaction align with the cardholder's billing address (addr1: 264.0)?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "The transaction 3509359 is flagged with a real-time risk score of 0.52. While it shares a device profile with 253 other cards, this extremely high volume of connections indicates a generic browser signature rather than a coordinated fraud ring or account takeover. Furthermore, none of the neighboring transactions have associated open or closed fraud cases.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3509359 is linked to a device profile shared by 253 cards all-time, including C03089-K1, C09436-K1, and C12865-K1.",
+        "The sharing of this device profile is not indicative of a fraud ring, as it represents a generic browser signature shared by many unrelated users.",
+        "There are no active or closed fraud cases associated with any of the neighboring transactions listed in the network."
+      ],
+      "open_questions": [
+        "What are the specific model, OS, and screen fields of the shared device profile to confirm it is a generic browser signature?",
+        "Are there any other risk factors specific to the cardholder of transaction 3509359 that contributed to the 0.52 risk score?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "Transaction 3509359 is highly suspicious given the customer's history of confirmed account takeover fraud on card C12265-K2. Previous cases CC-2277 and CC-2447 established a pattern of unauthorized mixed-channel activity on this account, suggesting this new online transaction may be a continuation of that compromise.",
+      "risk": "high",
+      "key_points": [
+        "The customer has two prior closed cases of confirmed fraud, CC-2277 and CC-2447, both classified as account takeover on card C12265-K2.",
+        "Previous fraudulent transactions occurred in August 2016, resulting in card blocks and customer reimbursement.",
+        "The current transaction 3509359 is an online transaction for $125.08 with a elevated risk score of 0.52."
+      ],
+      "open_questions": [
+        "Is transaction 3509359 linked to the same card C12265-K2 or a newly reissued card?",
+        "Does the device profile or IP address for transaction 3509359 match the unauthorized patterns observed in cases CC-2277 and CC-2447?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Account Takeover (ATO) / Card-Not-Present (CNP) fraud where an unauthorized actor is using the card details online with a new device and product code (R).",
+      "Legitimate cardholder behavior where the customer is making an unusual online purchase using a new device or browser."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the card's recent transaction history for other signs of compromise, channel shifts, or suspicious activity around the flagged transaction date.",
+        "days_back": 30
+      },
+      {
+        "tool": "device_neighbors",
+        "why": "To check if this specific device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) has been used by other cards or is associated with known fraud cases.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To determine if the amount of $125.08 matches any previous recurring transactions on this card, which would support a legitimate transaction hypothesis.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Account Takeover (ATO) vs. Legitimate Cardholder Online Purchase"
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The initial actions include DECLINE_TRANSACTION, which is not authorized by R1. R1 only permits VERIFY_WITH_CUSTOMER or STEP_UP_AUTH before any block. DECLINE_TRANSACTION should only be applied in the final actions under R4 after 24 hours of no reply."
+    ],
+    "what_would_change_verdict": "Remove DECLINE_TRANSACTION from the initial actions to comply with R1."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-020",
+    "n_vertices": 8,
+    "n_edges": 19
+  }
+}

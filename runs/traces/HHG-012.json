@@ -1,0 +1,556 @@
+{
+  "case_id": "HHG-012",
+  "events": [
+    {
+      "t": 1790184339.61,
+      "kind": "trigger",
+      "case_id": "HHG-012",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3553342 ($30.91, in billing region 494.0) at 0.55. Review and decide.",
+      "opened_at": "2016-12-18 05:00:31"
+    },
+    {
+      "t": 1790184339.62,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790184343.97,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is legitimate, representing normal spending by the cardholder who has a well-established history in billing region 494.0 dating back to July 2016.",
+        "The transaction is fraudulent, resulting from card cloning or account takeover, with the fraudster transacting in the cardholder's local region to avoid detection."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the card's full transaction history around the flagged date and check for any sudden changes in behavior, velocity, or other suspicious transactions.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if this specific amount ($30.91) is a recurring charge pattern on this card.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1790184344.79,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "low",
+      "assessment": "The flagged transaction 3553342 is a low-to-medium risk, low-value in-person transaction ($30.91) associated with a highly active account profile (c13=458, c1=107). While the model risk score is slightly elevated at 0.55, the transaction aligns with a high-frequency baseline and does not show typical card-testing or velocity anomalies.",
+      "key_points": [
+        "Flagged transaction 3553342 is a low-value ($30.91) in-person transaction with an elevated model risk score of 0.55.",
+        "The account shows extremely high historical volume with c13=458 and c1=107, suggesting a well-established customer profile rather than a new or compromised card.",
+        "The days-since-last-active features (d1=0, d15=0) indicate highly recent and ongoing activity, which is consistent with the high transaction counters."
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction 3553342 is flagged with a elevated risk score of 0.55, but there is insufficient device and historical data to conclusively confirm fraud. The associated card C05876-K2 has an extremely limited history with only one recorded transaction from December 2016, and the device profile for this transaction is entirely missing.",
+      "key_points": [
+        "Transaction 3553342 was attempted on card C05876-K2 in billing region 494.0.",
+        "The device profile is completely empty, providing no information on device type, proxy status, or whether it is a new device.",
+        "The resolved account C05876-K2|494.0|169 has only one prior transaction recorded on 2016-12-18 04:00:31."
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The transaction 3553342 shows no signs of fraudulent network activity or device sharing. While there are 5 new cards operating in the same billing region (494.0) within the window, none of them have associated fraud cases, indicating normal regional transaction volume.",
+      "key_points": [
+        "No shared device profiles or device neighbors were found for the transaction.",
+        "Billing region 494.0 has 39 active cards, including 5 new cards (C06929-K1, C12826-K1, C08334-K1, C12742-K1, C07614-K2).",
+        "There are zero connected fraud cases associated with any cards in this region or network."
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "medium",
+      "assessment": "Transaction 3553342 is flagged with a moderate risk score of 0.55 in billing region 494.0. The customer has a history of confirmed card-not-present fraud on card C05876-K2 (CC-2370), which resulted in the card being blocked and reissued, as well as a prior cleared travel-related alert (CC-0003).",
+      "key_points": [
+        "Case CC-2370 confirmed card-not-present fraud on card C05876-K2, resulting in a card block and reissue on 2016-08-20.",
+        "Case CC-0003 was previously cleared as legitimate out-of-region travel for a $442.92 transaction on the same card.",
+        "The current transaction 3553342 ($30.91) is flagged with a 0.55 risk score in billing region 494.0."
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$30.91 is a typical amount for this card (percentile 25%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C05876-K2, before_ts=2016-12-18 04:00:31, recent_days=30)",
+      "entity_ids": [
+        "3553342"
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "finding",
+      "key": "region_known",
+      "claim": "This card has 21 earlier card-present purchases in billing region 494.0 (first on 2016-07-05)",
+      "lr": 0.65,
+      "family": "region",
+      "ref": "query:card_profile(card=C05876-K2, before_ts=2016-12-18 04:00:31, recent_days=30)",
+      "entity_ids": [
+        "3553342"
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0003; latest note: \"Case CC-0003: model scored a $442.92 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C05876-K2)",
+      "entity_ids": [
+        "CC-0003"
+      ]
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "assessment",
+      "p": 0.1,
+      "prior": 0.1753175795656331,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "region_known",
+          "family": "region",
+          "lr": 0.65,
+          "delta_logodds": -0.431
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 30.91,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.10 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase); confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $30.91 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase)",
+      "asked_after_step": 9
+    },
+    {
+      "t": 1790184413.34,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase); confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790184414.13,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-0003",
+        "CC-2370",
+        "CC-4249",
+        "CC-4697",
+        "CC-4730",
+        "CC-4735",
+        "CC-4743",
+        "CC-4235"
+      ],
+      "knowledge": [
+        "No fraud",
+        "Glossary",
+        "R3 Customer confirms the transaction",
+        "R5 Card testing",
+        "Things to know",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1790184439.69,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "Section 6 (Stop Rule) violation: The agent requested customer validation despite having two independent pieces of evidence (typical amount, prior history in region) and an initial probability of 0.1 (<= 0.15). The investigation should have stopped and closed the case without bothering the customer."
+      ],
+      "what_would_change_verdict": "Remove the customer validation step and the initial actions. Close the case directly based on the strong historical evidence, citing Section 6."
+    },
+    {
+      "t": 1790184460.72,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-012",
+        "n_vertices": 7,
+        "n_edges": 19
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3553342)",
+      "params": {
+        "txn": "3553342"
+      },
+      "rows": 2,
+      "ms": 72.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C05876-K2, start_ts=2016-12-04 04:00:31, end_ts=2016-12-18 05:00:31)",
+      "params": {
+        "card": "C05876-K2",
+        "start_ts": "2016-12-04 04:00:31",
+        "end_ts": "2016-12-18 05:00:31"
+      },
+      "rows": 111,
+      "ms": 119.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C05876-K2, before_ts=2016-12-18 04:00:31, recent_days=30)",
+      "params": {
+        "card": "C05876-K2",
+        "before_ts": "2016-12-18 04:00:31",
+        "recent_days": 30
+      },
+      "rows": 910,
+      "ms": 66.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C05876-K2, amt=30.91, tol=0.31, before_ts=2016-12-18 04:00:31)",
+      "params": {
+        "card": "C05876-K2",
+        "amt": 30.91,
+        "tol": 0.31,
+        "before_ts": "2016-12-18 04:00:31"
+      },
+      "rows": 23,
+      "ms": 57.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3553342, lookback_days=200)",
+      "params": {
+        "txn": "3553342",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 48.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=494.0, start_ts=2016-12-15 04:00:31, end_ts=2016-12-18 05:00:31, max_cards=50)",
+      "params": {
+        "region": "494.0",
+        "start_ts": "2016-12-15 04:00:31",
+        "end_ts": "2016-12-18 05:00:31",
+        "max_cards": 50
+      },
+      "rows": 5,
+      "ms": 45.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C05876-K2)",
+      "params": {
+        "card": "C05876-K2"
+      },
+      "rows": 4,
+      "ms": 51.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C05876-K2, start_ts=2016-11-18 04:00:31, end_ts=2016-12-18 05:00:31)",
+      "params": {
+        "card": "C05876-K2",
+        "start_ts": "2016-11-18 04:00:31",
+        "end_ts": "2016-12-18 05:00:31"
+      },
+      "rows": 207,
+      "ms": 218.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C05876-K2, amt=30.91, tol=0.31, before_ts=2016-12-18 04:00:31)",
+      "params": {
+        "card": "C05876-K2",
+        "amt": 30.91,
+        "tol": 0.31,
+        "before_ts": "2016-12-18 04:00:31"
+      },
+      "rows": 23,
+      "ms": 596.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C05876-K2'], k=8, pattern=)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C05876-K2"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 15,
+      "ms": 626.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 167.2,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0003', 'CC-2370', 'CC-4249', 'CC-4697', 'CC-4730', 'CC-4735', 'CC-4743', 'CC-4235'], customer_ids=['C05876'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-0003",
+          "CC-2370",
+          "CC-4249",
+          "CC-4697",
+          "CC-4730",
+          "CC-4735",
+          "CC-4743",
+          "CC-4235"
+        ],
+        "customer_ids": [
+          "C05876"
+        ]
+      },
+      "rows": 9,
+      "ms": 183.5,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3553342 is a low-to-medium risk, low-value in-person transaction ($30.91) associated with a highly active account profile (c13=458, c1=107). While the model risk score is slightly elevated at 0.55, the transaction aligns with a high-frequency baseline and does not show typical card-testing or velocity anomalies.",
+      "risk": "low",
+      "key_points": [
+        "Flagged transaction 3553342 is a low-value ($30.91) in-person transaction with an elevated model risk score of 0.55.",
+        "The account shows extremely high historical volume with c13=458 and c1=107, suggesting a well-established customer profile rather than a new or compromised card.",
+        "The days-since-last-active features (d1=0, d15=0) indicate highly recent and ongoing activity, which is consistent with the high transaction counters."
+      ],
+      "open_questions": [
+        "What is the historical billing region (addr1) baseline for customer C05876 to confirm if region 494.0 represents an out-of-region anomaly?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "identity": {
+      "assessment": "The transaction 3553342 is flagged with a elevated risk score of 0.55, but there is insufficient device and historical data to conclusively confirm fraud. The associated card C05876-K2 has an extremely limited history with only one recorded transaction from December 2016, and the device profile for this transaction is entirely missing.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3553342 was attempted on card C05876-K2 in billing region 494.0.",
+        "The device profile is completely empty, providing no information on device type, proxy status, or whether it is a new device.",
+        "The resolved account C05876-K2|494.0|169 has only one prior transaction recorded on 2016-12-18 04:00:31."
+      ],
+      "open_questions": [
+        "What are the missing device details, IP address, or location metadata for transaction 3553342?",
+        "Are there any other recent transactions on card C05876-K2 that are not captured in the provided history?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The transaction 3553342 shows no signs of fraudulent network activity or device sharing. While there are 5 new cards operating in the same billing region (494.0) within the window, none of them have associated fraud cases, indicating normal regional transaction volume.",
+      "risk": "low",
+      "key_points": [
+        "No shared device profiles or device neighbors were found for the transaction.",
+        "Billing region 494.0 has 39 active cards, including 5 new cards (C06929-K1, C12826-K1, C08334-K1, C12742-K1, C07614-K2).",
+        "There are zero connected fraud cases associated with any cards in this region or network."
+      ],
+      "open_questions": [
+        "Are there any other transactions on card C07614-K2 or the other new cards that have not yet been reported as fraudulent?",
+        "What triggered the elevated real-time model risk score of 0.55 for transaction 3553342?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "Transaction 3553342 is flagged with a moderate risk score of 0.55 in billing region 494.0. The customer has a history of confirmed card-not-present fraud on card C05876-K2 (CC-2370), which resulted in the card being blocked and reissued, as well as a prior cleared travel-related alert (CC-0003).",
+      "risk": "medium",
+      "key_points": [
+        "Case CC-2370 confirmed card-not-present fraud on card C05876-K2, resulting in a card block and reissue on 2016-08-20.",
+        "Case CC-0003 was previously cleared as legitimate out-of-region travel for a $442.92 transaction on the same card.",
+        "The current transaction 3553342 ($30.91) is flagged with a 0.55 risk score in billing region 494.0."
+      ],
+      "open_questions": [
+        "Is transaction 3553342 attempted on the blocked card C05876-K2 or the newly reissued card?",
+        "What is the timestamp of transaction 3553342 relative to the fraud report on 2016-08-20?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is legitimate, representing normal spending by the cardholder who has a well-established history in billing region 494.0 dating back to July 2016.",
+      "The transaction is fraudulent, resulting from card cloning or account takeover, with the fraudster transacting in the cardholder's local region to avoid detection."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the card's full transaction history around the flagged date and check for any sudden changes in behavior, velocity, or other suspicious transactions.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if this specific amount ($30.91) is a recurring charge pattern on this card.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Legitimate cardholder activity vs. localized card cloning"
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "Section 6 (Stop Rule) violation: The agent requested customer validation despite having two independent pieces of evidence (typical amount, prior history in region) and an initial probability of 0.1 (<= 0.15). The investigation should have stopped and closed the case without bothering the customer."
+    ],
+    "what_would_change_verdict": "Remove the customer validation step and the initial actions. Close the case directly based on the strong historical evidence, citing Section 6."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-012",
+    "n_vertices": 7,
+    "n_edges": 19
+  }
+}

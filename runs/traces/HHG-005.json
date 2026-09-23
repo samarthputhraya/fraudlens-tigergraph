@@ -1,0 +1,562 @@
+{
+  "case_id": "HHG-005",
+  "events": [
+    {
+      "t": 1790184159.87,
+      "kind": "trigger",
+      "case_id": "HHG-005",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3523199 ($100.07, online) at 0.54. Review and decide.",
+      "opened_at": "2016-12-08 03:38:37"
+    },
+    {
+      "t": 1790184159.87,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790184181.85,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is a legitimate purchase by the cardholder using a newly acquired or recently updated iOS device.",
+        "The transaction is an Account Takeover (ATO) where a fraudster is using the cardholder's compromised credentials on a different iOS device.",
+        "The transaction is part of a wider card-testing or fraud ring utilizing this specific iOS device profile across multiple accounts."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To examine the card's historical transaction patterns, previous devices used, and whether there are other suspicious or mismatched transactions recently.",
+          "days_back": 30
+        },
+        {
+          "tool": "device_neighbors",
+          "why": "To check if this specific iOS device profile (iOS 9.3.5, mobile safari 9.0, 1024x768) has been used by other cards or is linked to known fraud cases.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To verify if the amount of $100.07 matches any previous recurring transactions on this card, which would point to a legitimate subscription.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1790184183.3,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "medium",
+      "assessment": "The flagged transaction 3523199 ($100.07) closely matches the historical recurring payment baseline of approximately $100 (e.g., 3008138, 3050502). However, it was initiated from a new iOS device and utilized an icloud.com email address, which deviates from the customer's typical gmail.com address seen in previous transactions.",
+      "key_points": [
+        "Transaction 3523199 ($100.07) aligns with the customer's established recurring payment pattern of ~$100 (e.g., 3050502 at $99.92 and 3008138 at $100.03).",
+        "The transaction introduces a new iOS device profile ('iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768') with a high risk score of 0.54.",
+        "The purchaser email domain changed to icloud.com, whereas historical transactions predominantly used gmail.com (e.g., 3440505, 3485762)."
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction 3523199 is flagged due to a high-risk score on a new iOS device profile that has never been seen on card C02923-K1. Given that the account C02923-K1|330.0|158 has a very limited history of only one transaction, this represents a potential card-not-present fraud attempt using a newly compromised card or a new device.",
+      "key_points": [
+        "Transaction 3523199 was attempted on a 'New' device profile (iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768) with no prior history on this card.",
+        "The resolved account C02923-K1|330.0|158 has an extremely limited history, containing only 1 transaction on 2016-12-07.",
+        "The device match status (id_34) is recorded as 'match_status:1', but the device has not been previously seen on the card (device_seen_on_card: 0)."
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "Transaction 3523199 on card C02923-K1 shows a moderate risk score of 0.54 on a new device connection. Although the device profile is shared with 112 cards all-time, this high volume suggests a generic browser signature rather than a coordinated fraud ring, especially since there are no linked fraud cases.",
+      "key_points": [
+        "Transaction 3523199 ($100.07) was flagged with a risk score of 0.54 for customer C02923 on card C02923-K1.",
+        "The device profile is associated with 112 cards all-time, indicating a highly generic browser signature shared by many unrelated users.",
+        "There are no historical or active investigative cases linked to this card, customer, or device profile."
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The current transaction 3523199 is highly suspicious due to a severe history of repeated account takeover compromises on customer C02923's account. Prior cases CC-2400, CC-2717, and CC-2857 all involved confirmed fraud where both credentials and card data were compromised, indicating a persistent security issue.",
+      "key_points": [
+        "Customer C02923 has three prior closed cases of confirmed fraud (CC-2400, CC-2717, and CC-2857) totaling over $1,700 in exposure.",
+        "All previous cases were classified as account takeover involving card C02923-K1, which required multiple blocks and reissues.",
+        "The current transaction 3523199 has a high risk score of 0.54, indicating a potential continuation of the account takeover pattern."
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "finding",
+      "key": "new_device",
+      "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768)",
+      "lr": 1.4,
+      "family": "device",
+      "ref": "query:txn_context(txn=3523199)",
+      "entity_ids": [
+        "3523199"
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$100.07 is a typical amount for this card (percentile 23%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C02923-K1, before_ts=2016-12-07 21:38:37, recent_days=30)",
+      "entity_ids": [
+        "3523199"
+      ]
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "assessment",
+      "p": 0.23,
+      "prior": 0.1753175795656331,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "new_device",
+          "family": "device",
+          "lr": 1.4,
+          "delta_logodds": 0.336
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        }
+      ],
+      "exposure": 100.07,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.23 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $100.07 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device",
+      "asked_after_step": 10
+    },
+    {
+      "t": 1790184190.96,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790184191.22,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-2400",
+        "CC-1672",
+        "CC-0965",
+        "CC-0189",
+        "CC-0318",
+        "CC-0699",
+        "CC-3105",
+        "CC-0099"
+      ],
+      "knowledge": [
+        "Glossary",
+        "No fraud",
+        "R3 Customer confirms the transaction",
+        "R5 Card testing",
+        "Things to know",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1790184197.72,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, requiring card blocking and potentially a SAR depending on exposure."
+    },
+    {
+      "t": 1790184219.16,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-005",
+        "n_vertices": 7,
+        "n_edges": 20
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3523199)",
+      "params": {
+        "txn": "3523199"
+      },
+      "rows": 2,
+      "ms": 90.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02923-K1, start_ts=2016-11-23 21:38:37, end_ts=2016-12-08 03:38:37)",
+      "params": {
+        "card": "C02923-K1",
+        "start_ts": "2016-11-23 21:38:37",
+        "end_ts": "2016-12-08 03:38:37"
+      },
+      "rows": 10,
+      "ms": 136.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C02923-K1, before_ts=2016-12-07 21:38:37, recent_days=30)",
+      "params": {
+        "card": "C02923-K1",
+        "before_ts": "2016-12-07 21:38:37",
+        "recent_days": 30
+      },
+      "rows": 90,
+      "ms": 179.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02923-K1, amt=100.07, tol=1.0, before_ts=2016-12-07 21:38:37)",
+      "params": {
+        "card": "C02923-K1",
+        "amt": 100.07,
+        "tol": 1.0,
+        "before_ts": "2016-12-07 21:38:37"
+      },
+      "rows": 5,
+      "ms": 56.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3523199, lookback_days=200)",
+      "params": {
+        "txn": "3523199",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 127.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768, start_ts=2016-11-07 21:38:37, end_ts=2016-12-08 03:38:37)",
+      "params": {
+        "dev": "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768",
+        "start_ts": "2016-11-07 21:38:37",
+        "end_ts": "2016-12-08 03:38:37"
+      },
+      "rows": 2,
+      "ms": 49.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C02923-K1)",
+      "params": {
+        "card": "C02923-K1"
+      },
+      "rows": 4,
+      "ms": 43.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02923-K1, start_ts=2016-11-07 21:38:37, end_ts=2016-12-08 03:38:37)",
+      "params": {
+        "card": "C02923-K1",
+        "start_ts": "2016-11-07 21:38:37",
+        "end_ts": "2016-12-08 03:38:37"
+      },
+      "rows": 17,
+      "ms": 1345.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768, start_ts=2016-11-07 21:38:37, end_ts=2016-12-08 03:38:37)",
+      "params": {
+        "dev": "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768",
+        "start_ts": "2016-11-07 21:38:37",
+        "end_ts": "2016-12-08 03:38:37"
+      },
+      "rows": 2,
+      "ms": 51.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02923-K1, amt=100.07, tol=1.0, before_ts=2016-12-07 21:38:37)",
+      "params": {
+        "card": "C02923-K1",
+        "amt": 100.07,
+        "tol": 1.0,
+        "before_ts": "2016-12-07 21:38:37"
+      },
+      "rows": 5,
+      "ms": 50.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768'], cards=['C02923-K1'], k=8, pattern=)",
+      "params": {
+        "devices": [
+          "iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768"
+        ],
+        "cards": [
+          "C02923-K1"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 21,
+      "ms": 148.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 112.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-2400', 'CC-1672', 'CC-0965', 'CC-0189', 'CC-0318', 'CC-0699', 'CC-3105', 'CC-0099'], customer_ids=['C02923'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-2400",
+          "CC-1672",
+          "CC-0965",
+          "CC-0189",
+          "CC-0318",
+          "CC-0699",
+          "CC-3105",
+          "CC-0099"
+        ],
+        "customer_ids": [
+          "C02923"
+        ]
+      },
+      "rows": 9,
+      "ms": 252.9,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3523199 ($100.07) closely matches the historical recurring payment baseline of approximately $100 (e.g., 3008138, 3050502). However, it was initiated from a new iOS device and utilized an icloud.com email address, which deviates from the customer's typical gmail.com address seen in previous transactions.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3523199 ($100.07) aligns with the customer's established recurring payment pattern of ~$100 (e.g., 3050502 at $99.92 and 3008138 at $100.03).",
+        "The transaction introduces a new iOS device profile ('iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768') with a high risk score of 0.54.",
+        "The purchaser email domain changed to icloud.com, whereas historical transactions predominantly used gmail.com (e.g., 3440505, 3485762)."
+      ],
+      "open_questions": [
+        "Did the customer intentionally update their email address and device for this recurring payment?",
+        "Why does the new iOS device have 168 associated transactions across the platform if it is new to this specific customer?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The transaction 3523199 is flagged due to a high-risk score on a new iOS device profile that has never been seen on card C02923-K1. Given that the account C02923-K1|330.0|158 has a very limited history of only one transaction, this represents a potential card-not-present fraud attempt using a newly compromised card or a new device.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3523199 was attempted on a 'New' device profile (iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768) with no prior history on this card.",
+        "The resolved account C02923-K1|330.0|158 has an extremely limited history, containing only 1 transaction on 2016-12-07.",
+        "The device match status (id_34) is recorded as 'match_status:1', but the device has not been previously seen on the card (device_seen_on_card: 0)."
+      ],
+      "open_questions": [
+        "Is this transaction a legitimate purchase by the cardholder using a newly acquired or older secondary iOS device?",
+        "Are there any other transactions or chargebacks associated with card C02923-K1 on other accounts?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "Transaction 3523199 on card C02923-K1 shows a moderate risk score of 0.54 on a new device connection. Although the device profile is shared with 112 cards all-time, this high volume suggests a generic browser signature rather than a coordinated fraud ring, especially since there are no linked fraud cases.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3523199 ($100.07) was flagged with a risk score of 0.54 for customer C02923 on card C02923-K1.",
+        "The device profile is associated with 112 cards all-time, indicating a highly generic browser signature shared by many unrelated users.",
+        "There are no historical or active investigative cases linked to this card, customer, or device profile."
+      ],
+      "open_questions": [
+        "What are the specific parameters of the device profile to confirm it is a generic user agent?",
+        "Are there any other recent transactions on card C02923-K1 that could help establish a normal spending pattern?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "The current transaction 3523199 is highly suspicious due to a severe history of repeated account takeover compromises on customer C02923's account. Prior cases CC-2400, CC-2717, and CC-2857 all involved confirmed fraud where both credentials and card data were compromised, indicating a persistent security issue.",
+      "risk": "high",
+      "key_points": [
+        "Customer C02923 has three prior closed cases of confirmed fraud (CC-2400, CC-2717, and CC-2857) totaling over $1,700 in exposure.",
+        "All previous cases were classified as account takeover involving card C02923-K1, which required multiple blocks and reissues.",
+        "The current transaction 3523199 has a high risk score of 0.54, indicating a potential continuation of the account takeover pattern."
+      ],
+      "open_questions": [
+        "Is transaction 3523199 associated with the previously compromised card C02923-K1 or a newly reissued card?",
+        "What device profile and IP address were used for transaction 3523199, and do they match the Windows on Edge 15.0 profile observed in case CC-2717?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is a legitimate purchase by the cardholder using a newly acquired or recently updated iOS device.",
+      "The transaction is an Account Takeover (ATO) where a fraudster is using the cardholder's compromised credentials on a different iOS device.",
+      "The transaction is part of a wider card-testing or fraud ring utilizing this specific iOS device profile across multiple accounts."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To examine the card's historical transaction patterns, previous devices used, and whether there are other suspicious or mismatched transactions recently.",
+        "days_back": 30
+      },
+      {
+        "tool": "device_neighbors",
+        "why": "To check if this specific iOS device profile (iOS 9.3.5, mobile safari 9.0, 1024x768) has been used by other cards or is linked to known fraud cases.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To verify if the amount of $100.07 matches any previous recurring transactions on this card, which would point to a legitimate subscription.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Determine if the 'New' device profile is isolated to this cardholder or shared across multiple unrelated accounts, and check the card's transaction history for signs of compromise."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, requiring card blocking and potentially a SAR depending on exposure."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-005",
+    "n_vertices": 7,
+    "n_edges": 20
+  }
+}

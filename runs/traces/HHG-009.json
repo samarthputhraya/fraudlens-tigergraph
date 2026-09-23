@@ -1,0 +1,525 @@
+{
+  "case_id": "HHG-009",
+  "events": [
+    {
+      "t": 1790184488.59,
+      "kind": "trigger",
+      "case_id": "HHG-009",
+      "trigger_type": "customer_report",
+      "text": "Customer C08299 message: 'I never made this $30.02 purchase. Please check my card.' Refers to 3581141.",
+      "opened_at": "2016-12-28 17:10:53"
+    },
+    {
+      "t": 1790184488.59,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790184525.4,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Friendly fraud or customer confusion regarding a legitimate recurring subscription or past purchase, supported by the typical amount and prior use of the generic device profile on this card.",
+        "Card-not-present fraud or account takeover where an unauthorized party obtained the card details and made a purchase using a generic device profile.",
+        "An unauthorized or mistaken recurring billing charge by a merchant that the customer does not recognize."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To examine the full transaction history of the card, checking if the generic device profile is consistently used for legitimate transactions and looking for other suspicious activity.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if there are prior transactions of approximately $30.02 on this card, which would point to a recurring subscription or billing agreement.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1790184525.72,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790184547.46,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The customer C08299 reported transaction 3581141 ($30.02) as unauthorized. This transaction deviates significantly from the customer's typical profile, utilizing a different billing address (addr1 203.0 instead of 330.0) and a completely blank device signature, while previous transactions of similar amounts (~$30.00) were consistently associated with addr1 330.0 and specific device profiles.",
+      "key_points": [
+        "Transaction 3581141 was executed with a billing address of 203.0, whereas the customer's historical transactions (such as 3545489, 3507659, and 3576079) consistently use 330.0.",
+        "The flagged transaction 3581141 used a completely blank device signature (' |  |  | ') classified as generic, unlike the customer's established device profiles (e.g., iOS and Windows devices in recurring matches).",
+        "The transaction amount of $30.02 closely mimics the customer's recurring charge pattern of approximately $30.00 (e.g., 3545489 at $29.97 and 3342487 at $30.04), suggesting an attempt to blend in with legitimate recurring activity."
+      ]
+    },
+    {
+      "t": 1790184547.46,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "Customer C08299 has disputed a $30.02 transaction (3581141) on card C08299-K1, claiming they did not authorize it. The transaction was conducted using a highly generic, empty device profile (' |  |  | ') which prevents reliable device fingerprinting. Given the explicit customer dispute and lack of established positive history on this account, the transaction is highly suspicious.",
+      "key_points": [
+        "Customer C08299 explicitly reported the $30.02 transaction 3581141 as unauthorized.",
+        "The account C08299-K1|203.0|179 has only 1 recorded transaction in its history, leaving no established pattern of legitimate use.",
+        "The transaction was associated with an empty, generic device profile (' |  |  | ') classified as 'Found' and seen 5 times across the system, which offers no identifying value."
+      ]
+    },
+    {
+      "t": 1790184547.46,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "The customer C08299 reported transaction 3581141 as unauthorized. While the transaction is associated with a device profile that has a high number of neighbors (1,013 cards), this represents a generic browser signature and does not provide evidence of a coordinated fraud ring or account takeover.",
+      "key_points": [
+        "Customer C08299 disputed transaction 3581141 ($30.02) as unauthorized.",
+        "The transaction occurred on a generic device profile shared by 1,013 cards all-time, which cannot be used to establish a direct network link to other transactions.",
+        "Several other cards (e.g., C02809-K2, C10308-K1, C11792-K1) show similar small-value transactions (around $30) on the same day, but they are only connected via this generic device signature."
+      ]
+    },
+    {
+      "t": 1790184547.46,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "medium",
+      "assessment": "Customer C08299 has disputed a single transaction of $30.02 (ID 3581141) claiming they did not make the purchase. A search of historical records shows no prior closed cases for this customer and no similar transaction patterns in the database.",
+      "key_points": [
+        "Customer C08299 reported transaction 3581141 ($30.02) as unauthorized.",
+        "There are no prior closed cases associated with customer C08299.",
+        "No similar cases or patterns were returned in the database query."
+      ]
+    },
+    {
+      "t": 1790184547.47,
+      "kind": "finding",
+      "key": "known_device",
+      "claim": "The device profile ( |  |  | ) was already used 5 times on this card before the alert",
+      "lr": 1.0,
+      "family": "device",
+      "ref": "query:card_profile(card=C08299-K1, before_ts=2016-12-28 12:10:53, recent_days=30)",
+      "entity_ids": [
+        "3581141"
+      ]
+    },
+    {
+      "t": 1790184547.47,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$30.02 is a typical amount for this card (percentile 30%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C08299-K1, before_ts=2016-12-28 12:10:53, recent_days=30)",
+      "entity_ids": [
+        "3581141"
+      ]
+    },
+    {
+      "t": 1790184547.47,
+      "kind": "assessment",
+      "p": 0.6,
+      "prior": 0.6,
+      "verdict": "uncertain",
+      "pattern": "card_not_present_fraud",
+      "contributions": [
+        {
+          "key": "known_device",
+          "family": "device",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        }
+      ],
+      "exposure": 30.02,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790184547.47,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.6,
+      "pattern": "card_not_present_fraud",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "status": "closed_fraud",
+      "exposure": 30.02,
+      "episode": [
+        "3581141"
+      ]
+    },
+    {
+      "t": 1790184548.72,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [],
+      "knowledge": [
+        "The five known fraud patterns",
+        "The five known fraud patterns",
+        "Account takeover",
+        "Card-not-present fraud",
+        "Card testing",
+        "Out-of-region use"
+      ]
+    },
+    {
+      "t": 1790184555.39,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The transaction matches the customer's own recurring pattern (typical amount, device used 5 times previously). Under R7, the correct actions are CREATE_CASE, VERIFY_WITH_CUSTOMER, and WARN_CUSTOMER, and the card must not be blocked. The draft incorrectly applies R2 and blocks the card."
+      ],
+      "what_would_change_verdict": "Apply R7 instead of R2, changing the actions to CREATE_CASE, VERIFY_WITH_CUSTOMER, and WARN_CUSTOMER, and removing BLOCK_CARD."
+    },
+    {
+      "t": 1790184564.11,
+      "kind": "warning",
+      "msg": "writer text 'summary' rejected (mentions a SAR that is not being filed); kept template"
+    },
+    {
+      "t": 1790184576.43,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-009",
+        "n_vertices": 6,
+        "n_edges": 10
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3581141)",
+      "params": {
+        "txn": "3581141"
+      },
+      "rows": 2,
+      "ms": 51.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C08299-K1, start_ts=2016-12-14 12:10:53, end_ts=2016-12-28 17:10:53)",
+      "params": {
+        "card": "C08299-K1",
+        "start_ts": "2016-12-14 12:10:53",
+        "end_ts": "2016-12-28 17:10:53"
+      },
+      "rows": 3,
+      "ms": 49.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C08299-K1, before_ts=2016-12-28 12:10:53, recent_days=30)",
+      "params": {
+        "card": "C08299-K1",
+        "before_ts": "2016-12-28 12:10:53",
+        "recent_days": 30
+      },
+      "rows": 46,
+      "ms": 41.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C08299-K1, amt=30.02, tol=0.3, before_ts=2016-12-28 12:10:53)",
+      "params": {
+        "card": "C08299-K1",
+        "amt": 30.02,
+        "tol": 0.3,
+        "before_ts": "2016-12-28 12:10:53"
+      },
+      "rows": 4,
+      "ms": 54.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3581141, lookback_days=200)",
+      "params": {
+        "txn": "3581141",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 47.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev= |  |  | , start_ts=2016-11-28 12:10:53, end_ts=2016-12-28 17:10:53)",
+      "params": {
+        "dev": " |  |  | ",
+        "start_ts": "2016-11-28 12:10:53",
+        "end_ts": "2016-12-28 17:10:53"
+      },
+      "rows": 627,
+      "ms": 261.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C08299-K1)",
+      "params": {
+        "card": "C08299-K1"
+      },
+      "rows": 1,
+      "ms": 43.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C08299-K1, start_ts=2016-11-28 12:10:53, end_ts=2016-12-28 17:10:53)",
+      "params": {
+        "card": "C08299-K1",
+        "start_ts": "2016-11-28 12:10:53",
+        "end_ts": "2016-12-28 17:10:53"
+      },
+      "rows": 8,
+      "ms": 261.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C08299-K1, amt=30.02, tol=0.3, before_ts=2016-12-28 12:10:53)",
+      "params": {
+        "card": "C08299-K1",
+        "amt": 30.02,
+        "tol": 0.3,
+        "before_ts": "2016-12-28 12:10:53"
+      },
+      "rows": 4,
+      "ms": 51.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[' |  |  | '], cards=['C08299-K1'], k=8, pattern=)",
+      "params": {
+        "devices": [
+          " |  |  | "
+        ],
+        "cards": [
+          "C08299-K1"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 21,
+      "ms": 293.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 947.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3581141'], card_ids=[], case_ids=[], customer_ids=['C08299'])",
+      "params": {
+        "txn_ids": [
+          "3581141"
+        ],
+        "card_ids": [],
+        "case_ids": [],
+        "customer_ids": [
+          "C08299"
+        ]
+      },
+      "rows": 2,
+      "ms": 113.9,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The customer C08299 reported transaction 3581141 ($30.02) as unauthorized. This transaction deviates significantly from the customer's typical profile, utilizing a different billing address (addr1 203.0 instead of 330.0) and a completely blank device signature, while previous transactions of similar amounts (~$30.00) were consistently associated with addr1 330.0 and specific device profiles.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3581141 was executed with a billing address of 203.0, whereas the customer's historical transactions (such as 3545489, 3507659, and 3576079) consistently use 330.0.",
+        "The flagged transaction 3581141 used a completely blank device signature (' |  |  | ') classified as generic, unlike the customer's established device profiles (e.g., iOS and Windows devices in recurring matches).",
+        "The transaction amount of $30.02 closely mimics the customer's recurring charge pattern of approximately $30.00 (e.g., 3545489 at $29.97 and 3342487 at $30.04), suggesting an attempt to blend in with legitimate recurring activity."
+      ],
+      "open_questions": [
+        "Why did the transaction 3581141 have a completely blank device profile while being processed as a desktop device type?",
+        "Are there other recent unauthorized attempts on card C08299-K1 that were declined or not captured in this window?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "identity": {
+      "assessment": "Customer C08299 has disputed a $30.02 transaction (3581141) on card C08299-K1, claiming they did not authorize it. The transaction was conducted using a highly generic, empty device profile (' |  |  | ') which prevents reliable device fingerprinting. Given the explicit customer dispute and lack of established positive history on this account, the transaction is highly suspicious.",
+      "risk": "high",
+      "key_points": [
+        "Customer C08299 explicitly reported the $30.02 transaction 3581141 as unauthorized.",
+        "The account C08299-K1|203.0|179 has only 1 recorded transaction in its history, leaving no established pattern of legitimate use.",
+        "The transaction was associated with an empty, generic device profile (' |  |  | ') classified as 'Found' and seen 5 times across the system, which offers no identifying value."
+      ],
+      "open_questions": [
+        "Are there other transactions associated with card C08299-K1 that were not captured in this specific account slice?",
+        "What was the merchant or delivery address associated with transaction 3581141?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "network": {
+      "assessment": "The customer C08299 reported transaction 3581141 as unauthorized. While the transaction is associated with a device profile that has a high number of neighbors (1,013 cards), this represents a generic browser signature and does not provide evidence of a coordinated fraud ring or account takeover.",
+      "risk": "medium",
+      "key_points": [
+        "Customer C08299 disputed transaction 3581141 ($30.02) as unauthorized.",
+        "The transaction occurred on a generic device profile shared by 1,013 cards all-time, which cannot be used to establish a direct network link to other transactions.",
+        "Several other cards (e.g., C02809-K2, C10308-K1, C11792-K1) show similar small-value transactions (around $30) on the same day, but they are only connected via this generic device signature."
+      ],
+      "open_questions": [
+        "Are there other unauthorized transactions on card C08299-K1 that were not captured in this slice?",
+        "What is the true IP or location of the transaction 3581141 to help determine if it was card-not-present fraud?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "precedent": {
+      "assessment": "Customer C08299 has disputed a single transaction of $30.02 (ID 3581141) claiming they did not make the purchase. A search of historical records shows no prior closed cases for this customer and no similar transaction patterns in the database.",
+      "risk": "medium",
+      "key_points": [
+        "Customer C08299 reported transaction 3581141 ($30.02) as unauthorized.",
+        "There are no prior closed cases associated with customer C08299.",
+        "No similar cases or patterns were returned in the database query."
+      ],
+      "open_questions": [
+        "What are the device, IP, and merchant details associated with transaction 3581141?",
+        "Are there any other recent transactions on this card that the customer has not yet reported?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Friendly fraud or customer confusion regarding a legitimate recurring subscription or past purchase, supported by the typical amount and prior use of the generic device profile on this card.",
+      "Card-not-present fraud or account takeover where an unauthorized party obtained the card details and made a purchase using a generic device profile.",
+      "An unauthorized or mistaken recurring billing charge by a merchant that the customer does not recognize."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To examine the full transaction history of the card, checking if the generic device profile is consistently used for legitimate transactions and looking for other suspicious activity.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if there are prior transactions of approximately $30.02 on this card, which would point to a recurring subscription or billing agreement.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Determine if the transaction is part of a recurring billing pattern or if the card's historical usage of the generic device profile aligns with legitimate customer behavior."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The transaction matches the customer's own recurring pattern (typical amount, device used 5 times previously). Under R7, the correct actions are CREATE_CASE, VERIFY_WITH_CUSTOMER, and WARN_CUSTOMER, and the card must not be blocked. The draft incorrectly applies R2 and blocks the card."
+    ],
+    "what_would_change_verdict": "Apply R7 instead of R2, changing the actions to CREATE_CASE, VERIFY_WITH_CUSTOMER, and WARN_CUSTOMER, and removing BLOCK_CARD."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-009",
+    "n_vertices": 6,
+    "n_edges": 10
+  }
+}

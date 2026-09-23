@@ -1,0 +1,549 @@
+{
+  "case_id": "HHG-015",
+  "events": [
+    {
+      "t": 1790182932.88,
+      "kind": "trigger",
+      "case_id": "HHG-015",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3464869 ($599.94, online) at 0.77. Review and decide.",
+      "opened_at": "2016-11-17 19:03:36"
+    },
+    {
+      "t": 1790182932.88,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790183022.14,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Account Takeover (ATO) / Card-Not-Present (CNP) fraud where an unauthorized user is using a new device to make a high-value purchase exceeding the card's historical maximum.",
+        "Legitimate cardholder activity where the genuine customer is making a high-value purchase using a newly acquired or different desktop computer."
+      ],
+      "calls": [
+        {
+          "tool": "device_neighbors",
+          "why": "To check if this specific, fully specified device profile (Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050) is shared with other unrelated cards or accounts, which would strongly indicate a fraud ring or shared attacker infrastructure.",
+          "days_back": 30
+        },
+        {
+          "tool": "card_window",
+          "why": "To analyze the card's full transaction history and context around the flagged transaction, looking for other recent changes in behavior or card testing.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1790183022.32,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction represents a high-risk shift in behavior, exceeding the card's historical maximum transaction amount of $550.03. It follows a rapid burst of high-value, in-person transactions from the previous day, but is conducted online using a new device profile and a different billing address.",
+      "key_points": [
+        "Flagged transaction 3464869 ($599.94) exceeds the historical baseline maximum amount of $550.03.",
+        "A rapid burst of three high-value, in-person transactions occurred on 2016-11-16 (3462385, 3462387, and 3462404) totaling over $1,540 in under 12 minutes.",
+        "Transaction 3464869 was initiated online from a new device profile (Trident/7.0 on Windows 8.1) and a different address (addr1: 327.0) than the in-person burst (addr1: 299.0)."
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The transaction 3464869 is flagged as high risk due to the use of a completely new device profile ('Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050') on cardholder account C03042-K1|327.0|138. The account itself has almost no history, with only one previous transaction recorded, making this high-value transaction of $599.94 highly suspicious.",
+      "key_points": [
+        "Transaction 3464869 was initiated from a new device profile ('Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050') never before seen on this card.",
+        "The cardholder account C03042-K1|327.0|138 has an extremely limited history of only 1 transaction prior to this event.",
+        "The real-time model scored this transaction highly at 0.77, which aligns with the risk of a newly registered or compromised card being used on a new device."
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "(unavailable: LLM call failed: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}})",
+      "key_points": []
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The current transaction 3464869 is flagged with a high risk score of 0.77 on card C03042-K1, which has a history of recurring fraud. Previous cases CC-0615 and CC-3886 both confirmed card-not-present fraud on new devices for this cardholder, resulting in card blocks and reissues. Given this pattern of compromise, the current high-value online transaction of $599.94 is highly suspicious.",
+      "key_points": [
+        "Card C03042-K1 has been associated with two prior confirmed fraud cases (CC-0615 and CC-3886) involving unauthorized online transactions from new devices.",
+        "A previous alert (CC-1313) was cleared as legitimate after the customer confirmed travel, indicating some legitimate out-of-region activity history.",
+        "The current transaction 3464869 is for a high amount of $599.94 and has been flagged with a high risk score of 0.77."
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "finding",
+      "key": "new_device",
+      "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050)",
+      "lr": 1.4,
+      "family": "device",
+      "ref": "query:txn_context(txn=3464869)",
+      "entity_ids": [
+        "3464869"
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "finding",
+      "key": "amount_above_max",
+      "claim": "$599.94 is above every earlier purchase on this card (previous maximum $550.03)",
+      "lr": 1.3,
+      "family": "amount",
+      "ref": "query:card_profile(card=C03042-K1, before_ts=2016-11-17 14:03:36, recent_days=30)",
+      "entity_ids": [
+        "3464869"
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1313; latest note: \"Case CC-1313: model scored a $100.08 transaction at 0.87. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C03042-K1)",
+      "entity_ids": [
+        "CC-1313"
+      ]
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "assessment",
+      "p": 0.33,
+      "prior": 0.25235670170115937,
+      "verdict": "uncertain",
+      "pattern": "card_not_present_new_device",
+      "contributions": [
+        {
+          "key": "new_device",
+          "family": "device",
+          "lr": 1.4,
+          "delta_logodds": 0.336
+        },
+        {
+          "key": "amount_above_max",
+          "family": "amount",
+          "lr": 1.3,
+          "delta_logodds": 0.262
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 599.94,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.33 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $599.94 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R4 / R8: verdict still uncertain and exposure $599.94 exceeds $500"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device",
+      "asked_after_step": 9
+    },
+    {
+      "t": 1790183050.01,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790183050.37,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-3886",
+        "CC-1313",
+        "CC-0615",
+        "CC-0681",
+        "CC-3107",
+        "CC-0587",
+        "CC-1182",
+        "CC-5008"
+      ],
+      "knowledge": [
+        "No fraud",
+        "R5 Card testing",
+        "Things to know",
+        "Glossary",
+        "R3 Customer confirms the transaction",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1790183059.85,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The trigger states the model score is 0.77, but the draft sets the initial probability to 0.33. This inconsistency leads to incorrectly citing R1 (which applies when probability < 0.70)."
+      ],
+      "what_would_change_verdict": "Correct the initial probability to reflect the model score (0.77) and update the initial actions and reasoning accordingly, as R1's requirement for probability < 0.70 would no longer apply."
+    },
+    {
+      "t": 1790183096.68,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-015",
+        "n_vertices": 7,
+        "n_edges": 20
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3464869)",
+      "params": {
+        "txn": "3464869"
+      },
+      "rows": 2,
+      "ms": 33.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C03042-K1, start_ts=2016-11-03 14:03:36, end_ts=2016-11-17 19:03:36)",
+      "params": {
+        "card": "C03042-K1",
+        "start_ts": "2016-11-03 14:03:36",
+        "end_ts": "2016-11-17 19:03:36"
+      },
+      "rows": 6,
+      "ms": 30.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C03042-K1, before_ts=2016-11-17 14:03:36, recent_days=30)",
+      "params": {
+        "card": "C03042-K1",
+        "before_ts": "2016-11-17 14:03:36",
+        "recent_days": 30
+      },
+      "rows": 68,
+      "ms": 30.9,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C03042-K1, amt=599.94, tol=6.0, before_ts=2016-11-17 14:03:36)",
+      "params": {
+        "card": "C03042-K1",
+        "amt": 599.94,
+        "tol": 6.0,
+        "before_ts": "2016-11-17 14:03:36"
+      },
+      "rows": 0,
+      "ms": 28.4,
+      "via": "mcp"
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3464869, lookback_days=200)",
+      "params": {
+        "txn": "3464869",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 20.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050, start_ts=2016-10-18 14:03:36, end_ts=2016-11-17 19:03:36)",
+      "params": {
+        "dev": "Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050",
+        "start_ts": "2016-10-18 14:03:36",
+        "end_ts": "2016-11-17 19:03:36"
+      },
+      "rows": 2,
+      "ms": 36.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C03042-K1)",
+      "params": {
+        "card": "C03042-K1"
+      },
+      "rows": 4,
+      "ms": 23.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050, start_ts=2016-10-18 14:03:36, end_ts=2016-11-17 19:03:36)",
+      "params": {
+        "dev": "Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050",
+        "start_ts": "2016-10-18 14:03:36",
+        "end_ts": "2016-11-17 19:03:36"
+      },
+      "rows": 2,
+      "ms": 135.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C03042-K1, start_ts=2016-10-18 14:03:36, end_ts=2016-11-17 19:03:36)",
+      "params": {
+        "card": "C03042-K1",
+        "start_ts": "2016-10-18 14:03:36",
+        "end_ts": "2016-11-17 19:03:36"
+      },
+      "rows": 10,
+      "ms": 48.5,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050'], cards=['C03042-K1'], k=8, pattern=)",
+      "params": {
+        "devices": [
+          "Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050"
+        ],
+        "cards": [
+          "C03042-K1"
+        ],
+        "k": 8,
+        "pattern": ""
+      },
+      "rows": 12,
+      "ms": 168.1,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 95.3,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-3886', 'CC-1313', 'CC-0615', 'CC-0681', 'CC-3107', 'CC-0587', 'CC-1182', 'CC-5008'], customer_ids=['C03042'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-3886",
+          "CC-1313",
+          "CC-0615",
+          "CC-0681",
+          "CC-3107",
+          "CC-0587",
+          "CC-1182",
+          "CC-5008"
+        ],
+        "customer_ids": [
+          "C03042"
+        ]
+      },
+      "rows": 9,
+      "ms": 127.9,
+      "via": "mcp"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction represents a high-risk shift in behavior, exceeding the card's historical maximum transaction amount of $550.03. It follows a rapid burst of high-value, in-person transactions from the previous day, but is conducted online using a new device profile and a different billing address.",
+      "risk": "high",
+      "key_points": [
+        "Flagged transaction 3464869 ($599.94) exceeds the historical baseline maximum amount of $550.03.",
+        "A rapid burst of three high-value, in-person transactions occurred on 2016-11-16 (3462385, 3462387, and 3462404) totaling over $1,540 in under 12 minutes.",
+        "Transaction 3464869 was initiated online from a new device profile (Trident/7.0 on Windows 8.1) and a different address (addr1: 327.0) than the in-person burst (addr1: 299.0)."
+      ],
+      "open_questions": [
+        "Why did the customer's transaction channel abruptly shift from rapid in-person purchases to an online purchase using a new device within 24 hours?",
+        "Are the anonymous.com email addresses used in the recent transactions linked to legitimate customer updates or unauthorized changes?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The transaction 3464869 is flagged as high risk due to the use of a completely new device profile ('Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050') on cardholder account C03042-K1|327.0|138. The account itself has almost no history, with only one previous transaction recorded, making this high-value transaction of $599.94 highly suspicious.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3464869 was initiated from a new device profile ('Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050') never before seen on this card.",
+        "The cardholder account C03042-K1|327.0|138 has an extremely limited history of only 1 transaction prior to this event.",
+        "The real-time model scored this transaction highly at 0.77, which aligns with the risk of a newly registered or compromised card being used on a new device."
+      ],
+      "open_questions": [
+        "Are there other transactions associated with card C03042-K1 that were not captured in this account summary?",
+        "What is the physical location or IP address associated with this transaction to verify if it matches the cardholder's billing address?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "(unavailable: LLM call failed: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}})",
+      "risk": "medium",
+      "key_points": []
+    },
+    "precedent": {
+      "assessment": "The current transaction 3464869 is flagged with a high risk score of 0.77 on card C03042-K1, which has a history of recurring fraud. Previous cases CC-0615 and CC-3886 both confirmed card-not-present fraud on new devices for this cardholder, resulting in card blocks and reissues. Given this pattern of compromise, the current high-value online transaction of $599.94 is highly suspicious.",
+      "risk": "high",
+      "key_points": [
+        "Card C03042-K1 has been associated with two prior confirmed fraud cases (CC-0615 and CC-3886) involving unauthorized online transactions from new devices.",
+        "A previous alert (CC-1313) was cleared as legitimate after the customer confirmed travel, indicating some legitimate out-of-region activity history.",
+        "The current transaction 3464869 is for a high amount of $599.94 and has been flagged with a high risk score of 0.77."
+      ],
+      "open_questions": [
+        "Is the current transaction 3464869 originating from a newly registered device or an established, trusted device for customer C03042?",
+        "Why is card ID C03042-K1 still active and experiencing alerts if it was supposedly blocked and reissued during the resolution of CC-3886?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Account Takeover (ATO) / Card-Not-Present (CNP) fraud where an unauthorized user is using a new device to make a high-value purchase exceeding the card's historical maximum.",
+      "Legitimate cardholder activity where the genuine customer is making a high-value purchase using a newly acquired or different desktop computer."
+    ],
+    "extra_calls": [
+      {
+        "tool": "device_neighbors",
+        "why": "To check if this specific, fully specified device profile (Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050) is shared with other unrelated cards or accounts, which would strongly indicate a fraud ring or shared attacker infrastructure.",
+        "days_back": 30
+      },
+      {
+        "tool": "card_window",
+        "why": "To analyze the card's full transaction history and context around the flagged transaction, looking for other recent changes in behavior or card testing.",
+        "days_back": 30
+      }
+    ],
+    "focus": "Determine if the new device profile is linked to other suspicious accounts or if the cardholder's recent activity supports a legitimate high-value purchase."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The trigger states the model score is 0.77, but the draft sets the initial probability to 0.33. This inconsistency leads to incorrectly citing R1 (which applies when probability < 0.70)."
+    ],
+    "what_would_change_verdict": "Correct the initial probability to reflect the model score (0.77) and update the initial actions and reasoning accordingly, as R1's requirement for probability < 0.70 would no longer apply."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-015",
+    "n_vertices": 7,
+    "n_edges": 20
+  }
+}
