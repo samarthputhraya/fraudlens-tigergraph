@@ -1,0 +1,11 @@
+CREATE OR REPLACE QUERY ring_components() FOR GRAPH Fraud {
+  /* Fraud-ring components found by WCC over RING_LINK: member cards, the shared devices that link them and the
+     confirmed-fraud closed cases already on member cards. */
+  MapAccum<INT, SetAccum<STRING>> @@members, @@vias, @@fraud_cases;
+  All = {Card.*};
+  Linked = SELECT c FROM All:c -(RING_LINK:e)-> Card:o
+           ACCUM @@vias += (c.wcc_id -> e.via), @@members += (c.wcc_id -> c.id);
+  F = SELECT c FROM Linked:c -(rev_ON_CARD:e)-> ClosedCase:cc WHERE cc.outcome == "confirmed_fraud"
+      ACCUM @@fraud_cases += (c.wcc_id -> cc.id);
+  PRINT @@members AS members, @@vias AS devices, @@fraud_cases AS fraud_cases;
+}

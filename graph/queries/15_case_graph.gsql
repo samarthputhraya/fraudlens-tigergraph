@@ -1,0 +1,11 @@
+CREATE OR REPLACE QUERY case_graph(VERTEX<InvestigationCase> ic) FOR GRAPH Fraud {
+  /* Neighbourhood of an investigation case for the analyst UI: transactions, cards, devices, cited cases,
+     rules, patterns, evidence requests and action records. */
+  SetAccum<EDGE> @@edges;
+  S = {ic};
+  N = SELECT n FROM S:s -((CASE_TXN|CASE_CARD|CASE_DEVICE|CASE_CITES|CASE_CITES_INV|CASE_RULE|CASE_PATTERN|CASE_REQUEST|CASE_ACTION):e)-> :n
+      ACCUM @@edges += e;
+  PRINT S AS case_vertex;
+  PRINT N AS neighbors;
+  PRINT @@edges AS edges;
+}

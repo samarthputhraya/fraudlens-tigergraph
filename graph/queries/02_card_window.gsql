@@ -1,0 +1,10 @@
+CREATE OR REPLACE QUERY card_window(VERTEX<Card> card, DATETIME start_ts, DATETIME end_ts) FOR GRAPH Fraud {
+  /* Every transaction on a card inside [start_ts, end_ts], with device profile, New/Found flag and proxy flag. */
+  SumAccum<STRING> @device, @is_new, @proxy;
+  Start = {card};
+  T = SELECT t FROM Start:c -(MADE:e)-> Transaction:t WHERE t.ts >= start_ts AND t.ts <= end_ts;
+  D = SELECT t FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
+      ACCUM t.@device = d.id, t.@is_new = e.is_new, t.@proxy = e.proxy;
+  PRINT T[T.id, T.ts, T.amt, T.product, T.channel, T.risk_score, T.addr1, T.p_email, T.r_email, T.dist1,
+          T.m4, T.m6, T.m123, T.m789, T.c1, T.c13, T.d1, T.d15, T.@device, T.@is_new, T.@proxy] AS txns;
+}

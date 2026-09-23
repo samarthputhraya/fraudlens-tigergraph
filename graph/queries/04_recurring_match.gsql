@@ -1,0 +1,9 @@
+CREATE OR REPLACE QUERY recurring_match(VERTEX<Card> card, DOUBLE amt, DOUBLE tol, DATETIME before_ts) FOR GRAPH Fraud {
+  /* Earlier transactions on the card whose amount is within +/- tol of amt (recurring-charge check, policy R7). */
+  SumAccum<STRING> @device;
+  Start = {card};
+  T = SELECT t FROM Start:c -(MADE:e)-> Transaction:t
+      WHERE t.ts < before_ts AND abs(t.amt - amt) <= tol;
+  D = SELECT t FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d ACCUM t.@device = d.id;
+  PRINT T[T.id, T.ts, T.amt, T.product, T.channel, T.addr1, T.p_email, T.r_email, T.@device] AS matches;
+}

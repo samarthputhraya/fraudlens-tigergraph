@@ -1,0 +1,7 @@
+CREATE OR REPLACE QUERY alert_scan(DATETIME start_ts, DATETIME end_ts, DOUBLE min_score = 0.85, INT max_n = 500) FOR GRAPH Fraud {
+  /* Autonomous monitoring: transactions whose model risk score crossed min_score inside the window. */
+  All = {Transaction.*};
+  T = SELECT t FROM All:t WHERE t.ts >= start_ts AND t.ts <= end_ts AND t.risk_score >= min_score
+      ORDER BY t.risk_score DESC LIMIT max_n;
+  PRINT T[T.id, T.card_id, T.customer_id, T.ts, T.amt, T.product, T.channel, T.addr1, T.risk_score] AS alerts;
+}

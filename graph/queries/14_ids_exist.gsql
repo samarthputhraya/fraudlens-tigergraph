@@ -1,0 +1,11 @@
+CREATE OR REPLACE QUERY ids_exist(SET<STRING> txn_ids, SET<STRING> card_ids, SET<STRING> case_ids, SET<STRING> customer_ids) FOR GRAPH Fraud {
+  /* Validator: returns which of the given IDs exist in the graph, so no answer file cites a made-up ID. */
+  T = to_vertex_set(txn_ids, "Transaction");
+  C = to_vertex_set(card_ids, "Card");
+  K = to_vertex_set(case_ids, "ClosedCase");
+  U = to_vertex_set(customer_ids, "Customer");
+  PRINT T[T.id] AS txns;
+  PRINT C[C.id] AS cards;
+  PRINT K[K.id] AS closed_cases;
+  PRINT U[U.id] AS customers;
+}

@@ -1,0 +1,11 @@
+CREATE OR REPLACE QUERY search_knowledge(LIST<FLOAT> qv, INT k = 6) FOR GRAPH Fraud {
+  /* GraphRAG over the bank's fraud policy, known typologies and regulator guidance: vector search over document
+     chunks, expanded through the graph to the policy rules and fraud patterns each chunk is linked to. */
+  MapAccum<VERTEX, FLOAT> @@dist;
+  SetAccum<STRING> @rules, @patterns;
+  R = vectorSearch({DocChunk.emb}, qv, k, {distance_map: @@dist});
+  X = SELECT d FROM R:d -(DOC_RULE:e)-> PolicyRule:p ACCUM d.@rules += p.id;
+  Y = SELECT d FROM R:d -(DOC_PATTERN:e)-> FraudPattern:p ACCUM d.@patterns += p.id;
+  PRINT R[R.id, R.source, R.section, R.body, R.@rules, R.@patterns] AS chunks;
+  PRINT @@dist AS dist;
+}

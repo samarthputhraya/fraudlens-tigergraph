@@ -1,0 +1,18 @@
+CREATE OR REPLACE QUERY device_neighbors(VERTEX<DeviceProfile> dev, DATETIME start_ts, DATETIME end_ts) FOR GRAPH Fraud {
+  /* Who else used this device profile inside the window: transactions, cards, customers, New/proxy flags,
+     and any closed or investigation cases those transactions belong to (shared-origin check, policy R6). */
+  SumAccum<STRING> @is_new, @proxy;
+  SetAccum<STRING> @closed_cases, @inv_cases;
+  SetAccum<STRING> @@cards_all_time;
+  Start = {dev};
+  T = SELECT t FROM Start:d -(rev_FROM_DEVICE:e)-> Transaction:t
+      WHERE t.ts >= start_ts AND t.ts <= end_ts
+      ACCUM t.@is_new = e.is_new, t.@proxy = e.proxy;
+  X = SELECT t FROM T:t -(rev_INVOLVES:e)-> ClosedCase:cc ACCUM t.@closed_cases += cc.id;
+  Y = SELECT t FROM T:t -(rev_CASE_TXN:e)-> InvestigationCase:ic ACCUM t.@inv_cases += ic.case_ref;
+  A = SELECT c FROM Start:d -(CARD_DEVICE:e)-> Card:c ACCUM @@cards_all_time += c.id;
+  PRINT Start[Start.id, Start.n_txn, Start.is_generic] AS device;
+  PRINT @@cards_all_time.size() AS n_cards_all_time;
+  PRINT T[T.id, T.card_id, T.customer_id, T.ts, T.amt, T.product, T.channel, T.addr1, T.risk_score,
+          T.@is_new, T.@proxy, T.@closed_cases, T.@inv_cases] AS txns;
+}

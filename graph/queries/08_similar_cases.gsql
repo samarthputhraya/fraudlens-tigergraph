@@ -1,0 +1,27 @@
+CREATE OR REPLACE QUERY similar_cases(LIST<FLOAT> qv, SET<VERTEX<DeviceProfile>> devices, SET<VERTEX<Card>> cards,
+                                      INT k = 8, STRING pattern = "") FOR GRAPH Fraud {
+  /* Hybrid GraphRAG over case memory. (1) vector search over closed-case narratives, optionally restricted to a
+     pattern; (2) graph-filtered vector search restricted to closed cases reachable from the given devices or
+     cards; (3) vector search over earlier investigation cases written by the agent. */
+  MapAccum<VERTEX, FLOAT> @@d_global, @@d_graph, @@d_inv;
+  All = {ClosedCase.*};
+  Cand = SELECT c FROM All:c WHERE pattern == "" OR c.pattern == pattern;
+  G = vectorSearch({ClosedCase.emb}, qv, k, {candidate_set: Cand, distance_map: @@d_global});
+
+  Devs = {devices};
+  DT = SELECT t FROM Devs:d -(rev_FROM_DEVICE:e)-> Transaction:t;
+  GC1 = SELECT cc FROM DT:t -(rev_INVOLVES:e)-> ClosedCase:cc;
+  Cs = {cards};
+  GC2 = SELECT cc FROM Cs:c -(rev_ON_CARD:e)-> ClosedCase:cc;
+  GC3 = SELECT cc FROM Cs:c -(rev_CONNECTED_TO:e)-> ClosedCase:cc;
+  GC = GC1 UNION GC2 UNION GC3;
+  H = {};
+  IF GC.size() > 0 THEN
+    H = vectorSearch({ClosedCase.emb}, qv, k, {candidate_set: GC, distance_map: @@d_graph});
+  END;
+  I = vectorSearch({InvestigationCase.emb}, qv, 5, {distance_map: @@d_inv});
+  PRINT G[G.id, G.card_id, G.opened_at, G.outcome, G.pattern, G.exposure_usd, G.report_filed, G.actions_taken, G.analyst_notes] AS vector_hits;
+  PRINT H[H.id, H.card_id, H.opened_at, H.outcome, H.pattern, H.exposure_usd, H.report_filed, H.actions_taken, H.analyst_notes] AS graph_hits;
+  PRINT I[I.id, I.case_ref, I.verdict, I.pattern, I.summary, I.final_actions] AS investigation_hits;
+  PRINT @@d_global AS d_global, @@d_graph AS d_graph, @@d_inv AS d_inv;
+}

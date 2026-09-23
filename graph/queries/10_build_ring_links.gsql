@@ -1,0 +1,24 @@
+CREATE OR REPLACE QUERY build_ring_links(DATETIME start_ts, DATETIME end_ts, INT max_cards = 60, INT min_cards = 3) FOR GRAPH Fraud {
+  /* Projects rare, non-generic device profiles used as a NEW device by several cards inside the window into
+     Card-RING_LINK-Card edges. The projection is the input to GDBMS_ALGO WCC/Louvain ring detection. */
+  SetAccum<VERTEX<Card>> @new_cards;
+  SumAccum<INT> @@devices, @@links;
+  Devs = {DeviceProfile.*};
+  Devs = SELECT d FROM Devs:d WHERE d.is_generic == FALSE;
+  T = SELECT t FROM Devs:d -(rev_FROM_DEVICE:e)-> Transaction:t
+      WHERE t.ts >= start_ts AND t.ts <= end_ts AND e.is_new == "New";
+  Cs = SELECT c FROM T:t -(rev_MADE:m)-> Card:c;
+  X = SELECT d FROM Cs:c -(CARD_DEVICE:e)-> DeviceProfile:d
+      WHERE d.is_generic == FALSE AND e.n_new > 0 AND e.last_ts >= start_ts AND e.first_ts <= end_ts
+      ACCUM d.@new_cards += c;
+  Hubs = SELECT d FROM X:d WHERE d.@new_cards.size() >= min_cards AND d.@new_cards.size() <= max_cards
+         ACCUM @@devices += 1,
+           FOREACH c1 IN d.@new_cards DO
+             FOREACH c2 IN d.@new_cards DO
+               IF getvid(c1) < getvid(c2) THEN
+                 INSERT INTO RING_LINK VALUES (c1, c2, 1.0, d.id, start_ts, end_ts), @@links += 1
+               END
+             END
+           END;
+  PRINT @@devices AS ring_devices, @@links AS links_inserted;
+}

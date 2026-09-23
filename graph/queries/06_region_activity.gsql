@@ -1,0 +1,24 @@
+CREATE OR REPLACE QUERY region_activity(VERTEX<BillingRegion> region, DATETIME start_ts, DATETIME end_ts, INT max_cards = 200) FOR GRAPH Fraud {
+  /* Cards transacting in a billing region inside the window, which of them are new to the region,
+     and confirmed-fraud closed cases on those cards (region-cluster / out-of-region check). */
+  SumAccum<INT> @n_window;
+  SumAccum<DOUBLE> @amt_window;
+  MinAccum<DATETIME> @first_in_region;
+  SetAccum<STRING> @fraud_cases;
+  SumAccum<INT> @@n_cards, @@n_new_cards;
+  DATETIME case_from;
+  case_from = datetime_sub(start_ts, INTERVAL 30 DAY);
+  Start = {region};
+  T = SELECT t FROM Start:r -(rev_BILLED_IN:e)-> Transaction:t WHERE t.ts >= start_ts AND t.ts <= end_ts;
+  C = SELECT c FROM T:t -(rev_MADE:e)-> Card:c ACCUM c.@n_window += 1, c.@amt_window += t.amt;
+  X = SELECT c FROM C:c -(CARD_REGION:e)-> BillingRegion:b WHERE b == region
+      ACCUM c.@first_in_region += e.first_ts;
+  C = SELECT c FROM C:c
+      POST-ACCUM @@n_cards += 1, IF c.@first_in_region >= start_ts THEN @@n_new_cards += 1 END;
+  F = SELECT c FROM C:c -(rev_ON_CARD:e)-> ClosedCase:cc
+      WHERE cc.outcome == "confirmed_fraud" AND cc.opened_at >= case_from
+      ACCUM c.@fraud_cases += cc.id;
+  New = SELECT c FROM C:c WHERE c.@first_in_region >= start_ts ORDER BY c.@n_window DESC LIMIT max_cards;
+  PRINT @@n_cards AS n_cards, @@n_new_cards AS n_new_cards;
+  PRINT New[New.id, New.customer_id, New.@n_window, New.@amt_window, New.@first_in_region, New.@fraud_cases] AS new_cards;
+}

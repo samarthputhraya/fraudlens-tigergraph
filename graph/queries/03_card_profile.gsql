@@ -1,0 +1,34 @@
+CREATE OR REPLACE QUERY card_profile(VERTEX<Card> card, DATETIME before_ts, INT recent_days = 30) FOR GRAPH Fraud {
+  /* Behavioural baseline of a card strictly before before_ts: regions (count, first/last seen), products,
+     channels, devices (count, first/last seen), purchaser email domains and the amount distribution. */
+  MapAccum<STRING, SumAccum<INT>> @@region_n, @@product_n, @@channel_n, @@device_n, @@p_email_n;
+  MapAccum<STRING, MinAccum<DATETIME>> @@region_first, @@device_first;
+  MapAccum<STRING, MaxAccum<DATETIME>> @@region_last, @@device_last;
+  SumAccum<INT> @@n, @@n_recent, @@n_online;
+  SumAccum<DOUBLE> @@amt_sum;
+  MaxAccum<DOUBLE> @@amt_max;
+  ListAccum<DOUBLE> @@amts;
+  MinAccum<DATETIME> @@first_ts;
+  MaxAccum<DATETIME> @@last_ts;
+  DATETIME recent_start;
+  recent_start = datetime_sub(before_ts, INTERVAL recent_days DAY);
+  Start = {card};
+  T = SELECT t FROM Start:c -(MADE:e)-> Transaction:t WHERE t.ts < before_ts
+      ACCUM @@n += 1, @@amt_sum += t.amt, @@amt_max += t.amt, @@amts += t.amt,
+            @@product_n += (t.product -> 1), @@channel_n += (t.channel -> 1),
+            @@first_ts += t.ts, @@last_ts += t.ts,
+            IF t.addr1 != "" THEN
+              @@region_n += (t.addr1 -> 1), @@region_first += (t.addr1 -> t.ts), @@region_last += (t.addr1 -> t.ts)
+            END,
+            IF t.p_email != "" THEN @@p_email_n += (t.p_email -> 1) END,
+            IF t.channel == "online" THEN @@n_online += 1 END,
+            IF t.ts >= recent_start THEN @@n_recent += 1 END;
+  D = SELECT d FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
+      ACCUM @@device_n += (d.id -> 1), @@device_first += (d.id -> t.ts), @@device_last += (d.id -> t.ts);
+  PRINT @@n AS n_txn, @@n_recent AS n_recent, @@n_online AS n_online, @@amt_sum AS amt_sum, @@amt_max AS amt_max,
+        @@first_ts AS first_ts, @@last_ts AS last_ts;
+  PRINT @@region_n AS region_n, @@region_first AS region_first, @@region_last AS region_last;
+  PRINT @@product_n AS product_n, @@channel_n AS channel_n, @@p_email_n AS p_email_n;
+  PRINT @@device_n AS device_n, @@device_first AS device_first, @@device_last AS device_last;
+  PRINT @@amts AS amts;
+}
