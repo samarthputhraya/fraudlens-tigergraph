@@ -1,0 +1,101 @@
+{
+  "case_id": "HHG-001",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.09,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "This card has 10 earlier card-present purchases in billing region 444.0 (first on 2016-09-13)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C12382-K1, before_ts=2016-12-04 19:55:28, recent_days=30)",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "The resolved account (C12382-K1|444.0|73) has 10 earlier transactions and none were ever part of a fraud case",
+        "source": "graph",
+        "ref": "query:account_history(txn=3514030, lookback_days=200)",
+        "entity_ids": [
+          "3441958",
+          "3471020",
+          "3490282"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3587 (confirmed_fraud, out_of_region_use); CC-1066 (confirmed_fraud, out_of_region_use); CC-1673 (confirmed_fraud, card_not_present_new_device); CC-2964 (confirmed_fraud, out_of_region_use)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C12382-K1'])",
+        "entity_ids": [
+          "CC-3587",
+          "CC-1066",
+          "CC-1673",
+          "CC-2964",
+          "CC-5411",
+          "CC-4473"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-3587",
+      "CC-1066",
+      "CC-1673",
+      "CC-2964",
+      "CC-5411",
+      "CC-4473",
+      "CC-4577",
+      "CC-2770"
+    ],
+    "summary": "Transaction 3514030 for $77.07 in billing region 444.0 triggered an alert due to a model risk score of 0.61. The transaction amount aligns with the card's history, which includes 10 prior card-present purchases in the same region. However, specialists noted extreme geographical dispersion across multiple regions within 72 hours and cited prior fraud cases such as CC-1066 and CC-1673. Despite these conflicting signals, the alert was cleared as legitimate activity and the transaction was allowed.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR filed as the alert was cleared as legitimate activity.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision.",
+  "tool_calls": 11,
+  "tokens": 7999,
+  "latency_s": 34.0
+}

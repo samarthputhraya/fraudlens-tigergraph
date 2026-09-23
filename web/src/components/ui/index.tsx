@@ -11,7 +11,7 @@ export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Bool
 // ---------- Panel ----------
 export function Panel({
   title, aside, children, className, bodyClass, ...rest
-}: { title?: ReactNode; aside?: ReactNode; bodyClass?: string } & HTMLAttributes<HTMLDivElement>) {
+}: { title?: ReactNode; aside?: ReactNode; bodyClass?: string } & Omit<HTMLAttributes<HTMLDivElement>, "title">) {
   return (
     <section className={cx("rounded-xl border border-ink-700 bg-ink-850 shadow-panel", className)} {...rest}>
       {(title || aside) && (

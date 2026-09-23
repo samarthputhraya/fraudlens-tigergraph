@@ -1,0 +1,137 @@
+{
+  "case_id": "HHG-008",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The same amount (+/-1%) recurs on this card on the same day of the month: 2016-11-19 $55.54 (7 matching charge(s) in the last six months), consistent with a recurring charge",
+        "source": "graph",
+        "ref": "query:recurring_match(card=C13171-K2, amt=55.68, tol=0.56, before_ts=2016-12-19 22:08:56)",
+        "entity_ids": [
+          "3469864"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-4819; latest note: \"Case CC-4819: model scored a $66.52 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C13171-K2)",
+        "entity_ids": [
+          "CC-4819"
+        ]
+      },
+      {
+        "claim": "The device profile ( |  | chrome 66.0 | ) was already used 9 times on this card before the alert",
+        "source": "graph",
+        "ref": "query:card_profile(card=C13171-K2, before_ts=2016-12-19 22:08:56, recent_days=30)",
+        "entity_ids": [
+          "3558054"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4819 (cleared, none); CC-2059 (confirmed_fraud, card_not_present_new_device); CC-0467 (confirmed_fraud, card_not_present_new_device); CC-4163 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[' |  | chrome 66.0 | '], cards=['C13171-K2'])",
+        "entity_ids": [
+          "CC-4819",
+          "CC-2059",
+          "CC-0467",
+          "CC-4163",
+          "CC-1660",
+          "CC-0635"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R3, R7 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R3/R7",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Customer reviews the earlier matching charges and recognises the payment as their own recurring charge",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3558054"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-4819",
+      "CC-2059",
+      "CC-0467",
+      "CC-4163",
+      "CC-1660",
+      "CC-0635",
+      "CC-1606",
+      "CC-5462"
+    ],
+    "summary": "Case HHG-008 was triggered by a message from customer C13171 disputing a $55.68 online transaction (ID 3558054). Investigation showed the device profile had been used 9 times previously on this card, and the transaction matched a monthly recurring charge pattern with seven similar charges in the last six months. After reviewing the earlier matching charges, the customer recognized the payment, leading to a legitimate verdict with a 0.05 fraud probability and no fraud pattern. The final actions taken were CREATE_CASE, WARN_CUSTOMER, and CLOSE_NO_FRAUD.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 9,
+      "assumed_response": "Customer reviews the earlier matching charges and recognises the payment as their own recurring charge"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: the customer disputes a charge"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: the disputed charge matches the card's own recurring pattern (same amount, monthly); confirm before any block"
+      },
+      {
+        "action": "WARN_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: send a recurring-charge reminder showing the earlier matching charges"
+      }
+    ],
+    "final": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: keep the case record; customer confirmation noted"
+      },
+      {
+        "action": "WARN_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: recurring-charge reminder sent"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: the customer recognised the recurring charge"
+      }
+    ],
+    "what_changed": "The assumed customer response (\"Customer reviews the earlier matching charges and recognises the payment as their own recurring charge\") settled the alert: probability fell from 0.26 to 0.05 and the recommendation moved from verification to CREATE_CASE, WARN_CUSTOMER, CLOSE_NO_FRAUD (R3, R7)."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 11,
+  "tokens": 7931,
+  "latency_s": 121.9
+}

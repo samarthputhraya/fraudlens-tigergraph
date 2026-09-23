@@ -15,7 +15,10 @@ from agent.llm import FLASH, PRO, generate_json
 
 SYSTEM = ("You are part of a bank's fraud investigation team. You reason only from the evidence given to you, you never "
           "invent transaction, card, customer, device or case IDs, and you are honest about uncertainty. Unnamed Vesta "
-          "features (V, C, D, M, id_ columns) must be described as unnamed model features, never given invented meanings.")
+          "features (V, C, D, M, id_ columns) must be described as unnamed model features, never given invented meanings. "
+          "A device profile with missing model/OS/screen fields (for example ' |  | chrome 66.0 | ') is a generic browser "
+          "signature shared by many unrelated people: sharing it is NOT evidence of a ring or of account takeover. Only a rare, "
+          "fully specified device profile used as a New device by several customers is ring evidence.")
 
 TOOL_MENU = {
     "device_neighbors": "Other cards/customers that used a device profile in a time window (params: days_back 7-120)",
@@ -31,7 +34,7 @@ def _compact(obj, limit: int = 3500) -> str:
     return s if len(s) <= limit else s[:limit] + "...(truncated)"
 
 
-def lead_plan(case: dict, txn: dict, first_findings: list[dict]) -> dict:
+def lead_plan(case: dict, txn: dict, first_findings: list[dict], catalog: dict | None = None) -> dict:
     schema = {"type": "object", "properties": {
         "hypotheses": {"type": "array", "items": {"type": "string"}},
         "extra_calls": {"type": "array", "items": {"type": "object", "properties": {
@@ -40,7 +43,10 @@ def lead_plan(case: dict, txn: dict, first_findings: list[dict]) -> dict:
             "required": ["tool", "why"]}},
         "focus": {"type": "string"}}, "required": ["hypotheses", "extra_calls", "focus"]}
     prompt = (f"ALERT: {case['trigger_type']} - {case['trigger_text']}\nFLAGGED TRANSACTION: {_compact(txn, 1200)}\n"
-              f"FIRST GRAPH FINDINGS: {_compact(first_findings, 2500)}\n\nTOOLS YOU MAY CALL (TigerGraph installed queries):\n"
+              f"FIRST GRAPH FINDINGS: {_compact(first_findings, 2500)}\n\n"
+              + (("INSTALLED QUERY CATALOG (discovered from TigerGraph via MCP):\n"
+                  + "\n".join(f"- {k}: {v[:160]}" for k, v in (catalog or {}).items()) + "\n\n") if catalog else "")
+              + "TOOLS YOU MAY CALL NOW (installed queries):\n"
               + "\n".join(f"- {k}: {v}" for k, v in TOOL_MENU.items()) +
               "\n\nList 2-4 competing hypotheses (fraud patterns or legitimate explanations) and choose at most 3 extra "
               "calls that would best discriminate between them. Choose none if the evidence is already decisive.")
@@ -98,9 +104,8 @@ def critic(draft: dict, policy_chunks: list[str]) -> dict:
 
 
 def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) -> dict:
-    props = {"summary": {"type": "string"}, "what_changed": {"type": "string"}, "stop_reason": {"type": "string"},
-             "sar_reason": {"type": "string"}}
-    req = ["summary", "what_changed", "stop_reason", "sar_reason"]
+    props = {"summary": {"type": "string"}}
+    req = ["summary"]
     if want_sar:
         props["sar_narrative"] = {"type": "string"}
         req.append("sar_narrative")
@@ -108,18 +113,23 @@ def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) ->
         props["pattern_description"] = {"type": "string"}
         req.append("pattern_description")
     schema = {"type": "object", "properties": props, "required": req}
+    decision = (f"verdict={draft['verdict']}, fraud_probability={draft['fraud_probability']}, pattern={draft['pattern']}, "
+                f"status={draft['status']}, final actions={[a['action'] for a in draft['final_actions']]}, "
+                f"suspicious activity report filed={draft['sar_filed']}")
     prompt = (
-        "Write the case text for this fraud investigation. Use ONLY facts, amounts, dates and IDs present in the DRAFT.\n"
-        "- summary: 2-6 plain sentences an analyst can read (what happened, verdict, key evidence, what the bank does).\n"
-        "- what_changed: one or two sentences on why the final recommendation differs from the initial one (or 'nothing' "
-        "if no evidence was requested).\n- stop_reason: one sentence on why the investigation ended here (policy section 6).\n"
-        "- sar_reason: one sentence citing the rule for filing or not filing (section 3a, R2/R6/R9).\n"
+        "Write the case text for this fraud investigation. The DECISION below was made by the bank's policy engine and is "
+        "FINAL: describe it exactly. Do not add, remove or soften actions, do not change the verdict, do not mention a "
+        "suspicious activity report unless one is filed, and do not speculate beyond the evidence list. Use ONLY facts, "
+        "amounts, dates and IDs present in the DRAFT.\n"
+        f"DECISION: {decision}\n"
+        "- summary: 2-6 plain sentences an analyst can read: what triggered the alert, what the graph evidence showed, the "
+        "verdict, and exactly the final actions.\n"
         + ("- sar_narrative: 6-12 sentences, a regulator-ready suspicious activity report that stands on its own: WHO "
            "(customer, cards, devices), WHAT happened, WHEN (dates and times), WHERE (channel, billing region), HOW it was "
            "carried out, WHY it is suspicious, and the total amount. Follow the FinCEN narrative guidance below.\n" if want_sar else "")
         + ("- pattern_description: 2-3 sentences on what the undocumented pattern is, who it affects and how it was found.\n" if want_desc else "")
         + f"\nFINCEN / POLICY GUIDANCE:\n{chr(10).join(guidance)[:4000]}\n\nDRAFT:\n{_compact(draft, 9000)}")
-    return generate_json(prompt, schema, system=SYSTEM, model=PRO, temperature=0.3)
+    return generate_json(prompt, schema, system=SYSTEM, model=PRO, temperature=0.2)
 
 
 ID_RE = re.compile(r"\b(CC-\d{4}|C\d{5}-K\d|C\d{5}|3\d{6})\b")

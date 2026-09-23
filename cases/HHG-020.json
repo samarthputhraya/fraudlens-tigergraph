@@ -1,0 +1,132 @@
+{
+  "case_id": "HHG-020",
+  "case": {
+    "status": "open",
+    "verdict": "uncertain",
+    "fraud_probability": 0.59,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3509359"
+    ],
+    "first_suspicious_txn_id": "3509359",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 125.08,
+    "evidence": [
+      {
+        "claim": "This card is used almost only in person (4 of 82 earlier transactions online); this purchase is online",
+        "source": "graph",
+        "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "This card has never used product code R before",
+        "source": "graph",
+        "ref": "query:card_profile(card=C12265-K2, before_ts=2016-12-03 06:04:26, recent_days=30)",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3509359)",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2636 (confirmed_fraud, card_not_present_new_device); CC-2910 (confirmed_fraud, card_not_present_new_device); CC-3235 (confirmed_fraud, card_not_present_new_device); CC-3423 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080'], cards=['C12265-K2'])",
+        "entity_ids": [
+          "CC-2636",
+          "CC-2910",
+          "CC-3235",
+          "CC-3423",
+          "CC-5111",
+          "CC-0031"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R4",
+        "entity_ids": []
+      },
+      {
+        "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3509359"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2636",
+      "CC-2910",
+      "CC-3235",
+      "CC-3423",
+      "CC-5111",
+      "CC-0031"
+    ],
+    "summary": "Transaction 3509359 for $125.08 was flagged as a potential card-not-present fraud attempt from a new device. The card C12265-K2 is primarily used in person, and this online purchase involved a previously unseen product code R. A step-up authentication request was sent, but the cardholder did not reply within 24 hours. As a result, the verdict is uncertain, leading the bank to decline the transaction and monitor the card.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "step_up_auth",
+      "asked_after_step": 9,
+      "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.59)"
+      },
+      {
+        "action": "STEP_UP_AUTH",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.59 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R4: decline the pending authorisation"
+      }
+    ],
+    "what_changed": "The recommendation did not change from the initial assessment, as the requested step-up authentication yielded no reply from the cardholder."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed under section 3a because the investigation concluded with an uncertain verdict and no confirmed fraud.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation was closed under policy section 6 after the 24-hour waiting period for customer verification expired without a response.",
+  "tool_calls": 11,
+  "tokens": 8990,
+  "latency_s": 111.1
+}

@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// API_TARGET overrides the backend the dev server proxies to (default http://localhost:8000).
+const API_TARGET: string = (globalThis as any).process?.env?.API_TARGET || "http://localhost:8000";
+
 // Build output goes straight into the FastAPI static folder so `uvicorn` serves the app at `/`.
 // The dev server proxies /api to the FastAPI backend; SSE responses are streamed through untouched.
 export default defineConfig({
@@ -15,7 +18,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: API_TARGET,
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on("proxyRes", (proxyRes) => {

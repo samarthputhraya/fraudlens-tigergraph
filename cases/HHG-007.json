@@ -1,0 +1,142 @@
+{
+  "case_id": "HHG-007",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "account_takeover",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3514948"
+    ],
+    "first_suspicious_txn_id": "3514948",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 111.92,
+    "evidence": [
+      {
+        "claim": "The resolved cardholder account behind this card (C09933-K2|264.0|50) already had 5 transaction(s) confirmed as fraud in closed case(s) CC-2565, CC-2834, CC-5521, most recently 2016-10-29; accounts with prior confirmed fraud were fraud 42% of the time in October vs a 2.7% base rate",
+        "source": "graph",
+        "ref": "query:account_history(txn=3514948, lookback_days=200)",
+        "entity_ids": [
+          "CC-2565",
+          "CC-2834",
+          "CC-5521",
+          "3408273"
+        ]
+      },
+      {
+        "claim": "This card has 2220 earlier card-present purchases in billing region 264.0 (first on 2016-07-03)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C09933-K2, before_ts=2016-12-05 00:46:14, recent_days=30)",
+        "entity_ids": [
+          "3514948"
+        ]
+      },
+      {
+        "claim": "The same amount (+/-1%) recurs on this card on the same day of the month: 2016-07-06 $110.90, 2016-11-03 $112.92 (5 matching charge(s) in the last six months), consistent with a recurring charge",
+        "source": "graph",
+        "ref": "query:recurring_match(card=C09933-K2, amt=111.92, tol=1.12, before_ts=2016-12-05 00:46:14)",
+        "entity_ids": [
+          "3013010",
+          "3424567"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0657; latest note: \"Case CC-0657: model scored a $1,769.94 transaction at 0.90. Cardholder confirmed the purchase. Amount unusual for this customer but consiste\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C09933-K2)",
+        "entity_ids": [
+          "CC-0657"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2565; CC-2834; CC-5521; CC-3136 (confirmed_fraud, account_takeover)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C09933-K2'])",
+        "entity_ids": [
+          "CC-2565",
+          "CC-2834",
+          "CC-5521",
+          "CC-3136",
+          "CC-0657"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R2, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R2/R4",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder states they did not make the flagged transaction(s) and still has the card",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3514948"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2565",
+      "CC-2834",
+      "CC-5521",
+      "CC-3136",
+      "CC-0657"
+    ],
+    "summary": "Transaction 3514948 for $111.92 in billing region 264.0 was flagged with a model score of 0.87. The account has a history of 5 prior confirmed fraud cases, most recently on 2016-10-29. While the amount and location are typical for the card and match a recurring charge pattern, the customer was contacted and stated they did not make the transaction. The case is classified as account takeover fraud.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 9,
+      "assumed_response": "Cardholder states they did not make the flagged transaction(s) and still has the card"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.79)"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: evidence not yet conclusive (probability 0.79 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the cardholder denied the transaction; exposure $111.92 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "what_changed": "The fraud probability increased from 0.79 to 0.97 after the customer was contacted and denied making the flagged transaction."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended because customer validation confirmed the transaction was unauthorized.",
+  "tool_calls": 11,
+  "tokens": 8993,
+  "latency_s": 144.6
+}

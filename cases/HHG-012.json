@@ -1,0 +1,119 @@
+{
+  "case_id": "HHG-012",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "This card has 21 earlier card-present purchases in billing region 494.0 (first on 2016-07-05)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C05876-K2, before_ts=2016-12-18 04:00:31, recent_days=30)",
+        "entity_ids": [
+          "3553342"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0003; latest note: \"Case CC-0003: model scored a $442.92 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C05876-K2)",
+        "entity_ids": [
+          "CC-0003"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0003 (cleared, none); CC-2370 (confirmed_fraud, card_not_present_fraud); CC-4235 (cleared, none); CC-4735 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C05876-K2'])",
+        "entity_ids": [
+          "CC-0003",
+          "CC-2370",
+          "CC-4235",
+          "CC-4735",
+          "CC-4899",
+          "CC-2740"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase)",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3553342"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0003",
+      "CC-2370",
+      "CC-4235",
+      "CC-4735",
+      "CC-4899",
+      "CC-2740",
+      "CC-4249",
+      "CC-4697"
+    ],
+    "summary": "The real-time model flagged transaction 3553342 for $30.91 in billing region 494.0 with a risk score of 0.55. The investigation revealed that the transaction amount is typical for this card, falling in the 25th percentile. Furthermore, the card has a history of 21 prior in-person purchases in this exact billing region dating back to July 2016, as well as a previously cleared alert for travel. The verdict is legitimate, and the bank will allow the transaction.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 9,
+      "assumed_response": "Cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase)"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.10 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed they made the purchase in billing region 494.0 (travel / local purchase); confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The final recommendation differs from the initial one because the customer validation step was removed, as the stop rule applied immediately based on the initial evidence."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed under Section 3a because the alert was cleared as legitimate activity with no fraud pattern identified.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended immediately under Section 6 because the initial probability was 0.10 and there were two independent pieces of evidence confirming legitimate activity.",
+  "tool_calls": 11,
+  "tokens": 7949,
+  "latency_s": 30.6
+}

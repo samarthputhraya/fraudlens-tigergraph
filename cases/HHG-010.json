@@ -74,7 +74,7 @@
       "CC-4654",
       "CC-0873"
     ],
-    "summary": "Transaction 3506725 for $1,000.03 was flagged online with a score of 0.90. The purchase originated from a new Windows device and exceeded the card's previous maximum of $670.04. A step-up authentication request was sent to the cardholder, but no reply was received within 24 hours. The verdict remains uncertain. The bank will decline the transaction, escalate the case to an analyst, monitor the card, and file a report due to network anomalies.",
+    "summary": "This case was opened because the real-time model scored online transaction 3506725 for $1,000.03 at 0.90. Graph evidence shows the purchase was made from a new device profile and the amount exceeds the card's previous maximum of $670.04. The cardholder did not reply to a step-up authentication request within 24 hours, leaving the card_not_present_new_device pattern unconfirmed. The final verdict is uncertain with a fraud probability of 0.56. The final actions taken are MONITOR_CARD, DECLINE_TRANSACTION, and ESCALATE_TO_ANALYST.",
     "written_to_graph": false,
     "graph_case_id": ""
   },
@@ -120,18 +120,18 @@
         "reason": "R4 / R8: verdict still uncertain and exposure $1,000.03 exceeds $500"
       }
     ],
-    "what_changed": "The final recommendation remains uncertain because the cardholder failed to respond to the step-up authentication request within 24 hours."
+    "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.56; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION, ESCALATE_TO_ANALYST and R8 escalates it because exposure exceeds $500."
   },
   "sar": {
     "file": false,
-    "reason": "A Suspicious Activity Report is filed under rule R6 because the device profile is linked to 208 other cards.",
+    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation was escalated because the verdict is uncertain and the exposure of $1,000.03 exceeds the $500 threshold.",
+  "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the case is handed to an analyst (R8).",
   "tool_calls": 11,
-  "tokens": 9219,
-  "latency_s": 77.2
+  "tokens": 9787,
+  "latency_s": 143.2
 }

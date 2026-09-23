@@ -85,8 +85,13 @@ class Investigator:
             return {"lead": {"hypotheses": [], "extra_calls": [], "focus": ""}}
         ep = s["ep"]
         t = {k: ep.txn.get(k) for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email", "r_email")}
+        if not hasattr(self, "_catalog"):
+            try:
+                self._catalog = self.g.describe_queries(agent="lead")
+            except Exception:  # noqa: BLE001
+                self._catalog = {}
         try:
-            lead = roles.lead_plan(s["case"], t, s["first_findings"])
+            lead = roles.lead_plan(s["case"], t, s["first_findings"], self._catalog)
         except Exception as e:  # noqa: BLE001
             lead = {"hypotheses": [], "extra_calls": [], "focus": f"(planner unavailable: {e})"}
         self.emit("plan", {"agent": "lead", "hypotheses": lead.get("hypotheses", []), "calls": lead.get("extra_calls", [])})
@@ -234,16 +239,39 @@ class Investigator:
             try:
                 out = roles.writer(draft, guidance, sar, want_desc)
                 allowed = self._allowed_ids(s)
-                for k, v in out.items():
-                    if v and not roles.unknown_ids(v, allowed):
-                        texts[k] = v
-                    elif v:
-                        self.emit("warning", {"msg": f"writer text '{k}' cited unknown IDs; kept template"})
+                for k in ("summary", "sar_narrative", "pattern_description"):
+                    v = out.get(k)
+                    if not v:
+                        continue
+                    bad = roles.unknown_ids(v, allowed)
+                    contradiction = self._contradicts(v, r, sar, k)
+                    if bad or contradiction:
+                        self.emit("warning", {"msg": f"writer text '{k}' rejected ({'unknown IDs ' + ','.join(bad[:3]) if bad else contradiction}); kept template"})
+                        continue
+                    texts[k] = v
             except Exception as e:  # noqa: BLE001
                 self.emit("warning", {"msg": f"writer unavailable: {e}"})
         if not r["evidence_requests"]:
             texts["what_changed"] = "nothing"
         return {"texts": texts}
+
+    @staticmethod
+    def _contradicts(text: str, r: dict, sar: bool, key: str) -> str:
+        """Guard: narrative text must agree with the deterministic decision."""
+        low = text.lower()
+        final = {a["action"] for a in r["final"]}
+        if key == "summary":
+            if not sar and any(w in low for w in ("suspicious activity report", " sar ", "sar.", "file a report", "files a report", "filing a report", "file a sar", "will file")):
+                return "mentions a SAR that is not being filed"
+            if r["verdict"] == "legitimate" and any(w in low for w in ("confirmed fraud", "is fraud", "fraud ring", "account takeover", "block the card", "blocked")):
+                return "describes fraud but the verdict is legitimate"
+            if r["verdict"] == "fraud" and any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate")):
+                return "describes a legitimate outcome but the verdict is fraud"
+            if "BLOCK_CARD" not in final and any(w in low for w in ("block the card", "will block", "card will be blocked", "blocks the card")):
+                return "mentions a card block that is not recommended"
+            if "ESCALATE_TO_ANALYST" not in final and "escalat" in low:
+                return "mentions an escalation that is not recommended"
+        return ""
 
     def finalize(self, s: State) -> State:
         r, case = s["result"], s["case"]
@@ -297,8 +325,8 @@ class Investigator:
             "evidence": [{"claim": f.claim, "ref": f.ref} for f in r["findings"]],
             "evidence_request": r["evidence_requests"], "initial_actions": r["initial"], "final_actions": r["final"],
             "status": r["status"], "similar_prior_cases": similar_prior_cases(r),
-            "specialists": {k: v.get("assessment") for k, v in (s.get("specialists") or {}).items()},
-            "compliance_review": s.get("critic"),
+            "sar_filed": any(a["action"] == "FILE_REPORT" for a in r["final"]),
+            "assumed_reply_branch": r.get("reply"),
         }
 
     def _allowed_ids(self, s: State) -> set[str]:
@@ -335,9 +363,44 @@ class Investigator:
                    f"Verdict: {r['verdict']} (probability {r['p_final']:.2f}), pattern {r['pattern']}. "
                    + (" ".join(f.claim.split(';')[0] + '.' for f in top) + " " if top else "")
                    + f"Recommended: {acts}.")
-        stop = {"fraud": "The evidence met the policy's section 6 threshold for a defensible decision; further queries would not change the actions.",
-                "legitimate": "The verification response (or two independent legitimate signals) settled the alert as legitimate (section 6).",
-                "uncertain": "Verification did not settle the question; the case is handed to an analyst rather than guessed (R8, section 6)."}[r["verdict"]]
+        led, reply, p0 = r["ledger"], r.get("reply"), r["ledger"]["p"]
+        fams = ", ".join(led["fraud_families"]) or "the pattern detector"
+        legit_fams = ", ".join(led["legit_families"]) or "the account's own history"
+        final_names = ", ".join(a["action"] for a in r["final"])
+        if reply == "confirm":
+            stop = ("Section 6: the verification response settled the question - the cardholder confirmed the transaction, "
+                    "so further investigation would not change the decision.")
+            what = (f"The assumed {'step-up' if r['evidence_requests'][0]['type'] == 'step_up_auth' else 'customer'} response "
+                    f"(\"{r['evidence_requests'][0]['assumed_response']}\") settled the alert: probability fell from {p0:.2f} to "
+                    f"{r['p_final']:.2f} and the recommendation moved from verification to {final_names} (R3"
+                    f"{', R7' if r['facts'].get('recurring') else ''}).")
+        elif reply == "deny":
+            stop = ("Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a "
+                    "defensible fraud decision; further queries would not change the actions.")
+            what = (f"The assumed denial raised the probability from {p0:.2f} to {r['p_final']:.2f}; under R2 the "
+                    f"recommendation moved from verification to {final_names}"
+                    + (f", including a suspicious activity report because {__import__('agent.policy', fromlist=['sar_reason']).sar_reason(r['situation'])}." if any(a['action'] == 'FILE_REPORT' for a in r['final']) else "."))
+        elif reply == "no_reply":
+            esc = any(a["action"] == "ESCALATE_TO_ANALYST" for a in r["final"])
+            stop = ("Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; "
+                    + ("the case is handed to an analyst (R8)." if esc else "the card is monitored for 72 hours and the case stays open."))
+            what = (f"No reply within 24 hours left the alert unresolved at probability {p0:.2f}; R4 replaces verification with "
+                    f"{final_names}" + (" and R8 escalates it because exposure exceeds $500." if esc else "."))
+        elif case["trigger_type"] == "customer_report" and r["verdict"] == "fraud":
+            stop = (f"Section 6: the customer's denial (R2) plus independent graph evidence ({fams}) support a defensible "
+                    f"decision at probability {r['p_final']:.2f}; further queries would not change the actions.")
+            what = "nothing"
+        elif r["verdict"] == "uncertain":
+            stop = "The graph evidence conflicts with the customer's report, so the case goes to an analyst under R8 instead of being guessed."
+            what = "nothing"
+        elif r["verdict"] == "fraud":
+            stop = (f"Section 6: fraud probability {r['p_final']:.2f} >= 0.85 on independent evidence ({fams}); "
+                    f"further queries would not change the actions.")
+            what = "nothing"
+        else:
+            stop = (f"Section 6: fraud probability {r['p_final']:.2f} <= 0.15 on independent legitimate signals ({legit_fams}); "
+                    f"contacting the cardholder would not change the decision.")
+            what = "nothing"
         sar_file = any(a["action"] == "FILE_REPORT" for a in r["final"])
         from agent.policy import sar_reason
         sar_reason_txt = (f"Section 3a: fraud confirmed or strongly suspected and {sar_reason(r['situation'])}." if sar_file else
@@ -364,7 +427,7 @@ class Investigator:
                 + f"{who} The bank recommends {', '.join(a['action'] for a in r['final'])}; the card block and this "
                 f"filing await human approval under the bank's routing policy.")
         return {"summary": summary, "stop_reason": stop, "sar_reason": sar_reason_txt,
-                "what_changed": "", "sar_narrative": narrative, "pattern_description": r["pattern_description"]}
+                "what_changed": what, "sar_narrative": narrative, "pattern_description": r["pattern_description"]}
 
     def _build(self):
         g = StateGraph(State)

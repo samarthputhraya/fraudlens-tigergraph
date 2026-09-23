@@ -276,6 +276,14 @@ class MirrorGraph:
         self._log("search_knowledge", {"k": k}, len(chunks), t0, agent)
         return {"chunks": chunks}
 
+    def describe_queries(self, agent: str = "lead") -> dict:
+        import time
+        from agent.graph_client import local_query_descriptions
+        t0 = time.time()
+        out = local_query_descriptions()
+        self._log("describe_queries", {"query_name": "all"}, len(out), t0, agent)
+        return out
+
     def ids_exist(self, txns, cards, cases, customers, agent: str | None = None) -> dict:
         found = {
             "txns": {r["id"] for r in self._rows("SELECT TransactionID id FROM txn WHERE TransactionID IN (SELECT unnest(?))", [list(txns) or [""]])},

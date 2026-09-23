@@ -59,6 +59,17 @@ def fmt_ts(ts: datetime | str) -> str:
     return ts if isinstance(ts, str) else ts.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def local_query_descriptions() -> dict[str, str]:
+    import re
+    out = {}
+    for f in sorted((ROOT / "graph" / "queries").glob("*.gsql")):
+        text = f.read_text(encoding="utf-8")
+        m, d = re.search(r"QUERY (\w+)\(", text), re.search(r"/\*(.*?)\*/", text, re.S)
+        if m:
+            out[m.group(1)] = " ".join(d.group(1).split()) if d else ""
+    return out
+
+
 @dataclass
 class ToolCall:
     agent: str
@@ -168,6 +179,32 @@ class GraphClient:
         rows = sum(len(v) for v in out.values() if isinstance(v, list))
         self.trace.add(ToolCall(agent or self.agent, "tigergraph__run_installed_query", query,
                                 {k: v for k, v in params.items()}, rows, (time.time() - t0) * 1000, ok, via))
+        return out
+
+    def describe_queries(self, agent: str = "lead") -> dict[str, str]:
+        """Tool discovery: read installed-query descriptions from TigerGraph through MCP."""
+        t0 = time.time()
+        out: dict[str, str] = {}
+        via = "mcp" if self._mcp else "local"
+        try:
+            if self._mcp:
+                resp = self._mcp.call("tigergraph__get_query_description", {"query_name": "all"})
+                data = resp.get("data") or {}
+                raw = data.get("descriptions") or data.get("result") or data
+                items = raw.get("queries", raw) if isinstance(raw, dict) else raw
+                if isinstance(items, list):
+                    for q in items:
+                        if isinstance(q, dict) and q.get("queryName"):
+                            out[q["queryName"]] = q.get("description", "")
+                elif isinstance(items, dict):
+                    out = {k: (v if isinstance(v, str) else json.dumps(v)[:300]) for k, v in items.items()}
+        except Exception:  # noqa: BLE001
+            out = {}
+        if not out:
+            out = local_query_descriptions()
+            via = "local" if not self._mcp else "mcp+local"
+        self.trace.add(ToolCall(agent, "tigergraph__get_query_description", "describe_queries", {"query_name": "all"},
+                                len(out), (time.time() - t0) * 1000, True, via))
         return out
 
     # ---- typed wrappers (one per installed query) ---------------------------------------------

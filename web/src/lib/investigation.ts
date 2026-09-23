@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import type { Api, InvEvent, ToolCall, Answer } from "../api/types";
+import { playEvents } from "./replay";
 
 export interface TimelineItem {
   id: number;
@@ -115,20 +116,23 @@ function reduce(s: RunState, a: Act): RunState {
   return n;
 }
 
-export function useInvestigation(api: Api | null, caseId: string | undefined) {
+// source "live": stream GET /api/cases/{id}/run (or the mock's replay offline).
+// source "replay": play a saved trace client-side, without asking the server to investigate again.
+export function useInvestigation(api: Api | null, caseId: string | undefined, source: "live" | "replay" = "live", replay?: InvEvent[] | null) {
   const [state, dispatch] = useReducer(reduce, undefined, initial);
   const stopRef = useRef<(() => void) | null>(null);
+  const replayRef = useRef(replay);
+  replayRef.current = replay;
+  const ready = source === "live" || !!replay;
 
   const start = useCallback(() => {
-    if (!api || !caseId) return;
+    if (!api || !caseId || !ready) return;
     stopRef.current?.();
     dispatch({ type: "start" });
-    stopRef.current = api.run(
-      caseId,
-      (ev) => dispatch({ type: "event", ev }),
-      (err) => dispatch({ type: "end", err }),
-    );
-  }, [api, caseId]);
+    const onEv = (ev: InvEvent) => dispatch({ type: "event", ev });
+    const onEnd = (err?: string) => dispatch({ type: "end", err });
+    stopRef.current = source === "replay" && replayRef.current ? playEvents(replayRef.current, onEv, onEnd) : api.run(caseId, onEv, onEnd);
+  }, [api, caseId, source, ready]);
 
   useEffect(() => {
     start();

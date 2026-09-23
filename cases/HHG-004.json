@@ -1,0 +1,122 @@
+{
+  "case_id": "HHG-004",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.67,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3583227"
+    ],
+    "first_suspicious_txn_id": "3583227",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 128.33,
+    "evidence": [
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before ( |  | firefox 47.0 | )",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3583227)",
+        "entity_ids": [
+          "3583227"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0696; latest note: \"Case CC-0696: model scored a $13.68 transaction at 0.83. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C08106-K1)",
+        "entity_ids": [
+          "CC-0696"
+        ]
+      },
+      {
+        "claim": "$128.33 is in the top 3% of this card's purchase amounts",
+        "source": "graph",
+        "ref": "query:card_profile(card=C08106-K1, before_ts=2016-12-29 01:53:54, recent_days=30)",
+        "entity_ids": [
+          "3583227"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0403 (confirmed_fraud, card_not_present_new_device); CC-2843 (confirmed_fraud, card_not_present_new_device); CC-4714 (confirmed_fraud, card_not_present_new_device); CC-3123 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'])",
+        "entity_ids": [
+          "CC-0403",
+          "CC-2843",
+          "CC-4714",
+          "CC-3123",
+          "CC-3193",
+          "CC-2833"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R2 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R2",
+        "entity_ids": []
+      },
+      {
+        "claim": "The customer reported that they never made the $128.33 purchase (3583227); under R2 this is a denial",
+        "source": "customer",
+        "ref": "trigger:HHG-004",
+        "entity_ids": [
+          "3583227"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0403",
+      "CC-2843",
+      "CC-4714",
+      "CC-3123",
+      "CC-3193",
+      "CC-2833",
+      "CC-0696"
+    ],
+    "summary": "Customer C08106 reported an unauthorized online transaction of $128.33 (ID 3583227). The transaction was made from a new device profile running Firefox 47.0, which had never been associated with this card before. The amount is in the top 3% of the card's purchase history, and the device is linked to 6 different cards. The verdict is fraud. The bank will block the card to prevent further unauthorized charges.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $128.33 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $128.33 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR will be filed under Section 3a because the total exposure of $128.33 is below the required threshold.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation concluded because the customer explicitly denied making the transaction, confirming fraud.",
+  "tool_calls": 12,
+  "tokens": 8073,
+  "latency_s": 33.8
+}

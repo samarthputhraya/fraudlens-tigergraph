@@ -114,7 +114,8 @@ export function buildLiveGraph(row: CaseRow | null | undefined, s: RunState, ser
 
   // 4. Decision: the fraud episode, and the case the agent opens.
   const verdict = s.decision?.verdict || s.answer?.case.verdict;
-  const caseId = s.answer?.case.graph_case_id || s.trigger?.case_id || row?.case_id || "";
+  const caseId = s.trigger?.case_id || row?.case_id || "";
+  const caseLabel = s.answer?.case.graph_case_id || caseId;
   let K = "";
   if (s.decision) {
     for (const t of (s.decision.episode || []) as string[]) {
@@ -122,7 +123,7 @@ export function buildLiveGraph(row: CaseRow | null | undefined, s: RunState, ser
       if (t !== txn) edge(C, id, "MADE");
     }
     if (verdict === "fraud" && txn) node("Transaction", txn, { affected: true, fraud: true });
-    K = node("InvestigationCase", caseId, { origin: "decision" });
+    K = node("InvestigationCase", caseId, { origin: "decision" }, caseLabel);
     edge(K, T, "CASE_TXN");
   }
 

@@ -172,16 +172,16 @@ export default function QueueView() {
       <div className="mt-4 overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-panel">
         <table className="w-full table-fixed border-collapse text-left">
           <colgroup>
-            <col className="w-[30%]" />
+            <col className="w-[27%]" />
             <col className="w-[9%]" />
-            <col className="w-[11%]" />
-            <col className="w-[8%]" />
+            <col className="w-[12%]" />
             <col className="w-[9%]" />
-            <col className="w-[10%]" />
+            <col className="w-[9%]" />
+            <col className="w-[9%]" />
             <col className="w-[9%]" />
             <col className="w-[7%]" />
             <col className="w-[4%]" />
-            <col className="w-[13%]" />
+            <col className="w-[10%]" />
           </colgroup>
           <thead>
             <tr className="border-b border-ink-700 text-xs text-ink-400">
@@ -244,7 +244,7 @@ export default function QueueView() {
                     <StatusBadge status={r.status} />
                   </td>
                   <td className="px-2 py-3">
-                    <VerdictBadge verdict={r.verdict} p={r.fraud_probability} />
+                    {v ? <VerdictBadge verdict={r.verdict} p={r.fraud_probability} /> : <span className="text-ink-600" title="Not investigated yet">—</span>}
                   </td>
                   <td className="truncate px-2 py-3 text-[12.5px] text-ink-200">{v ? patternLabel(r.pattern) : <span className="text-ink-500">—</span>}</td>
                   <td className="px-2 py-3 text-right font-mono text-[12.5px] tabular-nums text-ink-100">
@@ -270,9 +270,11 @@ export default function QueueView() {
                           nav(`/live/${r.case_id}`);
                         }}
                       >
-                        <Radar size={13} /> Investigate live
+                        <Radar size={13} />
+                        <span className="hidden 2xl:inline">Investigate live</span>
+                        <span className="2xl:hidden">Live</span>
                       </Button>
-                      <ChevronRight size={16} className="text-ink-600 group-hover:text-ink-300" />
+                      <ChevronRight size={16} className="hidden text-ink-600 group-hover:text-ink-300 2xl:block" />
                     </div>
                   </td>
                 </tr>

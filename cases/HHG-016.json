@@ -1,0 +1,107 @@
+{
+  "case_id": "HHG-016",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.68,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3534820"
+    ],
+    "first_suspicious_txn_id": "3534820",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 59.67,
+    "evidence": [
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Windows |  | edge 16.0 | )",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3534820)",
+        "entity_ids": [
+          "3534820"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2540 (confirmed_fraud, card_not_present_new_device); CC-2675 (confirmed_fraud, card_not_present_new_device); CC-2732 (confirmed_fraud, card_not_present_new_device); CC-3580 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows |  | edge 16.0 | '], cards=['C09988-K1'])",
+        "entity_ids": [
+          "CC-2540",
+          "CC-2675",
+          "CC-2732",
+          "CC-3580",
+          "CC-1780",
+          "CC-2879"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R2 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R2",
+        "entity_ids": []
+      },
+      {
+        "claim": "The customer reported that they never made the $59.67 purchase (3534820); under R2 this is a denial",
+        "source": "customer",
+        "ref": "trigger:HHG-016",
+        "entity_ids": [
+          "3534820"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2540",
+      "CC-2675",
+      "CC-2732",
+      "CC-3580",
+      "CC-1780",
+      "CC-2879",
+      "CC-0249",
+      "CC-5217"
+    ],
+    "summary": "Customer C09988 reported transaction 3534820 for $59.67 as unauthorized. The purchase was made online using a new Windows Edge device profile. Network analysis showed this device profile is associated with 160 different cards, strongly suggesting a card-not-present fraud ring. The verdict is fraud. The bank will block the card, file a report, and monitor connected cards.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $59.67 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $59.67 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "A SAR will be filed under rule R6 because the fraudulent transaction is linked to a shared device profile used across multiple cards.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended here because the customer confirmed the fraud and sufficient evidence was gathered to take action under policy section 6.",
+  "tool_calls": 12,
+  "tokens": 7193,
+  "latency_s": 40.3
+}
