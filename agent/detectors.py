@@ -187,8 +187,11 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         parts = dev.split(" | ")
         named_device = parts[0] not in ("", "Windows", "iOS Device", "MacOS") or (
             n_cards_all <= 10 and len(parts) == 4 and all(parts))
-        ring = len(other_custs) >= 3 and new_share >= 0.6 and (concentration >= 0.4 or anon >= 0.5 * len(others))
-        shared = (not ring) and len(other_custs) >= 2 and concentration >= 0.4 and named_device
+        # a ring = one device new to many accounts AND mostly behind an anonymising proxy (new OS/browser versions
+        # also concentrate in late months, so concentration alone is not evidence)
+        ring = len(other_custs) >= 3 and new_share >= 0.6 and anon >= 0.5 * len(others)
+        near_in_time = [x for x in others if abs((P(x["ts"]) - ts).total_seconds()) <= 7 * 86400]
+        shared = (not ring) and named_device and n_cards_all <= 10 and len({x["customer_id"] for x in near_in_time}) >= 2
         if ring or shared or ((fraud_links or inv_links) and named_device and concentration >= 0.2):
             members = sorted(other_cards)
             strength = (8.0 + 2.0 * min(len(other_custs), 10)) if ring else 4.0 + 1.5 * len(other_custs)

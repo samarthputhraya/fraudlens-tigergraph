@@ -1,0 +1,127 @@
+{
+  "case_id": "HHG-015",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3464869)",
+        "entity_ids": [
+          "3464869"
+        ]
+      },
+      {
+        "claim": "$599.94 is above every earlier purchase on this card (previous maximum $550.03)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C03042-K1, before_ts=2016-11-17 14:03:36, recent_days=30)",
+        "entity_ids": [
+          "3464869"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1313; latest note: \"Case CC-1313: model scored a $100.08 transaction at 0.87. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C03042-K1)",
+        "entity_ids": [
+          "CC-1313"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1313 (cleared, none); CC-0615 (confirmed_fraud, card_not_present_new_device); CC-3886 (confirmed_fraud, card_not_present_new_device); CC-1182 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050'], cards=['C03042-K1'])",
+        "entity_ids": [
+          "CC-1313",
+          "CC-0615",
+          "CC-3886",
+          "CC-1182",
+          "CC-0681",
+          "CC-3107"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed the purchase was made from their own new device",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3464869"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-1313",
+      "CC-0615",
+      "CC-3886",
+      "CC-1182",
+      "CC-0681",
+      "CC-3107",
+      "CC-3931",
+      "CC-0587"
+    ],
+    "summary": "Transaction 3464869 for $599.94 was flagged by the real-time model with a risk score of 0.77. The online purchase was slightly above the card's previous maximum of $550.03 and utilized a newly observed Windows 8.1 desktop device linked to an anonymous email domain. Network evidence indicated this device profile had been associated with 8 different cards all-time, raising initial suspicion of card-not-present fraud. However, customer validation was requested, and the cardholder confirmed the purchase was made from their own new device. The bank will allow the transaction and close the case as legitimate.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 9,
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.33 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The initial recommendation sought to verify the transaction with the customer, and upon receiving confirmation that the purchase was legitimate, the final decision was updated to allow the transaction and close the case without restrictions."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed under Section 3a, R9 because the alert was cleared as legitimate activity.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended because the customer positively validated the flagged transaction, confirming it was legitimate.",
+  "tool_calls": 11,
+  "tokens": 10940,
+  "latency_s": 0.2
+}

@@ -50,7 +50,8 @@ def client() -> genai.Client:
     with _lock:
         if _client is None:
             _client = genai.Client(vertexai=True, project=os.environ["GOOGLE_CLOUD_PROJECT"],
-                                   location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
+                                   location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
+                                   http_options=types.HttpOptions(timeout=int(os.getenv("LLM_TIMEOUT_MS", "150000"))))
     return _client
 
 
@@ -70,12 +71,17 @@ def generate(prompt: str, system: str = "", model: str | None = None, json_schem
         if usage_sink is not None:
             usage_sink.append(rec.get("tokens", 0))
         return rec["text"]
-    cfg = types.GenerateContentConfig(temperature=temperature, system_instruction=system or None)
-    if json_schema:
-        cfg.response_mime_type = "application/json"
-        cfg.response_json_schema = json_schema
     last = None
-    for attempt in range(5):
+    for attempt in range(3):
+        if attempt == 2 and model != FLASH:
+            model = FLASH  # degrade gracefully to the fast model on repeated failures
+        cfg = types.GenerateContentConfig(
+            temperature=temperature, system_instruction=system or None,
+            thinking_config=types.ThinkingConfig(thinking_level="low" if model == FLASH else "medium"),
+            http_options=types.HttpOptions(timeout=60000 if model == FLASH else 150000))
+        if json_schema:
+            cfg.response_mime_type = "application/json"
+            cfg.response_json_schema = json_schema
         try:
             resp = client().models.generate_content(model=model, contents=prompt, config=cfg)
             text = resp.text or ""

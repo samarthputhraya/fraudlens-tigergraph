@@ -1,0 +1,42 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FraudLens architecture</title>
+<style>
+  body{margin:0;background:#0b0f17;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#e5e7eb}
+  .wrap{width:1600px;padding:36px 40px}
+  h1{font-size:30px;margin:0 0 4px;font-weight:700} h1 span{color:#F58025}
+  p{margin:0 0 18px;color:#9ca3af;font-size:16px}
+</style></head>
+<body><div class="wrap">
+<h1>FraudLens <span>·</span> agentic fraud investigation on TigerGraph</h1>
+<p>The model predicts. TigerGraph proves. — LLMs reason and write; code owns numbers, IDs, policy and routes; only the case writer writes to the graph.</p>
+<pre class="mermaid">
+%%{init: {'theme':'dark','themeVariables':{'fontSize':'17px','primaryColor':'#111827','primaryBorderColor':'#F58025','lineColor':'#9ca3af','primaryTextColor':'#e5e7eb'}}}%%
+flowchart LR
+  T["Trigger<br/>risk score · customer report<br/>analyst request · autonomous monitor"] --> L["Lead Investigator<br/>Gemini 3.1 Pro<br/>hypotheses + tool choice"]
+  subgraph TEAM["Specialist agents (parallel, narrow tool scopes)"]
+    A1["Transaction<br/>velocity · recurrence<br/>card testing · structuring"]
+    A2["Identity & Device<br/>new device · proxy<br/>resolved Account lineage"]
+    A3["Network & Ring<br/>other cards on the device<br/>region clusters · rings"]
+    A4["Precedent<br/>case memory · policy<br/>FinCEN guidance"]
+  end
+  L --> TEAM
+  TEAM -->|"tigergraph__run_installed_query<br/>read-only allowlist"| MCP[["TigerGraph MCP"]]
+  MCP --> TG[("TigerGraph Savanna<br/>Fraud graph · 17 GSQL queries<br/>TigerVector · GDBMS_ALGO WCC")]
+  TEAM --> D["Detectors<br/>typed findings + LR<br/>+ replayable query ref"]
+  D --> LED["Calibrated log-odds ledger<br/>fitted on 14k fraud / 402k background"]
+  LED --> P["Policy engine (code)<br/>R1–R10 · §3a case vs SAR · §6 stop<br/>routes auto / L1 / L2"]
+  P -->|"VERIFY / STEP_UP"| C["Evidence request<br/>simulated reply, assumption stated"]
+  C -->|"confirm · deny · no reply"| P
+  P --> RV["Compliance Reviewer<br/>red-team vs policy"]
+  RV --> W["Writer<br/>summary · FinCEN-style SAR"]
+  W --> V["Validator<br/>schema · IDs exist · policy lint"]
+  V --> CW["Case writer<br/>only write path"] -->|"InvestigationCase · ActionRecord<br/>EvidenceRequest + edges"| TG
+  V --> UI["Command Center UI<br/>live SSE · re-prove · approval inbox"]
+  UI -->|"L1 / L2 approvals"| CW
+</pre>
+</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
+</script>
+</body></html>

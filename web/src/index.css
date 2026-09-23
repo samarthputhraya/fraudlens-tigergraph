@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-ink-900 font-sans text-ink-100 antialiased;
+    /* Inter's single-storey a, open digits and tabular-friendly forms give the UI its own voice */
+    font-feature-settings: "cv11", "ss01", "ss03", "cv05";
+    font-size: 14px;
+  }
+  .font-mono {
+    font-feature-settings: "zero", "calt" 0;
+  }
+  ::selection {
+    background: rgba(245, 128, 37, 0.35);
+  }
+  *:focus-visible {
+    outline: 2px solid #f58025;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #2b3544 transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: #2b3544;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .canvas-grid {
+    background-color: #080b0f;
+    background-image:
+      radial-gradient(ellipse 60% 55% at 50% 50%, rgba(245, 128, 37, 0.07), transparent 70%),
+      radial-gradient(circle at 1px 1px, rgba(150, 161, 179, 0.13) 1px, transparent 0);
+    background-size: 100% 100%, 22px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------- Print: only the SAR filing ---------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .sar-doc,
+  .sar-doc * {
+    visibility: visible;
+  }
+  .sar-doc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

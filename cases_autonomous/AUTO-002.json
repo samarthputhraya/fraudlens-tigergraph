@@ -1,0 +1,144 @@
+{
+  "row": {
+    "case_id": "AUTO-002",
+    "opened_at": "2016-12-03 21:30:00",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: 4 online purchases just under $500 within an hour (total $1,880.16) on card C06881-K1. Investigate transaction 3511062 and related activity.",
+    "flagged_txn_id": "3511062",
+    "card_id": "C06881-K1",
+    "customer_id": "C06881",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "structuring",
+    "card_id": "C06881-K1",
+    "customer_id": "C06881",
+    "flagged": "3511062",
+    "ts": "2016-12-03 20:30:00",
+    "txns": [
+      "3510950",
+      "3510982",
+      "3511041",
+      "3511062"
+    ],
+    "amount": 1880.16
+  },
+  "answer": {
+    "case_id": "AUTO-002",
+    "case": {
+      "status": "escalated",
+      "verdict": "fraud",
+      "fraud_probability": 0.97,
+      "pattern": "undocumented",
+      "pattern_description": "Sub-threshold structuring: 4 online purchases on one card within an hour, each priced just under a $500 authorisation threshold, apparently to avoid step-up checks on larger amounts. It matches none of the five known patterns; the agent found it by scanning the card's transaction window for clustered same-band purchases and matched it to earlier confirmed cases with the same signature.",
+      "affected_txn_ids": [
+        "3510950",
+        "3510982",
+        "3511041",
+        "3511062"
+      ],
+      "first_suspicious_txn_id": "3510950",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 1880.16,
+      "evidence": [
+        {
+          "claim": "4 online purchases within 30 minutes, each just under $500 ($462.13, $480.53, $464.58, $472.92; total $1,880.16): amounts appear chosen to stay under a $500 authorisation threshold",
+          "source": "graph",
+          "ref": "query:card_window(card=C06881-K1, start_ts=2016-11-19 20:30:00, end_ts=2016-12-03 21:30:00)",
+          "entity_ids": [
+            "3510950",
+            "3510982",
+            "3511041",
+            "3511062"
+          ]
+        },
+        {
+          "claim": "The device profile (iOS Device | iOS 11.2.2 | mobile safari 11.0 | 2208x1242) was already used 4 times on this card before the alert",
+          "source": "graph",
+          "ref": "query:card_profile(card=C06881-K1, before_ts=2016-12-03 20:30:00, recent_days=30)",
+          "entity_ids": [
+            "3511062"
+          ]
+        },
+        {
+          "claim": "Fraud Policy rules applied to this case: R9 (retrieved from the policy knowledge graph via GraphRAG)",
+          "source": "document",
+          "ref": "document:Fraud Policy v1.0 section 3 R9",
+          "entity_ids": []
+        }
+      ],
+      "similar_prior_cases": [],
+      "summary": "Analyst request on 2016-12-03: $472.92 online transaction 3511062 on card C06881-K1. Verdict: fraud (probability 0.97), pattern undocumented. 4 online purchases within 30 minutes, each just under $500 ($462.13, $480.53, $464.58, $472.92. The device profile (iOS Device | iOS 11.2.2 | mobile safari 11.0 | 2208x1242) was already used 4 times on this card before the alert. Recommended: BLOCK_CARD, CREATE_CASE, FILE_REPORT, ESCALATE_TO_ANALYST.",
+      "written_to_graph": false,
+      "graph_case_id": ""
+    },
+    "evidence_requests": [],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $1,880.16 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $1,880.16 exceeds $1,000; the pattern is coordinated and undocumented (R9)"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $1,880.16 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $1,880.16 exceeds $1,000; the pattern is coordinated and undocumented (R9)"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "what_changed": "nothing"
+    },
+    "sar": {
+      "file": true,
+      "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $1,880.16 exceeds $1,000; the pattern is coordinated and undocumented (R9).",
+      "narrative": "",
+      "subjects": [
+        "C06881",
+        "C06881-K1"
+      ],
+      "total_amount_usd": 1880.16,
+      "activity_dates": [
+        "2016-12-03",
+        "2016-12-03"
+      ]
+    },
+    "stop_reason": "The evidence met the policy's section 6 threshold for a defensible decision; further queries would not change the actions.",
+    "tool_calls": 9,
+    "tokens": 0,
+    "latency_s": 0.6
+  }
+}

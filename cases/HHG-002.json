@@ -1,0 +1,110 @@
+{
+  "case_id": "HHG-002",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "$292.36 is above every earlier purchase on this card (previous maximum $121.32)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C11891-K1, before_ts=2016-11-22 17:27:07, recent_days=30)",
+        "entity_ids": [
+          "3478782"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4160 (confirmed_fraud, card_not_present_fraud); CC-2323 (cleared, none); CC-2742 (cleared, none); CC-2285 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C11891-K1'])",
+        "entity_ids": [
+          "CC-4160",
+          "CC-2323",
+          "CC-2742",
+          "CC-2285",
+          "CC-5236",
+          "CC-5324"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed the purchase; amount unusual but consistent with their stated intent",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3478782"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-4160",
+      "CC-2323",
+      "CC-2742",
+      "CC-2285",
+      "CC-5236",
+      "CC-5324",
+      "CC-0138"
+    ],
+    "summary": "Transaction 3478782 for $292.36 was flagged on card C11891-K1 due to a real-time model risk score of 0.79. The transaction amount was unusually high compared to the card's previous maximum purchase of $121.32. The bank requested customer validation to verify the activity. The cardholder confirmed the purchase was intentional. As a result, the transaction is cleared as legitimate and the bank will allow the transaction.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 8,
+      "assumed_response": "Cardholder confirmed the purchase; amount unusual but consistent with their stated intent"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.30 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed the purchase; amount unusual but consistent with their stated intent; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The final recommendation differs from the initial one because the bank received customer confirmation that the transaction was legitimate, shifting the action from verification to allowing the transaction."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed under Section 3a because the alert was cleared as legitimate activity with no fraud pattern identified.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended here because the customer confirmed the transaction, clearing the alert as a false alarm.",
+  "tool_calls": 10,
+  "tokens": 9615,
+  "latency_s": 0.1
+}

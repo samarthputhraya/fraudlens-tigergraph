@@ -1,0 +1,133 @@
+{
+  "case_id": "HHG-006",
+  "case": {
+    "status": "escalated",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "undocumented",
+    "pattern_description": "Sub-threshold structuring: 4 online purchases on one card within an hour, each priced just under a $500 authorisation threshold, apparently to avoid step-up checks on larger amounts. It matches none of the five known patterns; the agent found it by scanning the card's transaction window for clustered same-band purchases and matched it to earlier confirmed cases with the same signature.",
+    "affected_txn_ids": [
+      "3476602",
+      "3476633",
+      "3476665",
+      "3476682"
+    ],
+    "first_suspicious_txn_id": "3476602",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 1906.07,
+    "evidence": [
+      {
+        "claim": "4 online purchases within 30 minutes, each just under $500 ($478.95, $456.96, $488.04, $482.12; total $1,906.07): amounts appear chosen to stay under a $500 authorisation threshold",
+        "source": "graph",
+        "ref": "query:card_window(card=C07297-K1, start_ts=2016-11-07 20:30:00, end_ts=2016-11-22 02:30:00)",
+        "entity_ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ]
+      },
+      {
+        "claim": "This card is used almost only in person (5 of 199 earlier transactions online); this purchase is online",
+        "source": "graph",
+        "ref": "query:card_profile(card=C07297-K1, before_ts=2016-11-21 20:30:00, recent_days=30)",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "The device profile (Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080) was already used 2 times on this card before the alert",
+        "source": "graph",
+        "ref": "query:card_profile(card=C07297-K1, before_ts=2016-11-21 20:30:00, recent_days=30)",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R2, R9 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R2/R9",
+        "entity_ids": []
+      },
+      {
+        "claim": "The customer reported that they never made the $482.12 purchase (3476682); under R2 this is a denial",
+        "source": "customer",
+        "ref": "trigger:HHG-006",
+        "entity_ids": [
+          "3476682"
+        ]
+      }
+    ],
+    "similar_prior_cases": [],
+    "summary": "Customer C07297 reported an unauthorized online transaction of $482.12 on card C07297-K1. Investigation revealed a rapid burst of four online transactions totaling $1,906.07 within 30 minutes on November 21, 2016, with each transaction amount just under $500. This card is historically used almost exclusively in person, with 194 of 199 earlier transactions being in-person. The bank has confirmed the activity as fraud, blocked the card, and will monitor connected cards.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $1,906.07 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $1,906.07 exceeds $1,000; the pattern is coordinated and undocumented (R9)"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $1,906.07 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $1,906.07 exceeds $1,000; the pattern is coordinated and undocumented (R9)"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "A Suspicious Activity Report is filed under Policy Section 3a and Rule R6 because the total exposure of $1,906.07 exceeds the $1,000 filing threshold and involves a coordinated pattern with a shared origin across multiple cards.",
+    "narrative": "This report concerns suspected unauthorized card activity on card C07297-K1 held by customer C07297. Between 2016-11-21 and 2016-11-21, 4 transaction(s) totaling $1,906.07 were identified as part of one fraud episode: 3476602 on 2016-11-21 20:00 for $478.95 (online); 3476633 on 2016-11-21 20:10 for $456.96 (online); 3476665 on 2016-11-21 20:24 for $488.04 (online); 3476682 on 2016-11-21 20:30 for $482.12 (online). The activity was classified as undocumented. 4 online purchases within 30 minutes, each just under $500 ($478.95, $456.96, $488.04, $482.12. This card is used almost only in person (5 of 199 earlier transactions online). The cardholder denied making the transactions. The bank recommends BLOCK_CARD, CREATE_CASE, FILE_REPORT, ESCALATE_TO_ANALYST; the card block and this filing await human approval under the bank's routing policy.",
+    "subjects": [
+      "C07297",
+      "C07297-K1"
+    ],
+    "total_amount_usd": 1906.07,
+    "activity_dates": [
+      "2016-11-21",
+      "2016-11-21"
+    ]
+  },
+  "stop_reason": "Per Policy Section 6, the investigation was concluded because the fraud probability of 0.97 is above the 0.85 threshold and the customer's denial of the transaction settles the decision.",
+  "tool_calls": 11,
+  "tokens": 14653,
+  "latency_s": 0.2
+}

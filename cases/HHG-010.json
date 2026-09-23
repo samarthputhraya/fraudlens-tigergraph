@@ -1,0 +1,137 @@
+{
+  "case_id": "HHG-010",
+  "case": {
+    "status": "escalated",
+    "verdict": "uncertain",
+    "fraud_probability": 0.56,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3506725"
+    ],
+    "first_suspicious_txn_id": "3506725",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 1000.03,
+    "evidence": [
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Windows | Windows 10 | edge 16.0 | 1366x768)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3506725)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "$1,000.03 is above every earlier purchase on this card (previous maximum $670.04)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C10434-K1, before_ts=2016-12-02 15:18:27, recent_days=30)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0873; latest note: \"Case CC-0873: model scored a $50.05 transaction at 0.93. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C10434-K1)",
+        "entity_ids": [
+          "CC-0873"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3954 (confirmed_fraud, card_not_present_new_device); CC-2720 (confirmed_fraud, card_not_present_new_device); CC-4362 (confirmed_fraud, card_not_present_new_device); CC-4333 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | edge 16.0 | 1366x768'], cards=['C10434-K1'])",
+        "entity_ids": [
+          "CC-3954",
+          "CC-2720",
+          "CC-4362",
+          "CC-4333",
+          "CC-4654",
+          "CC-0873"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R4, R8 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R4/R8",
+        "entity_ids": []
+      },
+      {
+        "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3506725"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-3954",
+      "CC-2720",
+      "CC-4362",
+      "CC-4333",
+      "CC-4654",
+      "CC-0873"
+    ],
+    "summary": "Transaction 3506725 for $1,000.03 was flagged online with a score of 0.90. The purchase originated from a new Windows device and exceeded the card's previous maximum of $670.04. A step-up authentication request was sent to the cardholder, but no reply was received within 24 hours. The verdict remains uncertain. The bank will decline the transaction, escalate the case to an analyst, monitor the card, and file a report due to network anomalies.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "step_up_auth",
+      "asked_after_step": 9,
+      "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.56)"
+      },
+      {
+        "action": "STEP_UP_AUTH",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.56 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R4: decline the pending authorisation"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R4 / R8: verdict still uncertain and exposure $1,000.03 exceeds $500"
+      }
+    ],
+    "what_changed": "The final recommendation remains uncertain because the cardholder failed to respond to the step-up authentication request within 24 hours."
+  },
+  "sar": {
+    "file": false,
+    "reason": "A Suspicious Activity Report is filed under rule R6 because the device profile is linked to 208 other cards.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation was escalated because the verdict is uncertain and the exposure of $1,000.03 exceeds the $500 threshold.",
+  "tool_calls": 11,
+  "tokens": 9219,
+  "latency_s": 77.2
+}

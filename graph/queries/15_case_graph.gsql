@@ -1,11 +1,20 @@
 CREATE OR REPLACE QUERY case_graph(VERTEX<InvestigationCase> ic) FOR GRAPH Fraud {
-  /* Neighbourhood of an investigation case for the analyst UI: transactions, cards, devices, cited cases,
+  /* Neighbourhood of an investigation case for the analyst UI: transactions, cards, devices, cited closed cases,
      rules, patterns, evidence requests and action records. */
-  SetAccum<EDGE> @@edges;
   S = {ic};
-  N = SELECT n FROM S:s -((CASE_TXN|CASE_CARD|CASE_DEVICE|CASE_CITES|CASE_CITES_INV|CASE_RULE|CASE_PATTERN|CASE_REQUEST|CASE_ACTION):e)-> :n
-      ACCUM @@edges += e;
+  T = SELECT t FROM S:s -(CASE_TXN:e)-> Transaction:t;
+  C = SELECT c FROM S:s -(CASE_CARD:e)-> Card:c;
+  D = SELECT d FROM S:s -(CASE_DEVICE:e)-> DeviceProfile:d;
+  K = SELECT k FROM S:s -(CASE_CITES:e)-> ClosedCase:k;
+  R = SELECT r FROM S:s -(CASE_RULE:e)-> PolicyRule:r;
+  A = SELECT a FROM S:s -(CASE_ACTION:e)-> ActionRecord:a;
+  Q = SELECT q FROM S:s -(CASE_REQUEST:e)-> EvidenceRequest:q;
   PRINT S AS case_vertex;
-  PRINT N AS neighbors;
-  PRINT @@edges AS edges;
+  PRINT T[T.id, T.ts, T.amt, T.channel, T.card_id] AS txns;
+  PRINT C[C.id, C.customer_id] AS cards;
+  PRINT D[D.id] AS devices;
+  PRINT K[K.id, K.outcome, K.pattern] AS cited_cases;
+  PRINT R[R.id, R.title] AS rules;
+  PRINT A[A.id, A.action, A.route, A.stage, A.status] AS actions;
+  PRINT Q[Q.id, Q.req_type, Q.assumed_response] AS requests;
 }

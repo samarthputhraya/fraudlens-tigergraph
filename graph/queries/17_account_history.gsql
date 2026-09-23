@@ -4,12 +4,13 @@ CREATE OR REPLACE QUERY account_history(VERTEX<Transaction> txn, INT lookback_da
      transactions belong to. Prior confirmed fraud on the same account is the strongest single fraud signal. */
   SetAccum<STRING> @closed_cases, @outcomes, @patterns, @inv_cases;
   SumAccum<STRING> @device, @is_new;
-  DATETIME t0, since;
+  MaxAccum<DATETIME> @@t0;
+  DATETIME since;
   T0 = {txn};
-  S = SELECT t FROM T0:t POST-ACCUM t0 = t.ts;
-  since = datetime_sub(t0, INTERVAL lookback_days DAY);
+  S = SELECT t FROM T0:t ACCUM @@t0 += t.ts;
+  since = datetime_sub(@@t0, INTERVAL lookback_days DAY);
   A = SELECT a FROM T0:t -(ON_ACCOUNT:e)-> Account:a;
-  H = SELECT t FROM A:a -(rev_ON_ACCOUNT:e)-> Transaction:t WHERE t.ts < t0 AND t.ts >= since;
+  H = SELECT t FROM A:a -(rev_ON_ACCOUNT:e)-> Transaction:t WHERE t.ts < @@t0 AND t.ts >= since;
   X = SELECT t FROM H:t -(rev_INVOLVES:e)-> ClosedCase:cc
       ACCUM t.@closed_cases += cc.id, t.@outcomes += cc.outcome, t.@patterns += cc.pattern;
   Y = SELECT t FROM H:t -(rev_CASE_TXN:e)-> InvestigationCase:ic ACCUM t.@inv_cases += ic.case_ref;

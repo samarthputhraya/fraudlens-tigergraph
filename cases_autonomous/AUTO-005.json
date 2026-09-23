@@ -1,0 +1,226 @@
+{
+  "row": {
+    "case_id": "AUTO-005",
+    "opened_at": "2016-12-14 03:57:41",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: 15 online authorisations under $5 within an hour on card C06744-K2. Investigate transaction 3541294 and related activity.",
+    "flagged_txn_id": "3541294",
+    "card_id": "C06744-K2",
+    "customer_id": "C06744",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "card_testing",
+    "card_id": "C06744-K2",
+    "customer_id": "C06744",
+    "flagged": "3541294",
+    "ts": "2016-12-14 02:57:41",
+    "txns": [
+      "3541189",
+      "3541190",
+      "3541212",
+      "3541214",
+      "3541216",
+      "3541218",
+      "3541225",
+      "3541236",
+      "3541250",
+      "3541267",
+      "3541270",
+      "3541281",
+      "3541282",
+      "3541291",
+      "3541294"
+    ],
+    "amount": 13.11
+  },
+  "answer": {
+    "case_id": "AUTO-005",
+    "case": {
+      "status": "open",
+      "verdict": "uncertain",
+      "fraud_probability": 0.53,
+      "pattern": "card_not_present_fraud",
+      "pattern_description": "",
+      "affected_txn_ids": [
+        "3535128",
+        "3535146",
+        "3536187",
+        "3540328",
+        "3540346",
+        "3540354",
+        "3540359",
+        "3540442",
+        "3540450",
+        "3540468",
+        "3540490",
+        "3540491",
+        "3540495",
+        "3540503",
+        "3540522",
+        "3540539",
+        "3540550",
+        "3540572",
+        "3540743",
+        "3540780",
+        "3540787",
+        "3540789",
+        "3540798",
+        "3540806",
+        "3540810",
+        "3540812",
+        "3540818",
+        "3540823",
+        "3540828",
+        "3540831",
+        "3541189",
+        "3541190",
+        "3541212",
+        "3541214",
+        "3541216",
+        "3541218",
+        "3541225",
+        "3541236",
+        "3541250",
+        "3541267",
+        "3541270",
+        "3541281",
+        "3541282",
+        "3541291",
+        "3541294"
+      ],
+      "first_suspicious_txn_id": "3535128",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 62.85,
+      "evidence": [
+        {
+          "claim": "Another transaction on the same resolved account 0.6 hours earlier (3541216, $0.79) was also scored 0.76 by the model",
+          "source": "graph",
+          "ref": "query:account_history(txn=3541294, lookback_days=200)",
+          "entity_ids": [
+            "3541216"
+          ]
+        },
+        {
+          "claim": "The resolved account (C06744-K2||163) has 44 earlier transactions and none were ever part of a fraud case",
+          "source": "graph",
+          "ref": "query:account_history(txn=3541294, lookback_days=200)",
+          "entity_ids": [
+            "3541281",
+            "3541282",
+            "3541291"
+          ]
+        },
+        {
+          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-3416; latest note: \"Case CC-3416: model scored a $36.94 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+          "source": "graph",
+          "ref": "query:prior_cases(card=C06744-K2)",
+          "entity_ids": [
+            "CC-3416"
+          ]
+        },
+        {
+          "claim": "The device profile (Windows |  | opera 53.0 | ) was already used 14 times on this card before the alert",
+          "source": "graph",
+          "ref": "query:card_profile(card=C06744-K2, before_ts=2016-12-14 02:57:41, recent_days=30)",
+          "entity_ids": [
+            "3541294"
+          ]
+        },
+        {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3984 (confirmed_fraud, card_not_present_fraud); CC-3871 (confirmed_fraud, card_not_present_fraud); CC-2573 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud)",
+          "source": "graph",
+          "ref": "query:similar_cases(k=8, pattern=, devices=['Windows |  | opera 53.0 | '], cards=['C06744-K2'])",
+          "entity_ids": [
+            "CC-3984",
+            "CC-3871",
+            "CC-2573",
+            "CC-2655",
+            "CC-2593",
+            "CC-0583"
+          ]
+        },
+        {
+          "claim": "Fraud Policy rules applied to this case: R1, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+          "source": "document",
+          "ref": "document:Fraud Policy v1.0 section 3 R1/R4",
+          "entity_ids": []
+        },
+        {
+          "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+          "source": "customer",
+          "ref": "evidence_request:1",
+          "entity_ids": [
+            "3541294"
+          ]
+        }
+      ],
+      "similar_prior_cases": [
+        "CC-3984",
+        "CC-3871",
+        "CC-2573",
+        "CC-2655",
+        "CC-2593",
+        "CC-0583",
+        "CC-0688",
+        "CC-3416"
+      ],
+      "summary": "Analyst request on 2016-12-14: $0.92 online transaction 3541294 on card C06744-K2. Verdict: uncertain (probability 0.53), pattern card_not_present_fraud. Another transaction on the same resolved account 0.6 hours earlier (3541216, $0.79) was also scored 0.76 by the model. The resolved account (C06744-K2||163) has 44 earlier transactions and none were ever part of a fraud case. Recommended: MONITOR_CARD, DECLINE_TRANSACTION.",
+      "written_to_graph": false,
+      "graph_case_id": ""
+    },
+    "evidence_requests": [
+      {
+        "type": "step_up_auth",
+        "asked_after_step": 7,
+        "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+      }
+    ],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.53)"
+        },
+        {
+          "action": "STEP_UP_AUTH",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.53 < 0.70); verify before any block"
+        }
+      ],
+      "final": [
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R4: decline the pending authorisation"
+        }
+      ],
+      "what_changed": ""
+    },
+    "sar": {
+      "file": false,
+      "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
+      "narrative": "",
+      "subjects": [],
+      "total_amount_usd": 0,
+      "activity_dates": []
+    },
+    "stop_reason": "Verification did not settle the question; the case is handed to an analyst rather than guessed (R8, section 6).",
+    "tool_calls": 9,
+    "tokens": 0,
+    "latency_s": 2.0
+  }
+}

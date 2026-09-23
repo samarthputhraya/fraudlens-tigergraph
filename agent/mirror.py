@@ -35,6 +35,23 @@ class MirrorGraph:
         self._closed_emb = None
         self._know = None
         self._acct_ready = False
+        # temporal backtest controls: only closed cases opened before `cutoff` exist, and `exclude` are masked
+        self.cutoff: str | None = None
+        self.exclude: set = set()
+
+    def _visible(self, case_id: str, opened_at: str | None) -> bool:
+        if case_id in self.exclude:
+            return False
+        return self.cutoff is None or (opened_at or "") < self.cutoff
+
+    def _opened(self) -> dict:
+        if not hasattr(self, "_opened_map"):
+            self._opened_map = {r["case_id"]: r["opened_at"] for r in self._rows("SELECT case_id, opened_at FROM closed")}
+        return self._opened_map
+
+    def _filter_cases(self, ids: list) -> list:
+        op = self._opened()
+        return [c for c in (ids or []) if self._visible(c, op.get(c))]
 
     def _log(self, query: str, params: dict, rows: int, t0: float, agent: str | None = None) -> None:
         import time
@@ -127,7 +144,7 @@ class MirrorGraph:
                                    WHERE tid IN (SELECT unnest(?)) GROUP BY tid""", [ids]):
                 cases[r["tid"]] = r["cs"]
         for r in rows:
-            r["closed_cases"] = cases.get(r["id"], [])
+            r["closed_cases"] = self._filter_cases(cases.get(r["id"], []))
             r["inv_cases"] = []
         n_all = self._rows("""SELECT count(DISTINCT t.card_id) n FROM ident i JOIN txn t ON t.TransactionID = i.TransactionID
                               WHERE i.device_profile = ?""", [device_id])[0]["n"]
@@ -160,6 +177,8 @@ class MirrorGraph:
             CAST(n_txns AS INT) n_txns, actions_taken, report_filed = 'Yes' report_filed, analyst_notes FROM closed WHERE customer_id = ?""", [cust])
         cx = self._rows("""SELECT case_id id, card_id, opened_at, outcome, pattern, analyst_notes FROM closed
             WHERE list_contains(string_split(coalesce(connected_card_ids,''), '|'), ?)""", [card_id])
+        cc = [c for c in cc if self._visible(c["id"], c["opened_at"])]
+        cx = [c for c in cx if self._visible(c["id"], c["opened_at"])]
         self._log("prior_cases", {"card": card_id}, len(cc) + len(cx), t0, agent)
         return {"customer_cards": cards, "closed_cases": cc, "connected_cases": cx, "investigations": []}
 
@@ -190,6 +209,12 @@ class MirrorGraph:
             LEFT JOIN case_txn ct ON ct.tid = t.TransactionID
             WHERE a.account_id = ? AND t.ts_dt < CAST(? AS TIMESTAMP) AND t.ts_dt >= CAST(? AS TIMESTAMP) ORDER BY t.ts_dt""",
                           [aid, ts, since])
+        op = self._opened()
+        for r in rows:
+            keep = [i for i, c in enumerate(r["closed_cases"] or []) if self._visible(c, op.get(c))]
+            r["outcomes"] = [r["outcomes"][i] for i in keep]
+            r["patterns"] = [r["patterns"][i] for i in keep]
+            r["closed_cases"] = [r["closed_cases"][i] for i in keep]
         n = self._rows("SELECT count(*) n FROM acct WHERE account_id = ?", [aid])[0]["n"]
         self._log("account_history", {"txn": txn_id, "lookback_days": lookback_days}, len(rows), t0, agent)
         return {"account": {"id": aid, "n_txn": n}, "history": rows}
@@ -211,6 +236,8 @@ class MirrorGraph:
         hits = []
         for i in order:
             meta = self._closed_meta[self._closed_ids[i]]
+            if not self._visible(meta["id"], meta["opened_at"]):
+                continue
             if pattern and meta["pattern"] != pattern:
                 continue
             hits.append({**meta, "distance": float(1 - sims[i])})
@@ -226,7 +253,8 @@ class MirrorGraph:
                 graph_ids.add(r["case_id"])
         ghits = []
         if graph_ids:
-            idx = [self._closed_ids.index(g) for g in graph_ids if g in self._closed_meta]
+            idx = [self._closed_ids.index(g) for g in graph_ids if g in self._closed_meta
+                   and self._visible(g, self._closed_meta[g]["opened_at"])]
             for i in sorted(idx, key=lambda j: -sims[j])[:k]:
                 ghits.append({**self._closed_meta[self._closed_ids[i]], "distance": float(1 - sims[i])})
         self._log("similar_cases", {"k": k, "pattern": pattern, "devices": devices, "cards": cards}, len(hits) + len(ghits), t0, agent)
