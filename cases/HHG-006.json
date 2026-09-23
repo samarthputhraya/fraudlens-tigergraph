@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "Sub-threshold structuring: 4 online purchases on one card within an hour, each priced just under a $500 authorisation threshold, apparently to avoid step-up checks on larger amounts. It matches none of the five known patterns; the agent found it by scanning the card's transaction window for clustered same-band purchases and matched it to earlier confirmed cases with the same signature.",
+    "pattern_description": "The undocumented pattern involves rapid, successive online transactions deliberately priced just under a specific dollar amount to evade standard authorization thresholds. It affects customer C07297, whose card was exploited for four such purchases just under $500 within a 30-minute window. This pattern was identified by analyzing the transaction amounts and timing in the graph evidence, revealing a coordinated effort to maximize extraction before detection.",
     "affected_txn_ids": [
       "3476602",
       "3476633",
@@ -60,9 +60,9 @@
       }
     ],
     "similar_prior_cases": [],
-    "summary": "Customer C07297 reported an unauthorized online transaction of $482.12 on card C07297-K1. Investigation revealed a rapid burst of four online transactions totaling $1,906.07 within 30 minutes on November 21, 2016, with each transaction amount just under $500. This card is historically used almost exclusively in person, with 194 of 199 earlier transactions being in-person. The bank has confirmed the activity as fraud, blocked the card, and will monitor connected cards.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "The investigation was triggered when customer C07297 reported an unrecognized online purchase of $482.12 on card C07297-K1. Graph evidence revealed a burst of four online transactions within 30 minutes totaling $1,906.07, all priced just under $500 to potentially evade authorization thresholds, which sharply contrasts with the customer's history of primarily in-person purchases. The policy engine reached a final verdict of fraud with a 0.97 probability and a status of escalated. The final actions taken were BLOCK_CARD, CREATE_CASE, FILE_REPORT, and ESCALATE_TO_ANALYST, and a suspicious activity report was filed.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-006"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -114,8 +114,8 @@
   },
   "sar": {
     "file": true,
-    "reason": "A Suspicious Activity Report is filed under Policy Section 3a and Rule R6 because the total exposure of $1,906.07 exceeds the $1,000 filing threshold and involves a coordinated pattern with a shared origin across multiple cards.",
-    "narrative": "This report concerns suspected unauthorized card activity on card C07297-K1 held by customer C07297. Between 2016-11-21 and 2016-11-21, 4 transaction(s) totaling $1,906.07 were identified as part of one fraud episode: 3476602 on 2016-11-21 20:00 for $478.95 (online); 3476633 on 2016-11-21 20:10 for $456.96 (online); 3476665 on 2016-11-21 20:24 for $488.04 (online); 3476682 on 2016-11-21 20:30 for $482.12 (online). The activity was classified as undocumented. 4 online purchases within 30 minutes, each just under $500 ($478.95, $456.96, $488.04, $482.12. This card is used almost only in person (5 of 199 earlier transactions online). The cardholder denied making the transactions. The bank recommends BLOCK_CARD, CREATE_CASE, FILE_REPORT, ESCALATE_TO_ANALYST; the card block and this filing await human approval under the bank's routing policy.",
+    "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $1,906.07 exceeds $1,000; the pattern is coordinated and undocumented (R9).",
+    "narrative": "This Suspicious Activity Report details confirmed fraudulent activity involving customer C07297 and their card C07297-K1. On November 21, 2016, between 20:00:00 and 20:30:00, four unauthorized online transactions were conducted using the compromised card. The transactions occurred across two billing regions, noted as addresses 264.0 and 476.0, and utilized multiple devices, including an iOS device and a Windows 7 desktop using Internet Explorer. The customer explicitly denied making the final $482.12 purchase, prompting the investigation. The activity is highly suspicious because the cardholder historically makes almost exclusively in-person purchases, with only 5 of 199 prior transactions occurring online. Furthermore, the four transactions were for $478.95, $456.96, $488.04, and $482.12, suggesting a deliberate attempt to stay just under a $500 authorization threshold. The total financial exposure for this incident is $1,906.07. The bank has blocked the card, escalated the case to an analyst, and filed this report to document the threshold-evasion pattern.",
     "subjects": [
       "C07297",
       "C07297-K1"
@@ -126,8 +126,8 @@
       "2016-11-21"
     ]
   },
-  "stop_reason": "Per Policy Section 6, the investigation was concluded because the fraud probability of 0.97 is above the 0.85 threshold and the customer's denial of the transaction settles the decision.",
-  "tool_calls": 11,
-  "tokens": 14653,
-  "latency_s": 0.2
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (behaviour) support a defensible decision at probability 0.97; further queries would not change the actions.",
+  "tool_calls": 12,
+  "tokens": 11613,
+  "latency_s": 58.2
 }

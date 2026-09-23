@@ -39,15 +39,14 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3954 (confirmed_fraud, card_not_present_new_device); CC-2720 (confirmed_fraud, card_not_present_new_device); CC-4362 (confirmed_fraud, card_not_present_new_device); CC-4333 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3954 (confirmed_fraud, card_not_present_new_device); CC-4362 (confirmed_fraud, card_not_present_new_device); CC-2720 (confirmed_fraud, card_not_present_new_device); CC-4333 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | edge 16.0 | 1366x768'], cards=['C10434-K1'])",
+        "ref": "query:similar_cases(devices=['Windows | Windows 10 | edge 16.0 | 1366x768'], cards=['C10434-K1'], k=8, pattern=)",
         "entity_ids": [
           "CC-3954",
-          "CC-2720",
           "CC-4362",
+          "CC-2720",
           "CC-4333",
-          "CC-4654",
           "CC-0873"
         ]
       },
@@ -68,15 +67,14 @@
     ],
     "similar_prior_cases": [
       "CC-3954",
-      "CC-2720",
       "CC-4362",
+      "CC-2720",
       "CC-4333",
-      "CC-4654",
       "CC-0873"
     ],
-    "summary": "This case was opened because the real-time model scored online transaction 3506725 for $1,000.03 at 0.90. Graph evidence shows the purchase was made from a new device profile and the amount exceeds the card's previous maximum of $670.04. The cardholder did not reply to a step-up authentication request within 24 hours, leaving the card_not_present_new_device pattern unconfirmed. The final verdict is uncertain with a fraud probability of 0.56. The final actions taken are MONITOR_CARD, DECLINE_TRANSACTION, and ESCALATE_TO_ANALYST.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This case was triggered when the real-time model scored online transaction 3506725 for $1,000.03 at 0.90. Graph evidence shows the purchase came from a new device profile and the amount exceeds the card's previous maximum of $670.04. The cardholder did not reply to a step-up authentication request within 24 hours. Due to the card-not-present new device pattern and lack of response, the verdict remains uncertain. The final actions are to monitor the card, decline the transaction, and escalate the case to an analyst.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-010"
   },
   "evidence_requests": [
     {
@@ -131,7 +129,7 @@
     "activity_dates": []
   },
   "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the case is handed to an analyst (R8).",
-  "tool_calls": 11,
-  "tokens": 9787,
-  "latency_s": 143.2
+  "tool_calls": 12,
+  "tokens": 8871,
+  "latency_s": 268.3
 }

@@ -39,15 +39,15 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3216 (confirmed_fraud, card_not_present_new_device); CC-3560 (confirmed_fraud, card_not_present_new_device); CC-3552 (confirmed_fraud, card_not_present_new_device); CC-0948 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3216 (confirmed_fraud, card_not_present_new_device); CC-3356 (confirmed_fraud, card_not_present_new_device); CC-0948 (confirmed_fraud, card_not_present_new_device); CC-1335 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'])",
+        "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=8, pattern=)",
         "entity_ids": [
           "CC-3216",
-          "CC-3560",
-          "CC-3552",
+          "CC-3356",
           "CC-0948",
-          "CC-2246",
+          "CC-1335",
+          "CC-3552",
           "CC-3353"
         ]
       },
@@ -68,22 +68,22 @@
     ],
     "similar_prior_cases": [
       "CC-3216",
-      "CC-3560",
-      "CC-3552",
+      "CC-3356",
       "CC-0948",
-      "CC-2246",
+      "CC-1335",
+      "CC-3552",
       "CC-3353",
-      "CC-3583",
+      "CC-2246",
       "CC-3761"
     ],
-    "summary": "Transaction 3526826 for $35.66 was flagged by the real-time model with a score of 0.76. The online purchase was initiated from a new device profile (Windows |  | chrome 66.0 | ) on card C07671-K2, which has historically been used almost exclusively in person. The bank requested step-up authentication, but the cardholder did not reply within 24 hours. As a result, the verdict remains uncertain, and the bank will decline the transaction and monitor the card.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "The investigation was triggered when the real-time model scored a $35.66 online transaction (3526826) at 0.76. Evidence shows the purchase came from a new device profile, which is anomalous given the card is almost exclusively used in person. A step-up authentication request was sent, but the cardholder did not reply within 24 hours. Due to the lack of confirmation, the verdict is uncertain with a 51 percent fraud probability for a card-not-present new device pattern. The case remains open, and the final actions are to decline the transaction and monitor the card.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-013"
   },
   "evidence_requests": [
     {
       "type": "step_up_auth",
-      "asked_after_step": 10,
+      "asked_after_step": 9,
       "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
     }
   ],
@@ -117,18 +117,18 @@
         "reason": "R4: decline the pending authorisation"
       }
     ],
-    "what_changed": "The final recommendation includes monitoring the card because the cardholder failed to respond to the step-up authentication request within 24 hours."
+    "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.51; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
   },
   "sar": {
     "file": false,
-    "reason": "A SAR was not filed because the verdict remains uncertain, although compliance review noted that Section 3a requires a SAR when a shared device profile is involved.",
+    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation ended because the 24-hour window for the cardholder to respond to the step-up authentication request expired.",
+  "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
   "tool_calls": 12,
-  "tokens": 8164,
-  "latency_s": 91.9
+  "tokens": 7481,
+  "latency_s": 32.3
 }

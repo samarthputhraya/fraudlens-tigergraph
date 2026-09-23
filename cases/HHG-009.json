@@ -38,9 +38,9 @@
       }
     ],
     "similar_prior_cases": [],
-    "summary": "Customer C08299 disputed an online transaction of $30.02 (ID 3581141), stating they did not make the purchase. While the transaction amount was typical for the card and the device profile had been used five times previously, the customer's direct denial indicates unauthorized use. The activity is classified as card-not-present fraud. Consequently, the bank blocked the card and created a case to record the investigation.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "Customer report on 2016-12-28: $30.02 online transaction 3581141 on card C08299-K1. Verdict: fraud (probability 0.60), pattern card_not_present_fraud. The device profile ( |  |  | ) was already used 5 times on this card before the alert. $30.02 is a typical amount for this card (percentile 30%). Recommended: BLOCK_CARD, CREATE_CASE.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-009"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -72,14 +72,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is required under Section 3a because the total exposure of $30.02 is below the $5,000 threshold.",
+    "reason": "Section 3a: no report required - exposure $30.02 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation was concluded because the customer's direct dispute provided sufficient evidence to block the card and close the case under policy section 6.",
-  "tool_calls": 11,
-  "tokens": 7125,
-  "latency_s": 41.2
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (the pattern detector) support a defensible decision at probability 0.60; further queries would not change the actions.",
+  "tool_calls": 12,
+  "tokens": 6902,
+  "latency_s": 87.8
 }

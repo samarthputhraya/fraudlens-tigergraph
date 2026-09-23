@@ -37,16 +37,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1313 (cleared, none); CC-0615 (confirmed_fraud, card_not_present_new_device); CC-3886 (confirmed_fraud, card_not_present_new_device); CC-1182 (cleared, none)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3886 (confirmed_fraud, card_not_present_new_device); CC-1313 (cleared, none); CC-0615 (confirmed_fraud, card_not_present_new_device); CC-0681 (cleared, none)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050'], cards=['C03042-K1'])",
+        "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050'], cards=['C03042-K1'], k=8, pattern=)",
         "entity_ids": [
+          "CC-3886",
           "CC-1313",
           "CC-0615",
-          "CC-3886",
-          "CC-1182",
           "CC-0681",
-          "CC-3107"
+          "CC-3107",
+          "CC-0587"
         ]
       },
       {
@@ -65,18 +65,18 @@
       }
     ],
     "similar_prior_cases": [
+      "CC-3886",
       "CC-1313",
       "CC-0615",
-      "CC-3886",
-      "CC-1182",
       "CC-0681",
       "CC-3107",
-      "CC-3931",
-      "CC-0587"
+      "CC-0587",
+      "CC-1182",
+      "CC-5008"
     ],
-    "summary": "Transaction 3464869 for $599.94 was flagged by the real-time model with a risk score of 0.77. The online purchase was slightly above the card's previous maximum of $550.03 and utilized a newly observed Windows 8.1 desktop device linked to an anonymous email domain. Network evidence indicated this device profile had been associated with 8 different cards all-time, raising initial suspicion of card-not-present fraud. However, customer validation was requested, and the cardholder confirmed the purchase was made from their own new device. The bank will allow the transaction and close the case as legitimate.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This alert was triggered when the real-time model scored an online transaction of $599.94 at 0.77. The transaction was flagged because it was the highest amount seen on the card and originated from a new device profile. The cardholder was contacted and confirmed the purchase was made from their own new device. The verdict is legitimate, and the final actions are to ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-015"
   },
   "evidence_requests": [
     {
@@ -110,18 +110,18 @@
         "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
       }
     ],
-    "what_changed": "The initial recommendation sought to verify the transaction with the customer, and upon receiving confirmation that the purchase was legitimate, the final decision was updated to allow the transaction and close the case without restrictions."
+    "what_changed": "The assumed customer response (\"Cardholder confirmed the purchase was made from their own new device\") settled the alert: probability fell from 0.33 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is filed under Section 3a, R9 because the alert was cleared as legitimate activity.",
+    "reason": "Section 3a: no report required - the activity is legitimate.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation ended because the customer positively validated the flagged transaction, confirming it was legitimate.",
-  "tool_calls": 11,
-  "tokens": 10940,
-  "latency_s": 0.2
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 12,
+  "tokens": 7997,
+  "latency_s": 163.8
 }

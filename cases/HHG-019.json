@@ -54,12 +54,11 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1263 (confirmed_fraud, card_not_present_new_device); CC-5221 (confirmed_fraud, card_not_present_new_device); CC-2087",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1263 (confirmed_fraud, card_not_present_new_device); CC-2087",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | other | chrome 61.0 | 1280x720'], cards=['C07987-K2', 'C06224-K2', 'C11309-K1'])",
+        "ref": "query:similar_cases(devices=['Windows | other | chrome 61.0 | 1280x720'], cards=['C07987-K2', 'C06224-K2', 'C11309-K1'], k=8, pattern=)",
         "entity_ids": [
           "CC-1263",
-          "CC-5221",
           "CC-2087"
         ]
       },
@@ -80,12 +79,11 @@
     ],
     "similar_prior_cases": [
       "CC-1263",
-      "CC-5221",
       "CC-2087"
     ],
-    "summary": "On 2016-12-01, a $99.92 online transaction on card C07987-K2 was flagged by the real-time model. The transaction originated from a new device profile that was also linked to two other customers' cards. The bank contacted the customer, who confirmed they did not authorize the transaction. The verdict is fraud, and the bank will block the card, monitor connected cards, and file a suspicious activity report.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "Case HHG-019 was triggered when the real-time model scored an online transaction of $99.92 (ID 3503878) at 0.90. Graph evidence revealed the transaction originated from a rare new device profile (Windows | other | chrome 61.0 | 1280x720) that was recently used on two other customers' cards. Step-up authentication confirmed the cardholder did not authorize the charge. The final verdict is fraud with a probability of 0.97. The final actions taken were BLOCK_CARD, CREATE_CASE, FILE_REPORT, and MONITOR_CONNECTED_CARDS.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-019"
   },
   "evidence_requests": [
     {
@@ -139,12 +137,12 @@
         "reason": "R6: 2 other card(s) share device profile Windows | other | chrome 61.0 | 1280x720"
       }
     ],
-    "what_changed": "The initial recommendation was to hold the transaction and verify it with the customer. After the customer denied making the transaction, the final recommendation escalated to blocking the card and filing a report."
+    "what_changed": "The assumed denial raised the probability from 0.83 to 0.97; under R2 the recommendation moved from verification to BLOCK_CARD, CREATE_CASE, FILE_REPORT, MONITOR_CONNECTED_CARDS, including a suspicious activity report because activity connects to device profile Windows | other | chrome 61.0 | 1280x720."
   },
   "sar": {
     "file": true,
-    "reason": "A SAR is being filed under Policy R6 and Section 3a because the fraudulent activity connects to a device profile shared with other customers.",
-    "narrative": "This Suspicious Activity Report details a confirmed card-not-present fraud incident involving customer C07987 and card C07987-K2. On 2016-12-01 at 17:28:53, an online transaction of $99.92 was attempted. The transaction was initiated from a device profile (Windows | other | chrome 61.0 | 1280x720) that was marked as new for this account. Investigation revealed that this same device profile was used on two other cards belonging to two different customers between 2016-11-29 and 2016-12-01. While the amount of $99.92 was consistent with the customer's recurring charges, the use of an unrecognized, shared device raised suspicion. The bank contacted the customer via step-up authentication. The customer stated they still had their card but did not authorize the flagged transaction. Due to the customer's denial and the device's association with multiple accounts, the activity is deemed fraudulent. The total exposure for this incident is $99.92.",
+    "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to device profile Windows | other | chrome 61.0 | 1280x720.",
+    "narrative": "This Suspicious Activity Report details a confirmed card-not-present fraud incident involving customer C07987 and card C07987-K2. On 2016-12-01 at 17:28:53, an online transaction of $99.92 (ID 3503878) was attempted using the card. The transaction was flagged because it originated from a device profile (Windows | other | chrome 61.0 | 1280x720) marked as new for this account. While the amount of $99.92 is typical for the customer and resembles a recurring monthly charge, the device anomaly prompted further investigation. Network analysis showed this specific, rare device profile was used on two other cards (C06224-K2, C11309-K1) belonging to different customers between 2016-11-29 and 2016-12-01. The bank contacted the customer via step-up authentication, and the cardholder confirmed they still possessed the card and did not authorize the transaction. This confirms a card-not-present fraud pattern from a new device, indicating compromised card details. The total exposure for this case is $99.92. Consequently, the bank blocked the card, created a case, filed this report, and initiated monitoring on the connected cards.",
     "subjects": [
       "C07987",
       "C07987-K2",
@@ -158,8 +156,8 @@
       "2016-12-01"
     ]
   },
-  "stop_reason": "The investigation was concluded because the customer confirmed the transaction was unauthorized, providing sufficient evidence to block the card and close the case.",
-  "tool_calls": 12,
-  "tokens": 10548,
-  "latency_s": 106.3
+  "stop_reason": "Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a defensible fraud decision; further queries would not change the actions.",
+  "tool_calls": 13,
+  "tokens": 10175,
+  "latency_s": 134.0
 }

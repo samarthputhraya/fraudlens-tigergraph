@@ -31,32 +31,32 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3587 (confirmed_fraud, out_of_region_use); CC-1066 (confirmed_fraud, out_of_region_use); CC-1673 (confirmed_fraud, card_not_present_new_device); CC-2964 (confirmed_fraud, out_of_region_use)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2964 (confirmed_fraud, out_of_region_use); CC-1673 (confirmed_fraud, card_not_present_new_device); CC-1066 (confirmed_fraud, out_of_region_use); CC-3587 (confirmed_fraud, out_of_region_use)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C12382-K1'])",
+        "ref": "query:similar_cases(devices=[], cards=['C12382-K1'], k=8, pattern=)",
         "entity_ids": [
-          "CC-3587",
-          "CC-1066",
-          "CC-1673",
           "CC-2964",
-          "CC-5411",
-          "CC-4473"
+          "CC-1673",
+          "CC-1066",
+          "CC-3587",
+          "CC-4235",
+          "CC-2770"
         ]
       }
     ],
     "similar_prior_cases": [
-      "CC-3587",
-      "CC-1066",
-      "CC-1673",
       "CC-2964",
-      "CC-5411",
-      "CC-4473",
-      "CC-4577",
-      "CC-2770"
+      "CC-1673",
+      "CC-1066",
+      "CC-3587",
+      "CC-4235",
+      "CC-2770",
+      "CC-4697",
+      "CC-5411"
     ],
-    "summary": "Transaction 3514030 for $77.07 in billing region 444.0 triggered an alert due to a model risk score of 0.61. The transaction amount aligns with the card's history, which includes 10 prior card-present purchases in the same region. However, specialists noted extreme geographical dispersion across multiple regions within 72 hours and cited prior fraud cases such as CC-1066 and CC-1673. Despite these conflicting signals, the alert was cleared as legitimate activity and the transaction was allowed.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This alert was triggered because the real-time model scored transaction 3514030 for $77.07 in billing region 444.0 at 0.61. Graph evidence showed that card C12382-K1 has 10 earlier card-present purchases in this same billing region dating back to September 13, 2016, and none were ever part of a fraud case. Additionally, the $77.07 transaction amount is typical for this card's profile. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-001"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -88,14 +88,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR filed as the alert was cleared as legitimate activity.",
+    "reason": "Section 3a: no report required - the activity is legitimate.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision.",
-  "tool_calls": 11,
-  "tokens": 7999,
-  "latency_s": 34.0
+  "stop_reason": "Section 6: fraud probability 0.09 <= 0.15 on independent legitimate signals (account, region); contacting the cardholder would not change the decision.",
+  "tool_calls": 12,
+  "tokens": 6914,
+  "latency_s": 111.1
 }

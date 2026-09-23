@@ -37,16 +37,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1383 (cleared, none); CC-5292 (cleared, none); CC-5455 (confirmed_fraud, card_not_present_new_device); CC-5181 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-5217 (confirmed_fraud, card_not_present_new_device); CC-5455 (confirmed_fraud, card_not_present_new_device); CC-5292 (cleared, none); CC-5181 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'])",
+        "ref": "query:similar_cases(devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'], k=8, pattern=)",
         "entity_ids": [
-          "CC-1383",
-          "CC-5292",
+          "CC-5217",
           "CC-5455",
+          "CC-5292",
           "CC-5181",
-          "CC-3105",
-          "CC-1008"
+          "CC-0699",
+          "CC-3105"
         ]
       },
       {
@@ -65,23 +65,23 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-1383",
-      "CC-5292",
+      "CC-5217",
       "CC-5455",
+      "CC-5292",
       "CC-5181",
+      "CC-0699",
       "CC-3105",
       "CC-1008",
-      "CC-0699",
-      "CC-0099"
+      "CC-0997"
     ],
-    "summary": "Transaction 3450629 for $100.09 was flagged with a risk score of 0.57. While the session used a hidden proxy, the device profile was previously used on this card and the amount is typical for the customer. A prior alert (CC-1383) for a similar amount was cleared after the customer confirmed travel. The bank reached out to the customer, who confirmed they made the purchase. The alert is cleared as legitimate activity, and the transaction is allowed.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This case was opened because the real-time model scored online transaction 3450629 for $100.09 at 0.57. Investigation showed the transaction amount is typical for the card, and the device profile had been used three times previously by this customer, despite the use of a hidden proxy. Additionally, the card had a prior alert (CC-1383) that was cleared as a false alarm. The bank contacted the customer, who confirmed they made the purchase, leading to a legitimate verdict. The final actions taken are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-017"
   },
   "evidence_requests": [
     {
       "type": "customer_validation",
-      "asked_after_step": 9,
+      "asked_after_step": 11,
       "assumed_response": "Cardholder confirmed they made the purchase"
     }
   ],
@@ -110,18 +110,18 @@
         "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
       }
     ],
-    "what_changed": "The initial recommendation was to verify the transaction with the customer. After the cardholder confirmed the purchase, the final action changed to allow the transaction and close the case as no fraud."
+    "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability fell from 0.34 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is filed because the alert was cleared as legitimate activity.",
+    "reason": "Section 3a: no report required - the activity is legitimate.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation ended because the customer confirmed the transaction, allowing the case to be closed as a false alarm.",
-  "tool_calls": 11,
-  "tokens": 11508,
-  "latency_s": 2.6
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 14,
+  "tokens": 7221,
+  "latency_s": 133.2
 }

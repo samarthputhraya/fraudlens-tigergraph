@@ -39,16 +39,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0403 (confirmed_fraud, card_not_present_new_device); CC-2843 (confirmed_fraud, card_not_present_new_device); CC-4714 (confirmed_fraud, card_not_present_new_device); CC-3123 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4714 (confirmed_fraud, card_not_present_new_device); CC-2843 (confirmed_fraud, card_not_present_new_device); CC-3123 (confirmed_fraud, card_not_present_new_device); CC-3473 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'])",
+        "ref": "query:similar_cases(devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'], k=8, pattern=)",
         "entity_ids": [
-          "CC-0403",
-          "CC-2843",
           "CC-4714",
+          "CC-2843",
           "CC-3123",
-          "CC-3193",
-          "CC-2833"
+          "CC-3473",
+          "CC-2833",
+          "CC-3193"
         ]
       },
       {
@@ -67,17 +67,17 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-0403",
-      "CC-2843",
       "CC-4714",
+      "CC-2843",
       "CC-3123",
-      "CC-3193",
+      "CC-3473",
       "CC-2833",
+      "CC-3193",
       "CC-0696"
     ],
-    "summary": "Customer C08106 reported an unauthorized online transaction of $128.33 (ID 3583227). The transaction was made from a new device profile running Firefox 47.0, which had never been associated with this card before. The amount is in the top 3% of the card's purchase history, and the device is linked to 6 different cards. The verdict is fraud. The bank will block the card to prevent further unauthorized charges.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "Case HHG-004 was triggered when customer C08106 reported an unrecognized online purchase of $128.33 (transaction 3583227). Evidence showed the transaction originated from a new device profile not previously associated with the account, and the amount was in the top 3% of the card's purchase history. The activity matches a card-not-present fraud pattern from a new device. The verdict is fraud, and the final actions are to block the card and create a case.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-004"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -109,14 +109,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR will be filed under Section 3a because the total exposure of $128.33 is below the required threshold.",
+    "reason": "Section 3a: no report required - exposure $128.33 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation concluded because the customer explicitly denied making the transaction, confirming fraud.",
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (the pattern detector) support a defensible decision at probability 0.67; further queries would not change the actions.",
   "tool_calls": 12,
-  "tokens": 8073,
-  "latency_s": 33.8
+  "tokens": 8225,
+  "latency_s": 113.0
 }

@@ -40,13 +40,12 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4957 (confirmed_fraud, out_of_region_use); CC-2935 (confirmed_fraud, out_of_region_use); CC-2817 (confirmed_fraud, out_of_region_use); CC-1589 (cleared, none)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2935 (confirmed_fraud, out_of_region_use); CC-4957 (confirmed_fraud, out_of_region_use); CC-1589 (cleared, none)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C08623-K2'])",
+        "ref": "query:similar_cases(devices=[], cards=['C08623-K2'], k=8, pattern=)",
         "entity_ids": [
-          "CC-4957",
           "CC-2935",
-          "CC-2817",
+          "CC-4957",
           "CC-1589"
         ]
       },
@@ -66,14 +65,13 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-4957",
       "CC-2935",
-      "CC-2817",
+      "CC-4957",
       "CC-1589"
     ],
-    "summary": "Customer C08623 reported an unauthorized $49.00 in-person purchase (3530164) in billing region 330.0. A preceding transaction (3530056) for $116.93 also occurred in this region 0.8 hours earlier. Evidence shows the card has 42 prior card-present purchases in region 330.0, making this a typical location for the cardholder rather than out-of-region use. Because the transaction occurred in a familiar region, the bank will verify with the customer to rule out family fraud or confusion before blocking the card.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This case was triggered by a message from customer C08623 denying a $49.00 in-person purchase (transaction 3530164). Graph evidence shows an episode of two in-person transactions totaling $165.93 in billing region 330.0, including a $116.93 purchase made 0.8 hours earlier. Although the card has a history of 42 prior purchases in this region and a previous false alarm for travel, the customer's direct denial confirms unauthorized activity. The policy engine reached a final verdict of fraud with a 0.66 probability, categorizing the pattern as out-of-region use. The final actions taken were to block the card and create a case.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-003"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -105,14 +103,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is filed as the total exposure of $165.93 is well below the reporting threshold per Section 3a.",
+    "reason": "Section 3a: no report required - exposure $165.93 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation concluded to await customer verification regarding the disputed transactions in their normal billing region under policy section 6.",
-  "tool_calls": 11,
-  "tokens": 10253,
-  "latency_s": 58.3
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (account) support a defensible decision at probability 0.66; further queries would not change the actions.",
+  "tool_calls": 12,
+  "tokens": 8210,
+  "latency_s": 51.3
 }

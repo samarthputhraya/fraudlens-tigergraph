@@ -39,16 +39,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2636 (confirmed_fraud, card_not_present_new_device); CC-2910 (confirmed_fraud, card_not_present_new_device); CC-3235 (confirmed_fraud, card_not_present_new_device); CC-3423 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3368 (confirmed_fraud, card_not_present_new_device); CC-2910 (confirmed_fraud, card_not_present_new_device); CC-0031 (confirmed_fraud, card_not_present_new_device); CC-5111 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080'], cards=['C12265-K2'])",
+        "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080'], cards=['C12265-K2'], k=8, pattern=)",
         "entity_ids": [
-          "CC-2636",
+          "CC-3368",
           "CC-2910",
-          "CC-3235",
-          "CC-3423",
+          "CC-0031",
           "CC-5111",
-          "CC-0031"
+          "CC-2636",
+          "CC-2079"
         ]
       },
       {
@@ -67,21 +67,21 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-2636",
+      "CC-3368",
       "CC-2910",
-      "CC-3235",
-      "CC-3423",
+      "CC-0031",
       "CC-5111",
-      "CC-0031"
+      "CC-2636",
+      "CC-2079"
     ],
-    "summary": "Transaction 3509359 for $125.08 was flagged as a potential card-not-present fraud attempt from a new device. The card C12265-K2 is primarily used in person, and this online purchase involved a previously unseen product code R. A step-up authentication request was sent, but the cardholder did not reply within 24 hours. As a result, the verdict is uncertain, leading the bank to decline the transaction and monitor the card.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This investigation was triggered when the real-time model scored online transaction 3509359 for $125.08 at 0.52. Graph evidence shows the purchase was made from a new device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) and involved a product code (R) never used by this card before. Additionally, the card is almost exclusively used in person, making this online transaction anomalous, and the cardholder did not reply to a step-up authentication request within 24 hours. Due to the card-not-present fraud from a new device pattern, the verdict is uncertain with a 59% fraud probability. The final actions are to decline the transaction and monitor the card, leaving the case open.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-020"
   },
   "evidence_requests": [
     {
       "type": "step_up_auth",
-      "asked_after_step": 9,
+      "asked_after_step": 10,
       "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
     }
   ],
@@ -115,18 +115,18 @@
         "reason": "R4: decline the pending authorisation"
       }
     ],
-    "what_changed": "The recommendation did not change from the initial assessment, as the requested step-up authentication yielded no reply from the cardholder."
+    "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.59; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is filed under section 3a because the investigation concluded with an uncertain verdict and no confirmed fraud.",
+    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation was closed under policy section 6 after the 24-hour waiting period for customer verification expired without a response.",
-  "tool_calls": 11,
-  "tokens": 8990,
-  "latency_s": 111.1
+  "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
+  "tool_calls": 13,
+  "tokens": 8327,
+  "latency_s": 115.0
 }

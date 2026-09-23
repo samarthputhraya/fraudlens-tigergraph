@@ -47,7 +47,7 @@
       {
         "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0631 (confirmed_fraud, out_of_region_use); CC-1450; CC-2589 (confirmed_fraud, out_of_region_use); CC-3537 (confirmed_fraud, out_of_region_use)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C02354-K2'])",
+        "ref": "query:similar_cases(devices=[], cards=['C02354-K2'], k=8, pattern=)",
         "entity_ids": [
           "CC-0631",
           "CC-1450",
@@ -80,11 +80,11 @@
       "CC-4436",
       "CC-4721",
       "CC-4942",
-      "CC-0405"
+      "CC-5441"
     ],
-    "summary": "Customer C02354 reported transaction 3491361 for $39.08 as unauthorized. Evidence shows this in-person purchase occurred in billing region 126.0, where the card has 565 prior card-present purchases since July 2016. While the account has a history of prior fraud cases, this specific transaction matches the customer's normal behavior. Following compliance review, the bank will verify the activity with the customer instead of immediately blocking the card.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "This case was triggered by customer C02354 reporting that they did not make a $39.08 in-person purchase (transaction 3491361). Graph evidence shows the account has a history of 11 prior confirmed fraud transactions across multiple closed cases, despite having 565 earlier card-present purchases in the same billing region. The policy engine reached a final verdict of fraud with a 0.9 probability, categorizing the activity as out-of-region use. The final actions taken were to block the card and create a case.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-018"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -116,14 +116,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR is filed because the exposure of $39.08 is below the required reporting threshold.",
+    "reason": "Section 3a: no report required - exposure $39.08 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation was stopped to verify the transaction with the customer, as the activity aligns with their established history.",
-  "tool_calls": 11,
-  "tokens": 10468,
-  "latency_s": 38.6
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (account) support a defensible decision at probability 0.90; further queries would not change the actions.",
+  "tool_calls": 12,
+  "tokens": 8502,
+  "latency_s": 161.2
 }
