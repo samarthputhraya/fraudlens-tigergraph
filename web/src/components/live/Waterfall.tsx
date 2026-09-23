@@ -19,8 +19,16 @@ const FRAUD = "#EF5A50";
 const LEGIT = "#3CC585";
 
 export function EvidenceWaterfall({
-  prior, contributions, p, findings, triggerLabel,
-}: { prior: number; contributions: Contribution[]; p: number | null; findings: InvEvent[]; triggerLabel: string }) {
+  prior, contributions, p, findings, triggerLabel, reply,
+}: {
+  prior: number;
+  contributions: Contribution[];
+  p: number | null;
+  findings: InvEvent[];
+  triggerLabel: string;
+  // a simulated customer reply that moved the probability after the ledger assessment
+  reply?: { label: string; from: number; to: number; text?: string } | null;
+}) {
   const lp = logit(prior);
   const rows: Row[] = [{ name: "Prior", range: [0, lp], delta: lp, kind: "prior", claim: `Starting belief for a ${triggerLabel} alert`, p: prior }];
   let cum = lp;
@@ -38,7 +46,12 @@ export function EvidenceWaterfall({
     cum += c.delta_logodds;
   }
   const clamped = cum > logit(P_MAX) || cum < logit(P_MIN);
-  if (p != null) rows.push({ name: "Posterior", range: [0, logit(p)], delta: logit(p), kind: "post", p, claim: clamped ? `Ledger total ${cum.toFixed(2)} log-odds, capped at ${p.toFixed(2)} by the calibration bounds` : undefined });
+  if (reply && Math.abs(reply.to - reply.from) > 0.005) {
+    const a = logit(reply.from);
+    const b = logit(reply.to);
+    rows.push({ name: reply.label, range: [a, b], delta: b - a, kind: "step", family: "customer", lr: +Math.exp(b - a).toFixed(2), claim: reply.text });
+  }
+  if (p != null) rows.push({ name: "Posterior", range: [0, logit(p)], delta: logit(p), kind: "post", p, claim: clamped && !reply ? `Ledger total ${cum.toFixed(2)} log-odds, capped at ${p.toFixed(2)} by the calibration bounds` : undefined });
 
   const all = rows.flatMap((r) => r.range);
   const lo = Math.min(-3.6, Math.floor(Math.min(...all) - 0.4));

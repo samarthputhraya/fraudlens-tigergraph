@@ -19,7 +19,7 @@ from tg import GRAPH, ROOT, conn, gsql, retry  # noqa: E402
 LOAD_DIR = ROOT / "data" / "prep" / "load"
 CHUNK_DIR = ROOT / "data" / "prep" / "chunks"
 DONE_FILE = ROOT / "data" / "prep" / "loaded.json"
-CHUNK_BYTES = 16_000_000
+CHUNK_BYTES = 8_000_000
 
 # (csv name, loading job) in dependency order
 LOAD_PLAN = [
@@ -51,18 +51,16 @@ def cmd_schema() -> None:
     else:
         show(gsql((ROOT / "graph" / "schema.gsql").read_text()))
         show(gsql((ROOT / "graph" / "vectors.gsql").read_text()))
-    show(gsql((ROOT / "graph" / "loading_jobs.gsql").read_text()))
+    show(gsql((ROOT / "graph" / "loading_jobs_positional.gsql").read_text()))
 
 
 def split_csv(path: Path) -> list[Path]:
-    """Split a CSV into ~16 MB chunks that each repeat the header row."""
-    if path.stat().st_size <= CHUNK_BYTES:
-        return [path]
+    """Split a CSV into ~16 MB header-less chunks (posted data ignores header="true", so the header must go)."""
     CHUNK_DIR.mkdir(parents=True, exist_ok=True)
     chunks: list[Path] = []
     with path.open("rb") as f:
-        header = f.readline()
-        idx, buf, size = 0, [header], len(header)
+        f.readline()  # drop header
+        idx, buf, size = 0, [], 0
         for line in f:
             buf.append(line)
             size += len(line)
@@ -70,8 +68,8 @@ def split_csv(path: Path) -> list[Path]:
                 out = CHUNK_DIR / f"{path.stem}.{idx:03d}.csv"
                 out.write_bytes(b"".join(buf))
                 chunks.append(out)
-                idx, buf, size = idx + 1, [header], len(header)
-        if len(buf) > 1:
+                idx, buf, size = idx + 1, [], 0
+        if buf:
             out = CHUNK_DIR / f"{path.stem}.{idx:03d}.csv"
             out.write_bytes(b"".join(buf))
             chunks.append(out)

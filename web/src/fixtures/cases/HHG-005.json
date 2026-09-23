@@ -1,0 +1,111 @@
+{
+  "case_id": "HHG-005",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3523199)",
+        "entity_ids": [
+          "3523199"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0189 (cleared, none); CC-0219 (cleared, none); CC-0374 (cleared, none); CC-0965 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['iOS Device | iOS 9.3.5 | mobile safari 9.0 | 1024x768'], cards=['C02923-K1'])",
+        "entity_ids": [
+          "CC-0189",
+          "CC-0219",
+          "CC-0374",
+          "CC-0965",
+          "CC-3105",
+          "CC-3107"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed the purchase was made from their own new device",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3523199"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0189",
+      "CC-0219",
+      "CC-0374",
+      "CC-0965",
+      "CC-3105",
+      "CC-3107",
+      "CC-0997",
+      "CC-0099"
+    ],
+    "summary": "Transaction 3523199 for $100.07 was flagged due to a model score of 0.54. The transaction occurred online using a new iOS device profile not previously seen on card C02923-K1. The amount is typical for the card's history. The customer was contacted and confirmed the purchase was legitimate, leading to the case being closed as no fraud.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 10,
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.23 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The initial recommendation was to verify with the customer, and the final recommendation allowed the transaction because the customer confirmed it was legitimate."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed because the activity was confirmed as legitimate by the cardholder.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended because the customer confirmed the transaction was legitimate.",
+  "tool_calls": 12,
+  "tokens": 8217,
+  "latency_s": 70.8
+}

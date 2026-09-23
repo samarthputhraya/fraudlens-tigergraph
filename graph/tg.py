@@ -45,7 +45,7 @@ def retry(fn, tries: int = 12, wait: float = 12.0):
         except Exception as e:  # noqa: BLE001 - network layer raises many types
             msg = str(e)
             last = e
-            transient = any(k in msg for k in ("502", "503", "504", "Connection", "timed out", "Max retries", "resum"))
+            transient = any(k in msg for k in ("499", "500", "502", "503", "504", "Connection", "timed out", "Max retries", "resum"))
             if not transient or i == tries - 1:
                 raise
             print(f"  [tg] transient error ({msg[:80]}), retry {i + 1}/{tries} in {wait:.0f}s")

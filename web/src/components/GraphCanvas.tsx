@@ -203,7 +203,7 @@ export function GraphCanvas({ graph, probe, className, onSelect }: Props) {
       elements: [],
       style: STYLESHEET,
       minZoom: 0.25,
-      maxZoom: 3,
+      maxZoom: 1.8,
       wheelSensitivity: 0.25,
       boxSelectionEnabled: false,
     });

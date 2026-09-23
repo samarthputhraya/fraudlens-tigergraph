@@ -6,7 +6,7 @@ CREATE OR REPLACE QUERY build_ring_links(DATETIME start_ts, DATETIME end_ts, INT
   Devs = {DeviceProfile.*};
   Devs = SELECT d FROM Devs:d WHERE d.is_generic == FALSE;
   T = SELECT t FROM Devs:d -(rev_FROM_DEVICE:e)-> Transaction:t
-      WHERE t.ts >= start_ts AND t.ts <= end_ts AND e.is_new == "New";
+      WHERE t.ts >= start_ts AND t.ts <= end_ts AND e.dev_new == "New";
   Cs = SELECT c FROM T:t -(rev_MADE:m)-> Card:c;
   X = SELECT d FROM Cs:c -(CARD_DEVICE:e)-> DeviceProfile:d
       WHERE d.is_generic == FALSE AND e.n_new > 0 AND e.last_ts >= start_ts AND e.first_ts <= end_ts

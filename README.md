@@ -113,7 +113,8 @@ python -m venv .venv && .venv/Scripts/activate      # Windows; use source .venv/
 pip install -r requirements.txt
 cp .env.example .env                                # TigerGraph Savanna host + Database Secret; GCP project for Vertex AI
 python graph/prep.py && python graph/export.py      # derive card_id / accounts / device profiles, export CSVs
-python graph/setup.py schema && python graph/setup.py load && python graph/setup.py queries
+python graph/positional.py                          # bind loading-job columns to the CSV headers
+python graph/setup.py schema && python graph/setup.py load && python graph/setup.py queries && python graph/setup.py describe
 python rag/ingest_docs.py && python rag/embed_cases.py && python graph/setup.py vectors
 python run_cases.py                                 # investigates all 20 cases -> cases/*.json (+ graph write-back)
 python monitor.py                                   # autonomous sweep -> cases_autonomous/

@@ -1,0 +1,553 @@
+{
+  "case_id": "HHG-017",
+  "events": [
+    {
+      "t": 1790177918.16,
+      "kind": "trigger",
+      "case_id": "HHG-017",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3450629 ($100.09, online) at 0.57. Review and decide.",
+      "opened_at": "2016-11-12 00:46:24"
+    },
+    {
+      "t": 1790177918.16,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790177919.02,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is legitimate, conducted by the cardholder who is using a VPN/proxy or traveling, consistent with the previous false alarm (CC-1383) and the known device profile.",
+        "The transaction is fraudulent due to Account Takeover (ATO), where an attacker is routing traffic through a hidden proxy to mimic the cardholder's device.",
+        "The transaction is part of a wider fraud ring using shared device profiles and hidden proxies to conduct unauthorized online transactions."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the card's full transaction history, including the context of the previous false alarm (CC-1383) and any other proxy usage.",
+          "days_back": 90
+        },
+        {
+          "tool": "device_neighbors",
+          "why": "To check if other cards or accounts have used this exact device profile, which would indicate shared fraud infrastructure.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1790177919.06,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3450629 is highly suspicious due to its participation in a rapid burst of three ~$100 transactions within 70 minutes, combined with the sudden use of a hidden IP proxy. Historical data for similar transaction amounts reveals highly inconsistent billing addresses and email domains, suggesting this card is being systematically targeted or tested across different accounts.",
+      "key_points": [
+        "Flagged transaction 3450629 is part of a rapid 72-hour burst of three transactions (including 3450436 and 3450503) of approximately $100 within 70 minutes on 2016-11-11.",
+        "Transaction 3450629 utilized a hidden IP proxy, which triggered a higher risk score of 0.57 compared to the preceding transactions in the burst.",
+        "Historical transactions of similar amounts (~$100) show highly inconsistent billing addresses (e.g., 226.0, 204.0, 299.0, 264.0, 420.0) and email domains (hotmail.com, yahoo.com, gmail.com, sbcglobal.net, anonymous.com), indicating potential card abuse."
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "Transaction 3450629 is flagged with a high risk score of 0.57 despite using a recognized device previously seen in transactions 3450436 and 3450503. The primary concern is the sudden appearance of a hidden proxy ('IP_PROXY:HIDDEN') on this transaction, which was not present in the prior transactions on the same day. This change in connection behavior suggests potential account takeover or proxy evasion tactics.",
+      "key_points": [
+        "Transaction 3450629 is the third transaction on 2016-11-11 for account C04570-K1|204.0|132, following transactions 3450436 and 3450503.",
+        "The device profile ('Windows | Windows 10 | chrome 65.0 | 1920x1080') is recognized as 'Found', but now utilizes a hidden proxy ('IP_PROXY:HIDDEN') which was previously empty.",
+        "The risk score has escalated to 0.57 from previous scores of 0.05 and 0.10.",
+        "The unnamed model feature id_34 is recorded as 'match_status:2'."
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "high",
+      "assessment": "The alert transaction 3450629 is associated with a highly suspicious device profile shared by 299 cards all-time. Within a short timeframe on November 10, 2016, this device profile was used to run transactions across numerous distinct card and customer accounts, many of which returned high risk scores. This pattern strongly indicates a coordinated card-not-present fraud ring or automated card testing using a shared device signature.",
+      "key_points": [
+        "The device profile 'Windows | Windows 10 | chrome 65.0 | 1920x1080' is linked to 299 distinct cards all-time, indicating a shared environment or emulator.",
+        "Multiple high-risk transactions were observed on this device profile within hours, including 3446893 (risk 0.81, card C03019-K2), 3446972 (risk 0.79, card C05086-K1), and 3446976 (risk 0.92, card C09165-K2).",
+        "Transactions show a wide variety of cardholders (such as C11464, C03738, and C00750) and email domains, suggesting a distributed attack rather than legitimate shared usage."
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "low",
+      "assessment": "Transaction 3450629 is an online transaction of $100.09 flagged with a moderate risk score of 0.57. A previous case CC-1383 involving card C04570-K1 was cleared as non-fraudulent after the customer confirmed travel. Given this history of legitimate out-of-region spending of a highly similar amount ($99.98), the current transaction is likely benign.",
+      "key_points": [
+        "Transaction 3450629 was flagged with a risk score of 0.57 for an online purchase of $100.09.",
+        "Prior case CC-1383 on card C04570-K1 was closed with no fraud detected after customer verification.",
+        "The previous cleared transaction was for $99.98, which closely aligns with the current transaction amount of $100.09."
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "finding",
+      "key": "known_device",
+      "claim": "The device profile (Windows | Windows 10 | chrome 65.0 | 1920x1080) was already used 3 times on this card before the alert",
+      "lr": 1.0,
+      "family": "device",
+      "ref": "query:card_profile(card=C04570-K1, before_ts=2016-11-11 23:46:24, recent_days=30)",
+      "entity_ids": [
+        "3450629"
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "finding",
+      "key": "proxy",
+      "claim": "The session was routed through an hidden proxy",
+      "lr": 3.0,
+      "family": "device",
+      "ref": "query:txn_context(txn=3450629)",
+      "entity_ids": [
+        "3450629"
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$100.09 is a typical amount for this card (percentile 21%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C04570-K1, before_ts=2016-11-11 23:46:24, recent_days=30)",
+      "entity_ids": [
+        "3450629"
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1383; latest note: \"Case CC-1383: model scored a $99.98 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C04570-K1)",
+      "entity_ids": [
+        "CC-1383"
+      ]
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "assessment",
+      "p": 0.34,
+      "prior": 0.1753175795656331,
+      "verdict": "uncertain",
+      "pattern": "card_not_present_fraud",
+      "contributions": [
+        {
+          "key": "known_device",
+          "family": "device",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "proxy",
+          "family": "device",
+          "lr": 3.0,
+          "delta_logodds": 1.099
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 300.14,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.34 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $300.14 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed they made the purchase",
+      "asked_after_step": 9
+    },
+    {
+      "t": 1790177919.07,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790177920.7,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-1383",
+        "CC-5292",
+        "CC-5455",
+        "CC-5181",
+        "CC-3105",
+        "CC-1008",
+        "CC-0699",
+        "CC-0099"
+      ],
+      "knowledge": [
+        "No fraud",
+        "Glossary",
+        "Things to know",
+        "R5 Card testing",
+        "Notes",
+        "R3 Customer confirms the transaction"
+      ]
+    },
+    {
+      "t": 1790177920.7,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The draft failed to apply R6 (shared origin across cards) despite the Network specialist identifying a shared device profile across 299 cards. This requires FILE_REPORT and MONITOR_CONNECTED_CARDS.",
+        "The Network specialist identified a 'coordinated card-not-present fraud ring', which triggers R9 (undocumented coordinated abuse) and requires ESCALATE_TO_ANALYST and FILE_REPORT.",
+        "The Identity specialist warned of potential account takeover (ATO) due to the sudden use of a hidden proxy. Relying on customer verification (R3) is unsafe when ATO is suspected, as the fraudster may intercept the verification.",
+        "The draft ignored conflicting evidence between the Precedent specialist (benign) and Network/Identity specialists (fraud ring/ATO), which should trigger R8 (evidence conflicts: ESCALATE_TO_ANALYST)."
+      ],
+      "what_would_change_verdict": "Acknowledge the shared device profile and coordinated fraud ring identified by the specialists. Apply R6 and R9 to file a SAR and escalate to an analyst, rather than closing the case based on potentially compromised customer verification."
+    },
+    {
+      "t": 1790177920.72,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "mirror",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3450629)",
+      "params": {
+        "txn": "3450629"
+      },
+      "rows": 1,
+      "ms": 667.5,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C04570-K1, start_ts=2016-10-28 23:46:24, end_ts=2016-11-12 00:46:24)",
+      "params": {
+        "card": "C04570-K1",
+        "start_ts": "2016-10-28 23:46:24",
+        "end_ts": "2016-11-12 00:46:24"
+      },
+      "rows": 3,
+      "ms": 7.1,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C04570-K1, before_ts=2016-11-11 23:46:24, recent_days=30)",
+      "params": {
+        "card": "C04570-K1",
+        "before_ts": "2016-11-11 23:46:24",
+        "recent_days": 30
+      },
+      "rows": 52,
+      "ms": 27.1,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C04570-K1, amt=100.09, tol=1.0, before_ts=2016-11-11 23:46:24)",
+      "params": {
+        "card": "C04570-K1",
+        "amt": 100.09,
+        "tol": 1.0,
+        "before_ts": "2016-11-11 23:46:24"
+      },
+      "rows": 10,
+      "ms": 17.3,
+      "via": "mirror"
+    },
+    {
+      "agent": "identity",
+      "tool": "mirror",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3450629, lookback_days=200)",
+      "params": {
+        "txn": "3450629",
+        "lookback_days": 200
+      },
+      "rows": 2,
+      "ms": 99.8,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Windows | Windows 10 | chrome 65.0 | 1920x1080, start_ts=2016-10-12 23:46:24, end_ts=2016-11-12 00:46:24)",
+      "params": {
+        "dev": "Windows | Windows 10 | chrome 65.0 | 1920x1080",
+        "start_ts": "2016-10-12 23:46:24",
+        "end_ts": "2016-11-12 00:46:24"
+      },
+      "rows": 299,
+      "ms": 32.2,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C04570-K1)",
+      "params": {
+        "card": "C04570-K1"
+      },
+      "rows": 1,
+      "ms": 7.5,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C04570-K1, start_ts=2016-08-13 23:46:24, end_ts=2016-11-12 00:46:24)",
+      "params": {
+        "card": "C04570-K1",
+        "start_ts": "2016-08-13 23:46:24",
+        "end_ts": "2016-11-12 00:46:24"
+      },
+      "rows": 23,
+      "ms": 10.3,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Windows | Windows 10 | chrome 65.0 | 1920x1080, start_ts=2016-10-12 23:46:24, end_ts=2016-11-12 00:46:24)",
+      "params": {
+        "dev": "Windows | Windows 10 | chrome 65.0 | 1920x1080",
+        "start_ts": "2016-10-12 23:46:24",
+        "end_ts": "2016-11-12 00:46:24"
+      },
+      "rows": 299,
+      "ms": 32.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'])",
+      "params": {
+        "k": 8,
+        "pattern": "",
+        "devices": [
+          "Windows | Windows 10 | chrome 65.0 | 1920x1080"
+        ],
+        "cards": [
+          "C04570-K1"
+        ]
+      },
+      "rows": 16,
+      "ms": 1500.3,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 67.2,
+      "via": "mirror"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3450629 is highly suspicious due to its participation in a rapid burst of three ~$100 transactions within 70 minutes, combined with the sudden use of a hidden IP proxy. Historical data for similar transaction amounts reveals highly inconsistent billing addresses and email domains, suggesting this card is being systematically targeted or tested across different accounts.",
+      "risk": "high",
+      "key_points": [
+        "Flagged transaction 3450629 is part of a rapid 72-hour burst of three transactions (including 3450436 and 3450503) of approximately $100 within 70 minutes on 2016-11-11.",
+        "Transaction 3450629 utilized a hidden IP proxy, which triggered a higher risk score of 0.57 compared to the preceding transactions in the burst.",
+        "Historical transactions of similar amounts (~$100) show highly inconsistent billing addresses (e.g., 226.0, 204.0, 299.0, 264.0, 420.0) and email domains (hotmail.com, yahoo.com, gmail.com, sbcglobal.net, anonymous.com), indicating potential card abuse."
+      ],
+      "open_questions": [
+        "Why are multiple transactions of almost identical amounts (~$100) occurring within such a short timeframe on the same day?",
+        "What is the true geographic location of the user behind the hidden proxy in transaction 3450629?"
+      ],
+      "suggested_pattern": "card_testing"
+    },
+    "identity": {
+      "assessment": "Transaction 3450629 is flagged with a high risk score of 0.57 despite using a recognized device previously seen in transactions 3450436 and 3450503. The primary concern is the sudden appearance of a hidden proxy ('IP_PROXY:HIDDEN') on this transaction, which was not present in the prior transactions on the same day. This change in connection behavior suggests potential account takeover or proxy evasion tactics.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3450629 is the third transaction on 2016-11-11 for account C04570-K1|204.0|132, following transactions 3450436 and 3450503.",
+        "The device profile ('Windows | Windows 10 | chrome 65.0 | 1920x1080') is recognized as 'Found', but now utilizes a hidden proxy ('IP_PROXY:HIDDEN') which was previously empty.",
+        "The risk score has escalated to 0.57 from previous scores of 0.05 and 0.10.",
+        "The unnamed model feature id_34 is recorded as 'match_status:2'."
+      ],
+      "open_questions": [
+        "What prompted the sudden use of a hidden proxy for transaction 3450629?",
+        "Are there any external indicators of compromise on the customer account C04570?"
+      ],
+      "suggested_pattern": "account_takeover"
+    },
+    "network": {
+      "assessment": "The alert transaction 3450629 is associated with a highly suspicious device profile shared by 299 cards all-time. Within a short timeframe on November 10, 2016, this device profile was used to run transactions across numerous distinct card and customer accounts, many of which returned high risk scores. This pattern strongly indicates a coordinated card-not-present fraud ring or automated card testing using a shared device signature.",
+      "risk": "high",
+      "key_points": [
+        "The device profile 'Windows | Windows 10 | chrome 65.0 | 1920x1080' is linked to 299 distinct cards all-time, indicating a shared environment or emulator.",
+        "Multiple high-risk transactions were observed on this device profile within hours, including 3446893 (risk 0.81, card C03019-K2), 3446972 (risk 0.79, card C05086-K1), and 3446976 (risk 0.92, card C09165-K2).",
+        "Transactions show a wide variety of cardholders (such as C11464, C03738, and C00750) and email domains, suggesting a distributed attack rather than legitimate shared usage."
+      ],
+      "open_questions": [
+        "Are there any commonalities in the IP addresses or proxy configurations used across these transactions, as 'IP_PROXY:TRANSPARENT' was flagged on transaction 3446476?",
+        "What is the chargeback or dispute history for the other 299 cards associated with this device profile?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "precedent": {
+      "assessment": "Transaction 3450629 is an online transaction of $100.09 flagged with a moderate risk score of 0.57. A previous case CC-1383 involving card C04570-K1 was cleared as non-fraudulent after the customer confirmed travel. Given this history of legitimate out-of-region spending of a highly similar amount ($99.98), the current transaction is likely benign.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3450629 was flagged with a risk score of 0.57 for an online purchase of $100.09.",
+        "Prior case CC-1383 on card C04570-K1 was closed with no fraud detected after customer verification.",
+        "The previous cleared transaction was for $99.98, which closely aligns with the current transaction amount of $100.09."
+      ],
+      "open_questions": [
+        "Does transaction 3450629 originate from the same geographic region or IP address associated with the customer's confirmed travel in case CC-1383?",
+        "Has the cardholder been contacted to verify this specific $100.09 transaction?"
+      ],
+      "suggested_pattern": "none"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is legitimate, conducted by the cardholder who is using a VPN/proxy or traveling, consistent with the previous false alarm (CC-1383) and the known device profile.",
+      "The transaction is fraudulent due to Account Takeover (ATO), where an attacker is routing traffic through a hidden proxy to mimic the cardholder's device.",
+      "The transaction is part of a wider fraud ring using shared device profiles and hidden proxies to conduct unauthorized online transactions."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the card's full transaction history, including the context of the previous false alarm (CC-1383) and any other proxy usage.",
+        "days_back": 90
+      },
+      {
+        "tool": "device_neighbors",
+        "why": "To check if other cards or accounts have used this exact device profile, which would indicate shared fraud infrastructure.",
+        "days_back": 30
+      }
+    ],
+    "focus": "The primary focus is to determine whether the hidden proxy usage is a benign pattern for this cardholder (e.g., VPN use) or an indicator of compromise/fraud, by analyzing the card's history and checking for device sharing across other accounts."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The draft failed to apply R6 (shared origin across cards) despite the Network specialist identifying a shared device profile across 299 cards. This requires FILE_REPORT and MONITOR_CONNECTED_CARDS.",
+      "The Network specialist identified a 'coordinated card-not-present fraud ring', which triggers R9 (undocumented coordinated abuse) and requires ESCALATE_TO_ANALYST and FILE_REPORT.",
+      "The Identity specialist warned of potential account takeover (ATO) due to the sudden use of a hidden proxy. Relying on customer verification (R3) is unsafe when ATO is suspected, as the fraudster may intercept the verification.",
+      "The draft ignored conflicting evidence between the Precedent specialist (benign) and Network/Identity specialists (fraud ring/ATO), which should trigger R8 (evidence conflicts: ESCALATE_TO_ANALYST)."
+    ],
+    "what_would_change_verdict": "Acknowledge the shared device profile and coordinated fraud ring identified by the specialists. Apply R6 and R9 to file a SAR and escalate to an analyst, rather than closing the case based on potentially compromised customer verification."
+  },
+  "problems": [],
+  "written": {
+    "ok": false
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "case_id": "HHG-009",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.6,
+    "pattern": "card_not_present_fraud",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3581141"
+    ],
+    "first_suspicious_txn_id": "3581141",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 30.02,
+    "evidence": [
+      {
+        "claim": "The device profile ( |  |  | ) was already used 5 times on this card before the alert",
+        "source": "graph",
+        "ref": "query:card_profile(card=C08299-K1, before_ts=2016-12-28 12:10:53, recent_days=30)",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R2 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R2",
+        "entity_ids": []
+      },
+      {
+        "claim": "The customer reported that they never made the $30.02 purchase (3581141); under R2 this is a denial",
+        "source": "customer",
+        "ref": "trigger:HHG-009",
+        "entity_ids": [
+          "3581141"
+        ]
+      }
+    ],
+    "similar_prior_cases": [],
+    "summary": "Customer C08299 disputed an online transaction of $30.02 (ID 3581141), stating they did not make the purchase. While the transaction amount was typical for the card and the device profile had been used five times previously, the customer's direct denial indicates unauthorized use. The activity is classified as card-not-present fraud. Consequently, the bank blocked the card and created a case to record the investigation.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the customer denies making the transaction; exposure $30.02 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is required under Section 3a because the total exposure of $30.02 is below the $5,000 threshold.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation was concluded because the customer's direct dispute provided sufficient evidence to block the card and close the case under policy section 6.",
+  "tool_calls": 11,
+  "tokens": 7125,
+  "latency_s": 41.2
+}

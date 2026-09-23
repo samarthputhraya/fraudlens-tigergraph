@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern involves a single device profile operating behind an anonymous proxy to make online purchases across multiple unrelated card accounts. It affects numerous customers whose cards are being exploited in a coordinated manner. The pattern was discovered by querying the device neighbors of the flagged transaction, revealing its use across 19 other cards.",
+    "pattern_description": "This undocumented pattern involves the coordinated use of a rare, fully specified device profile across multiple unrelated customer accounts within a short timeframe. The unauthorized transactions are conducted online, often routed through anonymous proxies, on cards that historically exhibit card-present, in-person transaction behavior. This pattern was discovered during an analyst review of shared device signatures across recently flagged transactions.",
     "affected_txn_ids": [
       "3460634",
       "3478561"
@@ -99,7 +99,7 @@
       "CC-2985",
       "CC-2649"
     ],
-    "summary": "An analyst requested a review of transaction 3478561 on card C13487-K1 due to unusual device activity. The investigation confirmed fraud, as the transaction was made online via an anonymous proxy using a device profile linked to 19 other cards. The card's history was almost entirely in-person, making this online activity highly anomalous. The bank will block the card, file a SAR, and monitor the connected cards.",
+    "summary": "This case was triggered by an analyst request to review transaction 3478561 on card C13487-K1 due to several cards showing purchases from the same unusual device profile. Investigation revealed that the flagged transaction and a prior transaction on this card were conducted online using a rare device profile, which was also linked to 19 other cards belonging to 19 different customers. The flagged transaction was routed through an anonymous proxy, and the card is historically used almost exclusively in person. The final decision is fraud with a probability of 0.97, and the final actions are BLOCK_CARD, CREATE_CASE, FILE_REPORT, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST.",
     "written_to_graph": false,
     "graph_case_id": ""
   },
@@ -163,8 +163,8 @@
   },
   "sar": {
     "file": true,
-    "reason": "A SAR is filed under section 3a and rules R6 and R9 because the activity connects to a device profile shared across multiple cards in a coordinated, undocumented pattern.",
-    "narrative": "This report details suspected fraudulent activity involving customer C13487 and card C13487-K1. Between 2016-11-15 and 2016-11-22, two online transactions were conducted, totaling $187.33. The flagged transaction, 3478561, occurred on 2016-11-22 at 16:11:00 for $74.96 in billing region 191.0. The purchase was initiated from a new device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) and routed through an anonymous proxy. This activity is highly suspicious because the card's historical usage is almost exclusively in-person, with only 2 of 71 earlier transactions being online. Furthermore, network analysis revealed that the same device profile was used on 19 other cards belonging to 19 different customers between 2016-11-14 and 2016-11-22. In 24 of those instances, the device was marked as new and operated behind an anonymizing proxy. This indicates a coordinated effort to exploit multiple accounts using a single device setup. The total exposure for this card is $187.33.",
+    "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to device profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080; the pattern is coordinated and undocumented (R9).",
+    "narrative": "On November 22, 2016, at 20:11:00, an investigation was opened for customer C13487 and card C13487-K1 following an analyst request regarding a shared unusual device profile. The flagged transaction, ID 3478561, occurred on November 22, 2016, at 16:11:00, for $74.96 in the online channel under billing region 191.0. This transaction was routed through an anonymous proxy (IP_PROXY:ANONYMOUS) using a rare device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) registered as 'New' for this account. A prior transaction, ID 3460634, occurred on November 15, 2016, for $112.37 using the same device profile, bringing the total exposure to $187.33. This card is historically used almost exclusively in person, with only 2 of 71 earlier transactions occurring online. Furthermore, the exact same device profile was used on 19 other cards belonging to 19 other customers between November 14 and November 22, 2016. Across these connected cards, the device profile was used 24 times as a 'New' device and 24 times behind an anonymizing proxy. This highly specific device profile appears only 52 times in the entire dataset, indicating a coordinated and unauthorized compromise of multiple customer accounts.",
     "subjects": [
       "C13487",
       "C13487-K1",
@@ -195,8 +195,8 @@
       "2016-11-22"
     ]
   },
-  "stop_reason": "The investigation ended here because the probability of fraud is greater than or equal to 0.85 on two or more independent pieces of evidence and the exposure of $187.33 is under $2,500, per policy section 6.",
-  "tool_calls": 11,
-  "tokens": 14488,
-  "latency_s": 99.1
+  "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (behaviour, device, network); further queries would not change the actions.",
+  "tool_calls": 12,
+  "tokens": 10836,
+  "latency_s": 174.9
 }

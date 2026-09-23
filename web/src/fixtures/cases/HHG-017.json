@@ -1,0 +1,127 @@
+{
+  "case_id": "HHG-017",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The session was routed through an hidden proxy",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3450629)",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1383; latest note: \"Case CC-1383: model scored a $99.98 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C04570-K1)",
+        "entity_ids": [
+          "CC-1383"
+        ]
+      },
+      {
+        "claim": "The device profile (Windows | Windows 10 | chrome 65.0 | 1920x1080) was already used 3 times on this card before the alert",
+        "source": "graph",
+        "ref": "query:card_profile(card=C04570-K1, before_ts=2016-11-11 23:46:24, recent_days=30)",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1383 (cleared, none); CC-5292 (cleared, none); CC-5455 (confirmed_fraud, card_not_present_new_device); CC-5181 (confirmed_fraud, card_not_present_new_device)",
+        "source": "graph",
+        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'])",
+        "entity_ids": [
+          "CC-1383",
+          "CC-5292",
+          "CC-5455",
+          "CC-5181",
+          "CC-3105",
+          "CC-1008"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": []
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed they made the purchase",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3450629"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-1383",
+      "CC-5292",
+      "CC-5455",
+      "CC-5181",
+      "CC-3105",
+      "CC-1008",
+      "CC-0699",
+      "CC-0099"
+    ],
+    "summary": "Transaction 3450629 for $100.09 was flagged with a risk score of 0.57. While the session used a hidden proxy, the device profile was previously used on this card and the amount is typical for the customer. A prior alert (CC-1383) for a similar amount was cleared after the customer confirmed travel. The bank reached out to the customer, who confirmed they made the purchase. The alert is cleared as legitimate activity, and the transaction is allowed.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 9,
+      "assumed_response": "Cardholder confirmed they made the purchase"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.34 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The initial recommendation was to verify the transaction with the customer. After the cardholder confirmed the purchase, the final action changed to allow the transaction and close the case as no fraud."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No SAR is filed because the alert was cleared as legitimate activity.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "The investigation ended because the customer confirmed the transaction, allowing the case to be closed as a false alarm.",
+  "tool_calls": 11,
+  "tokens": 11508,
+  "latency_s": 2.6
+}

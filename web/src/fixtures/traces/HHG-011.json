@@ -1,0 +1,581 @@
+{
+  "case_id": "HHG-011",
+  "events": [
+    {
+      "t": 1790178870.09,
+      "kind": "trigger",
+      "case_id": "HHG-011",
+      "trigger_type": "customer_report",
+      "text": "Customer C11923 message: 'I never made this $131.30 purchase. Please check my card.' Refers to 3583368.",
+      "opened_at": "2016-12-29 06:27:44"
+    },
+    {
+      "t": 1790178870.09,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790178875.37,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Account Takeover (ATO) where a fraudster used a compromised card on a shared device linked to other accounts.",
+        "Legitimate transaction by a family member or the customer using a new device, which they do not recognize or falsely claim as fraud.",
+        "Device fingerprint collision on a common device profile (SM-G610F) where the card was stolen and used by an unrelated fraudster."
+      ],
+      "calls": [
+        {
+          "tool": "device_neighbors",
+          "why": "To investigate the other 2 cards and customers sharing this device profile to see if they have confirmed fraud cases.",
+          "days_back": 14
+        },
+        {
+          "tool": "card_window",
+          "why": "To review the full transaction history on this card around the time of the alert to check for other unauthorized charges or patterns.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1790178875.41,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790178942.39,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3583368 is highly suspicious and likely fraudulent, as confirmed by the customer's dispute. The card C11923-K2 was subjected to an intense velocity burst of transactions on 2016-12-26 using multiple distinct devices and email domains, which is a classic signature of card-testing and credential abuse prior to the larger $131.30 charge.",
+      "key_points": [
+        "The flagged transaction 3583368 ($131.30) is significantly larger than the preceding transactions in the 72-hour window, which mostly ranged from $8.67 to $56.61.",
+        "A severe multi-device velocity burst occurred on 2016-12-26 within a span of less than 2 hours, involving at least 6 different device signatures (e.g., LG-X230, Windows, MYA-L13, SM-G570M, ALE-L23) and multiple email domains (gmail.com, hotmail.com, anonymous.com).",
+        "The rapid succession of varied device logins and small-value transactions (such as 3575821, 3575822, and 3575852) indicates systematic card-testing and potential account takeover or credential stuffing."
+      ]
+    },
+    {
+      "t": 1790178942.39,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The flagged transaction 3583368 is highly suspicious as it was performed on a new mobile device (SM-G610F) never before seen on card C11923-K2, aligning with the customer's fraud report. Furthermore, the card's recent history on 2016-12-29 shows a rapid succession of transactions using different devices and email domains, indicating potential compromise.",
+      "key_points": [
+        "The flagged device (SM-G610F) is marked as 'New' and has never been seen on card C11923-K2 prior to this alert.",
+        "Recent transactions 3583101, 3583199, and 3583229 occurred within a two-hour window on 2016-12-29 using three different devices (including a Windows PC and a Huawei LDN-LX3) and three different email domains (outlook.es, yahoo.com.mx, gmail.com).",
+        "Customer C11923 explicitly disputed the $131.30 purchase (transaction 3583368), confirming unauthorized card use."
+      ]
+    },
+    {
+      "t": 1790178942.39,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "high",
+      "assessment": "The disputed transaction 3583368 is part of a highly suspicious multi-card device-sharing ring. Within a five-hour window, three different customer accounts (C11923, C05595, and C03938) conducted online transactions using the exact same Android device profile. Given the customer's fraud report and the rapid succession of different cards on a single device, this activity indicates a coordinated card-not-present fraud campaign.",
+      "key_points": [
+        "Transaction 3583368 ($131.30) was reported as unauthorized by customer C11923.",
+        "The transaction shares device 'SM-G610F Build/NRD90M |  | chrome 66.0 for android |' with transactions 3582730 (customer C05595) and 3582750 (customer C03938).",
+        "All three transactions occurred within a 5-hour window between December 28 and December 29, 2016, and share identical email domains (gmail.com) and unnamed model feature m4 ('M2').",
+        "The shared device has been linked to 4 distinct cards in total, indicating a high likelihood of a shared fraud terminal."
+      ]
+    },
+    {
+      "t": 1790178942.39,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Customer C11923 has reported an unauthorized transaction of $131.30 (ID 3583368). The customer has an extensive history of confirmed fraud cases on card C11923-K2, indicating a persistent targeting of this account or recurring compromise. Given this established pattern, the current alert is highly likely to be legitimate fraud.",
+      "key_points": [
+        "Customer C11923 has at least eight prior closed fraud cases (including CC-0031, CC-0290, CC-1056, CC-2247, CC-2673, CC-2799, CC-3039, and CC-3206) all resulting in confirmed fraud.",
+        "Prior fraud patterns on this customer's account primarily involve 'card_not_present_new_device' and 'card_testing' on card C11923-K2.",
+        "The current disputed transaction 3583368 of $131.30 aligns with the customer's historical profile of unauthorized card-not-present activity."
+      ]
+    },
+    {
+      "t": 1790178942.4,
+      "kind": "finding",
+      "key": "new_device",
+      "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (SM-G610F Build/NRD90M |  | chrome 66.0 for android | )",
+      "lr": 1.4,
+      "family": "device",
+      "ref": "query:txn_context(txn=3583368)",
+      "entity_ids": [
+        "3583368"
+      ]
+    },
+    {
+      "t": 1790178942.4,
+      "kind": "finding",
+      "key": "shared_device",
+      "claim": "The same device profile (SM-G610F Build/NRD90M |  | chrome 66.0 for android | ) was used on 2 other card(s) of 2 other customer(s) between 2016-12-28 and 2016-12-28, 1 of those uses as a New device. The profile appears on only 4 card(s) in the whole dataset",
+      "lr": 7.0,
+      "family": "network",
+      "ref": "query:device_neighbors(dev=SM-G610F Build/NRD90M |  | chrome 66.0 for android | , start_ts=2016-11-29 03:27:44, end_ts=2016-12-29 06:27:44)",
+      "entity_ids": [
+        "C03938-K1",
+        "C05595-K1"
+      ]
+    },
+    {
+      "t": 1790178942.4,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-4743; latest note: \"Case CC-4743: model scored a $32.09 transaction at 0.96. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C11923-K2)",
+      "entity_ids": [
+        "CC-4743"
+      ]
+    },
+    {
+      "t": 1790178942.4,
+      "kind": "assessment",
+      "p": 0.92,
+      "prior": 0.6,
+      "verdict": "fraud",
+      "pattern": "card_not_present_new_device",
+      "contributions": [
+        {
+          "key": "new_device",
+          "family": "device",
+          "lr": 1.4,
+          "delta_logodds": 0.336
+        },
+        {
+          "key": "shared_device",
+          "family": "network",
+          "lr": 7.0,
+          "delta_logodds": 1.946
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 235.66,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $235.66 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 2 other card(s) share device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $235.66 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 2 other card(s) share device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $235.66 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 2 other card(s) share device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the customer denies making the transaction; exposure $235.66 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 2 other card(s) share device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790178942.4,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.92,
+      "pattern": "card_not_present_new_device",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the customer denies making the transaction; exposure $235.66 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 2 other card(s) share device profile SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+        }
+      ],
+      "status": "closed_fraud",
+      "exposure": 235.66,
+      "episode": [
+        "3583101",
+        "3583199",
+        "3583229",
+        "3583368"
+      ]
+    },
+    {
+      "t": 1790178954.06,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-3905",
+        "CC-2799",
+        "CC-3206",
+        "CC-5146",
+        "CC-1273",
+        "CC-3683",
+        "CC-4556",
+        "CC-2198"
+      ],
+      "knowledge": [
+        "Card-not-present fraud from a new device",
+        "Account takeover",
+        "Card-not-present fraud",
+        "Out-of-region use",
+        "The five known fraud patterns",
+        "The five known fraud patterns"
+      ]
+    },
+    {
+      "t": 1790178969.34,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The Precedent specialist claims the customer has an 'extensive history of confirmed fraud cases', but the evidence shows only 1 prior alert that was cleared as a false alarm.",
+        "The Transaction specialist claims there was a velocity burst on 2016-12-26, but the episode data shows transactions occurring on 2016-12-29."
+      ],
+      "what_would_change_verdict": "The verdict of fraud is correct based on the customer's denial (R2) and the shared device profile (R6), and the actions/routes are perfectly aligned with the policy. However, the specialist summaries must be corrected to accurately reflect the evidence without hallucinating dates or prior fraud history."
+    },
+    {
+      "t": 1790178985.05,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "mirror",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3583368)",
+      "params": {
+        "txn": "3583368"
+      },
+      "rows": 1,
+      "ms": 24.8,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11923-K2, start_ts=2016-12-15 03:27:44, end_ts=2016-12-29 06:27:44)",
+      "params": {
+        "card": "C11923-K2",
+        "start_ts": "2016-12-15 03:27:44",
+        "end_ts": "2016-12-29 06:27:44"
+      },
+      "rows": 602,
+      "ms": 102.2,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C11923-K2, before_ts=2016-12-29 03:27:44, recent_days=30)",
+      "params": {
+        "card": "C11923-K2",
+        "before_ts": "2016-12-29 03:27:44",
+        "recent_days": 30
+      },
+      "rows": 10306,
+      "ms": 122.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C11923-K2, amt=131.3, tol=1.31, before_ts=2016-12-29 03:27:44)",
+      "params": {
+        "card": "C11923-K2",
+        "amt": 131.3,
+        "tol": 1.31,
+        "before_ts": "2016-12-29 03:27:44"
+      },
+      "rows": 14,
+      "ms": 16.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "identity",
+      "tool": "mirror",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3583368, lookback_days=200)",
+      "params": {
+        "txn": "3583368",
+        "lookback_days": 200
+      },
+      "rows": 3,
+      "ms": 17.9,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=SM-G610F Build/NRD90M |  | chrome 66.0 for android | , start_ts=2016-11-29 03:27:44, end_ts=2016-12-29 06:27:44)",
+      "params": {
+        "dev": "SM-G610F Build/NRD90M |  | chrome 66.0 for android | ",
+        "start_ts": "2016-11-29 03:27:44",
+        "end_ts": "2016-12-29 06:27:44"
+      },
+      "rows": 3,
+      "ms": 14.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C11923-K2)",
+      "params": {
+        "card": "C11923-K2"
+      },
+      "rows": 11,
+      "ms": 0.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=SM-G610F Build/NRD90M |  | chrome 66.0 for android | , start_ts=2016-12-15 03:27:44, end_ts=2016-12-29 06:27:44)",
+      "params": {
+        "dev": "SM-G610F Build/NRD90M |  | chrome 66.0 for android | ",
+        "start_ts": "2016-12-15 03:27:44",
+        "end_ts": "2016-12-29 06:27:44"
+      },
+      "rows": 3,
+      "ms": 13.7,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11923-K2, start_ts=2016-11-29 03:27:44, end_ts=2016-12-29 06:27:44)",
+      "params": {
+        "card": "C11923-K2",
+        "start_ts": "2016-11-29 03:27:44",
+        "end_ts": "2016-12-29 06:27:44"
+      },
+      "rows": 1460,
+      "ms": 25.2,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=8, pattern=, devices=['SM-G610F Build/NRD90M |  | chrome 66.0 for android | '], cards=['C11923-K2', 'C03938-K1', 'C05595-K1'])",
+      "params": {
+        "k": 8,
+        "pattern": "",
+        "devices": [
+          "SM-G610F Build/NRD90M |  | chrome 66.0 for android | "
+        ],
+        "cards": [
+          "C11923-K2",
+          "C03938-K1",
+          "C05595-K1"
+        ]
+      },
+      "rows": 16,
+      "ms": 10.9,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 0.0,
+      "via": "mirror"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3583368 is highly suspicious and likely fraudulent, as confirmed by the customer's dispute. The card C11923-K2 was subjected to an intense velocity burst of transactions on 2016-12-26 using multiple distinct devices and email domains, which is a classic signature of card-testing and credential abuse prior to the larger $131.30 charge.",
+      "risk": "high",
+      "key_points": [
+        "The flagged transaction 3583368 ($131.30) is significantly larger than the preceding transactions in the 72-hour window, which mostly ranged from $8.67 to $56.61.",
+        "A severe multi-device velocity burst occurred on 2016-12-26 within a span of less than 2 hours, involving at least 6 different device signatures (e.g., LG-X230, Windows, MYA-L13, SM-G570M, ALE-L23) and multiple email domains (gmail.com, hotmail.com, anonymous.com).",
+        "The rapid succession of varied device logins and small-value transactions (such as 3575821, 3575822, and 3575852) indicates systematic card-testing and potential account takeover or credential stuffing."
+      ],
+      "open_questions": [
+        "Are there any legitimate transactions on this card to establish a true baseline customer profile?",
+        "How did the fraudster obtain the card details, and are other cards belonging to customer C11923 also compromised?"
+      ],
+      "suggested_pattern": "card_testing"
+    },
+    "identity": {
+      "assessment": "The flagged transaction 3583368 is highly suspicious as it was performed on a new mobile device (SM-G610F) never before seen on card C11923-K2, aligning with the customer's fraud report. Furthermore, the card's recent history on 2016-12-29 shows a rapid succession of transactions using different devices and email domains, indicating potential compromise.",
+      "risk": "high",
+      "key_points": [
+        "The flagged device (SM-G610F) is marked as 'New' and has never been seen on card C11923-K2 prior to this alert.",
+        "Recent transactions 3583101, 3583199, and 3583229 occurred within a two-hour window on 2016-12-29 using three different devices (including a Windows PC and a Huawei LDN-LX3) and three different email domains (outlook.es, yahoo.com.mx, gmail.com).",
+        "Customer C11923 explicitly disputed the $131.30 purchase (transaction 3583368), confirming unauthorized card use."
+      ],
+      "open_questions": [
+        "What were the IP addresses and geolocations associated with transactions 3583101, 3583199, 3583229, and the flagged transaction 3583368?",
+        "Are the previous three transactions on 2016-12-29 also disputed by the customer, or were they legitimate?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "The disputed transaction 3583368 is part of a highly suspicious multi-card device-sharing ring. Within a five-hour window, three different customer accounts (C11923, C05595, and C03938) conducted online transactions using the exact same Android device profile. Given the customer's fraud report and the rapid succession of different cards on a single device, this activity indicates a coordinated card-not-present fraud campaign.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3583368 ($131.30) was reported as unauthorized by customer C11923.",
+        "The transaction shares device 'SM-G610F Build/NRD90M |  | chrome 66.0 for android |' with transactions 3582730 (customer C05595) and 3582750 (customer C03938).",
+        "All three transactions occurred within a 5-hour window between December 28 and December 29, 2016, and share identical email domains (gmail.com) and unnamed model feature m4 ('M2').",
+        "The shared device has been linked to 4 distinct cards in total, indicating a high likelihood of a shared fraud terminal."
+      ],
+      "open_questions": [
+        "What is the status of the fourth card linked to this device that did not appear in the recent transaction list?",
+        "Have customers C05595 and C03938 been contacted to verify their transactions (3582730 and 3582750)?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "precedent": {
+      "assessment": "Customer C11923 has reported an unauthorized transaction of $131.30 (ID 3583368). The customer has an extensive history of confirmed fraud cases on card C11923-K2, indicating a persistent targeting of this account or recurring compromise. Given this established pattern, the current alert is highly likely to be legitimate fraud.",
+      "risk": "high",
+      "key_points": [
+        "Customer C11923 has at least eight prior closed fraud cases (including CC-0031, CC-0290, CC-1056, CC-2247, CC-2673, CC-2799, CC-3039, and CC-3206) all resulting in confirmed fraud.",
+        "Prior fraud patterns on this customer's account primarily involve 'card_not_present_new_device' and 'card_testing' on card C11923-K2.",
+        "The current disputed transaction 3583368 of $131.30 aligns with the customer's historical profile of unauthorized card-not-present activity."
+      ],
+      "open_questions": [
+        "Is the disputed transaction 3583368 associated with card C11923-K2 or a newly reissued card?",
+        "What device and IP metadata are associated with transaction 3583368, and do they match previous unauthorized devices?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Account Takeover (ATO) where a fraudster used a compromised card on a shared device linked to other accounts.",
+      "Legitimate transaction by a family member or the customer using a new device, which they do not recognize or falsely claim as fraud.",
+      "Device fingerprint collision on a common device profile (SM-G610F) where the card was stolen and used by an unrelated fraudster."
+    ],
+    "extra_calls": [
+      {
+        "tool": "device_neighbors",
+        "why": "To investigate the other 2 cards and customers sharing this device profile to see if they have confirmed fraud cases.",
+        "days_back": 14
+      },
+      {
+        "tool": "card_window",
+        "why": "To review the full transaction history on this card around the time of the alert to check for other unauthorized charges or patterns.",
+        "days_back": 30
+      }
+    ],
+    "focus": "The shared device profile (SM-G610F) used across multiple customer accounts within a 24-hour window."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The Precedent specialist claims the customer has an 'extensive history of confirmed fraud cases', but the evidence shows only 1 prior alert that was cleared as a false alarm.",
+      "The Transaction specialist claims there was a velocity burst on 2016-12-26, but the episode data shows transactions occurring on 2016-12-29."
+    ],
+    "what_would_change_verdict": "The verdict of fraud is correct based on the customer's denial (R2) and the shared device profile (R6), and the actions/routes are perfectly aligned with the policy. However, the specialist summaries must be corrected to accurately reflect the evidence without hallucinating dates or prior fraud history."
+  },
+  "problems": [],
+  "written": {
+    "ok": false
+  }
+}

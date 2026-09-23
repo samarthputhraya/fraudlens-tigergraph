@@ -15,7 +15,9 @@ CREATE OR REPLACE QUERY similar_cases(LIST<FLOAT> qv, SET<VERTEX<DeviceProfile>>
   GC2 = SELECT cc FROM Cs:c -(rev_ON_CARD:e)-> ClosedCase:cc;
   GC3 = SELECT cc FROM Cs:c -(rev_CONNECTED_TO:e)-> ClosedCase:cc;
   GC = GC1 UNION GC2 UNION GC3;
-  GC = GC UNION G;   // never empty: falls back to the global hits when nothing is reachable in the graph
+  IF GC.size() == 0 THEN
+    GC = G;   // nothing reachable through the graph: fall back to the global hits
+  END;
   H = vectorSearch({ClosedCase.emb}, qv, k, {candidate_set: GC, distance_map: @@d_graph});
   I = vectorSearch({InvestigationCase.emb}, qv, 5, {distance_map: @@d_inv});
   PRINT G[G.id, G.card_id, G.opened_at, G.outcome, G.pattern, G.exposure_usd, G.report_filed, G.actions_taken, G.analyst_notes] AS vector_hits;

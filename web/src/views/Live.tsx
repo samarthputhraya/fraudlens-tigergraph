@@ -324,7 +324,23 @@ export default function LiveView() {
 
           <Panel title="Evidence waterfall" aside={<span className="text-[11px]">log-odds, axis in probability</span>} bodyClass="px-2 pb-3 pt-2">
             {s.trigger ? (
-              <EvidenceWaterfall prior={prior} contributions={contributions} p={s.decision?.p ?? s.assessment?.p ?? null} findings={s.findings} triggerLabel={triggerLabel(trigger).toLowerCase()} />
+              <EvidenceWaterfall
+                prior={prior}
+                contributions={contributions}
+                p={s.decision?.p ?? s.assessment?.p ?? null}
+                findings={s.findings}
+                triggerLabel={triggerLabel(trigger).toLowerCase()}
+                reply={
+                  s.evidenceRequests.length && s.assessment && s.decision
+                    ? {
+                        label: s.evidenceRequests[0].branch === "confirm" ? "Customer confirms" : s.evidenceRequests[0].branch === "deny" ? "Customer denies" : "No reply",
+                        from: s.assessment.p,
+                        to: s.decision.p,
+                        text: s.evidenceRequests[0].assumed_response,
+                      }
+                    : null
+                }
+              />
             ) : (
               <p className="px-2 py-6 text-center text-xs text-ink-400">The prior appears when the alert opens.</p>
             )}

@@ -1,0 +1,557 @@
+{
+  "case_id": "HHG-008",
+  "events": [
+    {
+      "t": 1790179480.43,
+      "kind": "trigger",
+      "case_id": "HHG-008",
+      "trigger_type": "customer_report",
+      "text": "Customer C13171 message: 'I never made this $55.68 purchase. Please check my card.' Refers to 3558054.",
+      "opened_at": "2016-12-20 03:08:56"
+    },
+    {
+      "t": 1790179480.43,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790179548.68,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is a legitimate recurring subscription charge that the customer has forgotten or failed to recognize.",
+        "The transaction is unauthorized (third-party fraud) despite matching previous recurring amounts."
+      ],
+      "calls": [
+        {
+          "tool": "recurring_match",
+          "why": "To analyze the history of similar recurring charges on this card and verify if they occur regularly on the same day of the month.",
+          "tol_pct": 1.0
+        },
+        {
+          "tool": "card_window",
+          "why": "To inspect the card's overall transaction history around the flagged date for any other anomalous or unauthorized activity.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1790179548.72,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The card C13171-K2 shows a high volume of rapid transactions within a 72-hour window using multiple distinct email domains (gmail.com, hotmail.es, hotmail.com, outlook.com) and several different mobile and desktop devices. This pattern of highly fragmented device and email usage strongly supports the customer's claim of unauthorized activity, indicating a compromised card or account takeover.",
+      "key_points": [
+        "The disputed transaction 3558054 ($55.68) was processed using a hotmail.com email address and a generic Chrome browser signature.",
+        "Multiple distinct devices were used in the preceding 72 hours, including a Huawei ALE-L23 (3550100), Moto X Play (3551412), and Samsung SM-G900M (3553223, 3553269, 3553281).",
+        "Email addresses associated with the card switched rapidly between gmail.com, hotmail.es, hotmail.com, and outlook.com (e.g., 3553275, 3554288, 3554589), which is highly anomalous for a single legitimate user."
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The customer C13171 has disputed a transaction of $55.68 (ID 3558054). The account history shows rapid changes in both email domains (hotmail.com to gmail.com) and device profiles (mobile safari to chrome) within a single day on December 19, 2016, which strongly points to unauthorized access or account takeover.",
+      "key_points": [
+        "Customer C13171 disputed transaction 3558054 ($55.68) which is not present in the provided history but occurred around the same timeframe.",
+        "A transition from hotmail.com (transaction 3555768) to gmail.com (transactions 3556719 and 3557118) occurred within hours on 2016-12-19.",
+        "The device profile changed from mobile safari to a new Windows Chrome 66.0 signature (transaction 3556719) and a generic Chrome signature, indicating multiple distinct access methods.",
+        "The generic browser signature ' |  | chrome 66.0 | ' has been seen on 9 cards, indicating it is a shared generic profile and not a unique identifier."
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "The customer C13171 reported transaction 3558054 as unauthorized. Although the transaction shares a device profile with 175 other cards, the device profile ' |  | chrome 66.0 | ' is a generic browser signature lacking model, OS, or screen fields, meaning it is shared by many unrelated users and does not provide evidence of a coordinated fraud ring or account takeover.",
+      "key_points": [
+        "Customer C13171 disputed transaction 3558054 ($55.68) as unauthorized.",
+        "The device profile associated with the transaction (' |  | chrome 66.0 | ') is highly generic and shared across 175 cards in the database, including transactions from C03218, C09657, and C10245.",
+        "Because the device signature is generic, the connection to other cards does not constitute evidence of a shared fraud ring."
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Customer C13171 has reported an unrecognized transaction of $55.68 (ID 3558054). This customer has an extensive history of confirmed fraud cases on card C13171-K2, including CC-2244, CC-2454, CC-2716, CC-3079, CC-3422, CC-3566, CC-3728, and CC-3928, which were all resolved as confirmed card-not-present fraud. Given this persistent pattern of unauthorized activity, the current alert is highly likely to be another instance of fraud.",
+      "key_points": [
+        "Customer C13171 reported transaction 3558054 ($55.68) as unauthorized.",
+        "The customer has at least eight prior closed cases (CC-2244, CC-2454, CC-2716, CC-3079, CC-3422, CC-3566, CC-3728, CC-3928) associated with card C13171-K2, all confirmed as fraud.",
+        "Prior cases involved card-not-present fraud patterns using various unauthorized devices, such as Windows, Android, and Moto G devices."
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "finding",
+      "key": "known_device",
+      "claim": "The device profile ( |  | chrome 66.0 | ) was already used 9 times on this card before the alert",
+      "lr": 1.0,
+      "family": "device",
+      "ref": "query:card_profile(card=C13171-K2, before_ts=2016-12-19 22:08:56, recent_days=30)",
+      "entity_ids": [
+        "3558054"
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$55.68 is a typical amount for this card (percentile 68%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C13171-K2, before_ts=2016-12-19 22:08:56, recent_days=30)",
+      "entity_ids": [
+        "3558054"
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "finding",
+      "key": "recurring_amount",
+      "claim": "The same amount (+/-1%) recurs on this card on the same day of the month: 2016-11-19 $55.54 (7 matching charge(s) in the last six months), consistent with a recurring charge",
+      "lr": 0.3,
+      "family": "amount",
+      "ref": "query:recurring_match(card=C13171-K2, amt=55.68, tol=0.56, before_ts=2016-12-19 22:08:56)",
+      "entity_ids": [
+        "3469864"
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-4819; latest note: \"Case CC-4819: model scored a $66.52 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C13171-K2)",
+      "entity_ids": [
+        "CC-4819"
+      ]
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "assessment",
+      "p": 0.26,
+      "prior": 0.6,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "known_device",
+          "family": "device",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0
+        },
+        {
+          "key": "recurring_amount",
+          "family": "amount",
+          "lr": 0.3,
+          "delta_logodds": -1.204
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 149.86,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: the customer disputes a charge"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R7: the disputed charge matches the card's own recurring pattern (same amount, monthly); confirm before any block"
+        },
+        {
+          "action": "WARN_CUSTOMER",
+          "route": "auto",
+          "reason": "R7: send a recurring-charge reminder showing the earlier matching charges"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: keep the case record; customer confirmation noted"
+          },
+          {
+            "action": "WARN_CUSTOMER",
+            "route": "auto",
+            "reason": "R7: recurring-charge reminder sent"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: the customer recognised the recurring charge"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: customer maintains the charge is unauthorised after seeing the recurring history; exposure $149.86 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: dispute on record"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Customer reviews the earlier matching charges and recognises the payment as their own recurring charge",
+      "asked_after_step": 9
+    },
+    {
+      "t": 1790179559.0,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: keep the case record; customer confirmation noted"
+        },
+        {
+          "action": "WARN_CUSTOMER",
+          "route": "auto",
+          "reason": "R7: recurring-charge reminder sent"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: the customer recognised the recurring charge"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790179559.01,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-4819",
+        "CC-2059",
+        "CC-0467",
+        "CC-4163",
+        "CC-1660",
+        "CC-0635",
+        "CC-1606",
+        "CC-5462"
+      ],
+      "knowledge": [
+        "No fraud",
+        "Glossary",
+        "Things to know",
+        "R5 Card testing",
+        "Notes",
+        "R3 Customer confirms the transaction"
+      ]
+    },
+    {
+      "t": 1790179584.95,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "If the customer denied the charge after reviewing the recurring pattern, R2 would apply, requiring BLOCK_CARD and CREATE_CASE."
+    },
+    {
+      "t": 1790179602.31,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "mirror",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3558054)",
+      "params": {
+        "txn": "3558054"
+      },
+      "rows": 1,
+      "ms": 19.7,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C13171-K2, start_ts=2016-12-05 22:08:56, end_ts=2016-12-20 03:08:56)",
+      "params": {
+        "card": "C13171-K2",
+        "start_ts": "2016-12-05 22:08:56",
+        "end_ts": "2016-12-20 03:08:56"
+      },
+      "rows": 81,
+      "ms": 16.2,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C13171-K2, before_ts=2016-12-19 22:08:56, recent_days=30)",
+      "params": {
+        "card": "C13171-K2",
+        "before_ts": "2016-12-19 22:08:56",
+        "recent_days": 30
+      },
+      "rows": 899,
+      "ms": 72.9,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C13171-K2, amt=55.68, tol=0.56, before_ts=2016-12-19 22:08:56)",
+      "params": {
+        "card": "C13171-K2",
+        "amt": 55.68,
+        "tol": 0.56,
+        "before_ts": "2016-12-19 22:08:56"
+      },
+      "rows": 7,
+      "ms": 16.5,
+      "via": "mirror"
+    },
+    {
+      "agent": "identity",
+      "tool": "mirror",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3558054, lookback_days=200)",
+      "params": {
+        "txn": "3558054",
+        "lookback_days": 200
+      },
+      "rows": 3,
+      "ms": 20.7,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev= |  | chrome 66.0 | , start_ts=2016-11-19 22:08:56, end_ts=2016-12-20 03:08:56)",
+      "params": {
+        "dev": " |  | chrome 66.0 | ",
+        "start_ts": "2016-11-19 22:08:56",
+        "end_ts": "2016-12-20 03:08:56"
+      },
+      "rows": 419,
+      "ms": 28.5,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C13171-K2)",
+      "params": {
+        "card": "C13171-K2"
+      },
+      "rows": 19,
+      "ms": 4.8,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C13171-K2, amt=55.68, tol=0.56, before_ts=2016-12-19 22:08:56)",
+      "params": {
+        "card": "C13171-K2",
+        "amt": 55.68,
+        "tol": 0.56,
+        "before_ts": "2016-12-19 22:08:56"
+      },
+      "rows": 7,
+      "ms": 13.5,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C13171-K2, start_ts=2016-11-19 22:08:56, end_ts=2016-12-20 03:08:56)",
+      "params": {
+        "card": "C13171-K2",
+        "start_ts": "2016-11-19 22:08:56",
+        "end_ts": "2016-12-20 03:08:56"
+      },
+      "rows": 140,
+      "ms": 21.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=8, pattern=, devices=[' |  | chrome 66.0 | '], cards=['C13171-K2'])",
+      "params": {
+        "k": 8,
+        "pattern": "",
+        "devices": [
+          " |  | chrome 66.0 | "
+        ],
+        "cards": [
+          "C13171-K2"
+        ]
+      },
+      "rows": 16,
+      "ms": 6.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 2.7,
+      "via": "mirror"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The card C13171-K2 shows a high volume of rapid transactions within a 72-hour window using multiple distinct email domains (gmail.com, hotmail.es, hotmail.com, outlook.com) and several different mobile and desktop devices. This pattern of highly fragmented device and email usage strongly supports the customer's claim of unauthorized activity, indicating a compromised card or account takeover.",
+      "risk": "high",
+      "key_points": [
+        "The disputed transaction 3558054 ($55.68) was processed using a hotmail.com email address and a generic Chrome browser signature.",
+        "Multiple distinct devices were used in the preceding 72 hours, including a Huawei ALE-L23 (3550100), Moto X Play (3551412), and Samsung SM-G900M (3553223, 3553269, 3553281).",
+        "Email addresses associated with the card switched rapidly between gmail.com, hotmail.es, hotmail.com, and outlook.com (e.g., 3553275, 3554288, 3554589), which is highly anomalous for a single legitimate user."
+      ],
+      "open_questions": [
+        "Which of the transactions in the 72-hour window, if any, were actually authorized by the legitimate cardholder?",
+        "How were the card credentials compromised (e.g., phishing, data breach, or physical theft)?"
+      ],
+      "suggested_pattern": "account_takeover"
+    },
+    "identity": {
+      "assessment": "The customer C13171 has disputed a transaction of $55.68 (ID 3558054). The account history shows rapid changes in both email domains (hotmail.com to gmail.com) and device profiles (mobile safari to chrome) within a single day on December 19, 2016, which strongly points to unauthorized access or account takeover.",
+      "risk": "high",
+      "key_points": [
+        "Customer C13171 disputed transaction 3558054 ($55.68) which is not present in the provided history but occurred around the same timeframe.",
+        "A transition from hotmail.com (transaction 3555768) to gmail.com (transactions 3556719 and 3557118) occurred within hours on 2016-12-19.",
+        "The device profile changed from mobile safari to a new Windows Chrome 66.0 signature (transaction 3556719) and a generic Chrome signature, indicating multiple distinct access methods.",
+        "The generic browser signature ' |  | chrome 66.0 | ' has been seen on 9 cards, indicating it is a shared generic profile and not a unique identifier."
+      ],
+      "open_questions": [
+        "What are the specific transaction details, including IP address and email used, for the disputed transaction 3558054?",
+        "Was there a formal credential change or password reset on account C13171-K2 preceding these transactions?"
+      ],
+      "suggested_pattern": "account_takeover"
+    },
+    "network": {
+      "assessment": "The customer C13171 reported transaction 3558054 as unauthorized. Although the transaction shares a device profile with 175 other cards, the device profile ' |  | chrome 66.0 | ' is a generic browser signature lacking model, OS, or screen fields, meaning it is shared by many unrelated users and does not provide evidence of a coordinated fraud ring or account takeover.",
+      "risk": "medium",
+      "key_points": [
+        "Customer C13171 disputed transaction 3558054 ($55.68) as unauthorized.",
+        "The device profile associated with the transaction (' |  | chrome 66.0 | ') is highly generic and shared across 175 cards in the database, including transactions from C03218, C09657, and C10245.",
+        "Because the device signature is generic, the connection to other cards does not constitute evidence of a shared fraud ring."
+      ],
+      "open_questions": [
+        "Are there other indicators of compromise on customer C13171's account, such as recent IP, email, or shipping address changes?",
+        "What are the specific transaction details for 3558054, as it was truncated from the provided transaction list?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "precedent": {
+      "assessment": "Customer C13171 has reported an unrecognized transaction of $55.68 (ID 3558054). This customer has an extensive history of confirmed fraud cases on card C13171-K2, including CC-2244, CC-2454, CC-2716, CC-3079, CC-3422, CC-3566, CC-3728, and CC-3928, which were all resolved as confirmed card-not-present fraud. Given this persistent pattern of unauthorized activity, the current alert is highly likely to be another instance of fraud.",
+      "risk": "high",
+      "key_points": [
+        "Customer C13171 reported transaction 3558054 ($55.68) as unauthorized.",
+        "The customer has at least eight prior closed cases (CC-2244, CC-2454, CC-2716, CC-3079, CC-3422, CC-3566, CC-3728, CC-3928) associated with card C13171-K2, all confirmed as fraud.",
+        "Prior cases involved card-not-present fraud patterns using various unauthorized devices, such as Windows, Android, and Moto G devices."
+      ],
+      "open_questions": [
+        "Why does the card ID C13171-K2 remain active across multiple cases if previous analyst notes state the card was blocked and reissued?",
+        "What device and merchant details are associated with the new disputed transaction 3558054?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is a legitimate recurring subscription charge that the customer has forgotten or failed to recognize.",
+      "The transaction is unauthorized (third-party fraud) despite matching previous recurring amounts."
+    ],
+    "extra_calls": [
+      {
+        "tool": "recurring_match",
+        "why": "To analyze the history of similar recurring charges on this card and verify if they occur regularly on the same day of the month.",
+        "tol_pct": 1.0
+      },
+      {
+        "tool": "card_window",
+        "why": "To inspect the card's overall transaction history around the flagged date for any other anomalous or unauthorized activity.",
+        "days_back": 30
+      }
+    ],
+    "focus": "Verify if the transaction is part of an established, legitimate recurring billing pattern that the customer may have forgotten."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "If the customer denied the charge after reviewing the recurring pattern, R2 would apply, requiring BLOCK_CARD and CREATE_CASE."
+  },
+  "problems": [],
+  "written": {
+    "ok": false
+  }
+}

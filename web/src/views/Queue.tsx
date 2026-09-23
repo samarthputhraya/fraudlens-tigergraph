@@ -246,9 +246,11 @@ export default function QueueView() {
                   <td className="px-2 py-3">
                     {v ? <VerdictBadge verdict={r.verdict} p={r.fraud_probability} /> : <span className="text-ink-600" title="Not investigated yet">—</span>}
                   </td>
-                  <td className="truncate px-2 py-3 text-[12.5px] text-ink-200">{v ? patternLabel(r.pattern) : <span className="text-ink-500">—</span>}</td>
+                  <td className="truncate px-2 py-3 text-[12.5px] text-ink-200">
+                    {v && r.pattern && r.pattern !== "none" ? patternLabel(r.pattern) : <span className="text-ink-500">{v ? "No fraud" : "—"}</span>}
+                  </td>
                   <td className="px-2 py-3 text-right font-mono text-[12.5px] tabular-nums text-ink-100">
-                    {r.exposure_usd != null && v ? money(r.exposure_usd) : <span className="text-ink-500">—</span>}
+                    {r.exposure_usd != null && v ? <span className={r.exposure_usd ? "" : "text-ink-500"}>{money(r.exposure_usd)}</span> : <span className="text-ink-500">—</span>}
                   </td>
                   <td className="px-2 py-3 text-center">
                     {r.sar ? (

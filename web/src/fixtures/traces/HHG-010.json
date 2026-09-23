@@ -1,0 +1,547 @@
+{
+  "case_id": "HHG-010",
+  "events": [
+    {
+      "t": 1790179337.27,
+      "kind": "trigger",
+      "case_id": "HHG-010",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3506725 ($1,000.03, online) at 0.90. Review and decide.",
+      "opened_at": "2016-12-02 18:18:27"
+    },
+    {
+      "t": 1790179337.27,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790179367.63,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Account Takeover (ATO) where an unauthorized user is making a high-value online purchase ($1,000.03) using a new device profile.",
+        "Legitimate transaction by the genuine cardholder making an unusually large purchase from a newly acquired or updated Windows 10 device.",
+        "Fraud ring activity involving a shared device profile used across multiple compromised card accounts."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the card's full transaction history, checking for recent velocity spikes, location changes, or other suspicious patterns leading up to this high-value transaction.",
+          "days_back": 30
+        },
+        {
+          "tool": "device_neighbors",
+          "why": "To determine if this specific device profile (Windows 10, Edge 16.0, 1366x768) has been used by other cards or customers, which would indicate a shared device or potential fraud ring.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1790179367.69,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3506725 is highly suspicious as it represents a significant deviation from the customer's historical baseline, exceeding the previous maximum transaction amount of $670.04. The transaction was initiated from a new Windows device using anonymous email domains, which contrasts sharply with the previous online transaction 3492086 that used a MacOS device and standard email providers.",
+      "key_points": [
+        "Transaction 3506725 ($1,000.03) significantly exceeds the customer's baseline maximum transaction amount of $670.04.",
+        "The transaction was completed on a new Windows device with anonymous email domains ('anonymous.com'), whereas the previous online transaction 3492086 used a MacOS device and 'comcast.net'/'gmail.com' emails.",
+        "The device profile used in transaction 3506725 is highly active across the system, appearing in 1,249 other transactions, which is unusual for a legitimate personal device."
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The transaction of $1,000.03 on account C10434-K1|469.0|153 is highly suspicious due to being the very first transaction on the account, executed from a newly seen device profile. The high transaction value combined with a complete lack of account history and a high model risk score of 0.90 strongly suggests potential card-not-present fraud.",
+      "key_points": [
+        "Transaction 3506725 was flagged with a high risk score of 0.90 for a large amount of $1,000.03.",
+        "The account C10434-K1|469.0|153 has no prior transaction history (n_txn: 1) and no historical records.",
+        "The transaction was made using a new device profile ('Windows | Windows 10 | edge 16.0 | 1366x768') that has never been seen on this card before."
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "high",
+      "assessment": "The alert transaction 3506725 is flagged with a high risk score of 0.90. While it shares a device profile ('Windows | Windows 10 | edge 16.0 | 1366x768') with 208 other cards, this profile represents a highly generic browser signature rather than a rare, specific device linking a fraud ring. However, several individual transactions sharing this profile, such as 3485180 (risk 0.87) and 3491096 (risk 0.74), also show elevated risk scores.",
+      "key_points": [
+        "Alert transaction 3506725 has a high risk score of 0.90 for a $1,000.03 online purchase.",
+        "The shared device profile 'Windows | Windows 10 | edge 16.0 | 1366x768' is highly generic, connecting 208 cards all-time, and does not inherently constitute evidence of a coordinated fraud ring.",
+        "Multiple other transactions on this generic device profile show high risk scores, including transaction 3485180 ($100.04, risk 0.87) and transaction 3491096 ($24.91, risk 0.74)."
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Transaction 3506725 has been flagged with a high risk score of 0.90 for a large online purchase of $1,000.03. While a previous case CC-0873 on card C10434-K1 was cleared as legitimate travel, the significantly higher value of the current transaction warrants immediate verification. We must confirm if this transaction is authorized before clearing the alert.",
+      "key_points": [
+        "Transaction 3506725 was flagged with a high model risk score of 0.90 for $1,000.03.",
+        "Prior case CC-0873 on card C10434-K1 was closed as cleared after the customer confirmed travel in July 2016.",
+        "The current transaction value of $1,000.03 is substantially larger than the $50.05 transaction cleared in the previous case."
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "finding",
+      "key": "new_device",
+      "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Windows | Windows 10 | edge 16.0 | 1366x768)",
+      "lr": 1.4,
+      "family": "device",
+      "ref": "query:txn_context(txn=3506725)",
+      "entity_ids": [
+        "3506725"
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "finding",
+      "key": "amount_above_max",
+      "claim": "$1,000.03 is above every earlier purchase on this card (previous maximum $670.04)",
+      "lr": 1.3,
+      "family": "amount",
+      "ref": "query:card_profile(card=C10434-K1, before_ts=2016-12-02 15:18:27, recent_days=30)",
+      "entity_ids": [
+        "3506725"
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0873; latest note: \"Case CC-0873: model scored a $50.05 transaction at 0.93. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C10434-K1)",
+      "entity_ids": [
+        "CC-0873"
+      ]
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "assessment",
+      "p": 0.56,
+      "prior": 0.4679620633819107,
+      "verdict": "uncertain",
+      "pattern": "card_not_present_new_device",
+      "contributions": [
+        {
+          "key": "new_device",
+          "family": "device",
+          "lr": 1.4,
+          "delta_logodds": 0.336
+        },
+        {
+          "key": "amount_above_max",
+          "family": "amount",
+          "lr": 1.3,
+          "delta_logodds": 0.262
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223
+        }
+      ],
+      "exposure": 1000.03,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.56)"
+        },
+        {
+          "action": "STEP_UP_AUTH",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.56 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $1,000.03 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R2 / section 3a: exposure $1,000.03 exceeds $1,000"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R4 / R8: verdict still uncertain and exposure $1,000.03 exceeds $500"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "evidence_request",
+      "type": "step_up_auth",
+      "branch": "no_reply",
+      "assumed_response": "No reply from the cardholder within 24 hours of the verification request",
+      "asked_after_step": 9
+    },
+    {
+      "t": 1790179431.94,
+      "kind": "decision",
+      "verdict": "uncertain",
+      "p": 0.56,
+      "pattern": "card_not_present_new_device",
+      "final": [
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+        },
+        {
+          "action": "DECLINE_TRANSACTION",
+          "route": "L1",
+          "reason": "R4: decline the pending authorisation"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R4 / R8: verdict still uncertain and exposure $1,000.03 exceeds $500"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 1000.03,
+      "episode": [
+        "3506725"
+      ]
+    },
+    {
+      "t": 1790179431.96,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-3954",
+        "CC-2720",
+        "CC-4362",
+        "CC-4333",
+        "CC-4654",
+        "CC-0873"
+      ],
+      "knowledge": [
+        "Card-not-present fraud from a new device",
+        "Account takeover",
+        "Card-not-present fraud",
+        "Out-of-region use",
+        "The five known fraud patterns",
+        "The five known fraud patterns"
+      ]
+    },
+    {
+      "t": 1790179455.52,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "DECLINE_TRANSACTION is incorrectly included in initial_actions. The policy does not authorize declining a transaction as a temporary hold while waiting for verification. R4 explicitly states to apply DECLINE_TRANSACTION only after 24 hours of no reply."
+      ],
+      "what_would_change_verdict": "Remove DECLINE_TRANSACTION from initial_actions to comply with R1 and R4, applying it only in final_actions after the 24-hour no-reply condition is met."
+    },
+    {
+      "t": 1790179480.42,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "mirror",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3506725)",
+      "params": {
+        "txn": "3506725"
+      },
+      "rows": 1,
+      "ms": 39.4,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C10434-K1, start_ts=2016-11-18 15:18:27, end_ts=2016-12-02 18:18:27)",
+      "params": {
+        "card": "C10434-K1",
+        "start_ts": "2016-11-18 15:18:27",
+        "end_ts": "2016-12-02 18:18:27"
+      },
+      "rows": 3,
+      "ms": 38.8,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C10434-K1, before_ts=2016-12-02 15:18:27, recent_days=30)",
+      "params": {
+        "card": "C10434-K1",
+        "before_ts": "2016-12-02 15:18:27",
+        "recent_days": 30
+      },
+      "rows": 33,
+      "ms": 50.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C10434-K1, amt=1000.03, tol=10.0, before_ts=2016-12-02 15:18:27)",
+      "params": {
+        "card": "C10434-K1",
+        "amt": 1000.03,
+        "tol": 10.0,
+        "before_ts": "2016-12-02 15:18:27"
+      },
+      "rows": 0,
+      "ms": 19.9,
+      "via": "mirror"
+    },
+    {
+      "agent": "identity",
+      "tool": "mirror",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3506725, lookback_days=200)",
+      "params": {
+        "txn": "3506725",
+        "lookback_days": 200
+      },
+      "rows": 0,
+      "ms": 49.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Windows | Windows 10 | edge 16.0 | 1366x768, start_ts=2016-11-02 15:18:27, end_ts=2016-12-02 18:18:27)",
+      "params": {
+        "dev": "Windows | Windows 10 | edge 16.0 | 1366x768",
+        "start_ts": "2016-11-02 15:18:27",
+        "end_ts": "2016-12-02 18:18:27"
+      },
+      "rows": 63,
+      "ms": 122.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C10434-K1)",
+      "params": {
+        "card": "C10434-K1"
+      },
+      "rows": 1,
+      "ms": 19.4,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C10434-K1, start_ts=2016-11-02 15:18:27, end_ts=2016-12-02 18:18:27)",
+      "params": {
+        "card": "C10434-K1",
+        "start_ts": "2016-11-02 15:18:27",
+        "end_ts": "2016-12-02 18:18:27"
+      },
+      "rows": 3,
+      "ms": 22.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "network",
+      "tool": "mirror",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Windows | Windows 10 | edge 16.0 | 1366x768, start_ts=2016-11-02 15:18:27, end_ts=2016-12-02 18:18:27)",
+      "params": {
+        "dev": "Windows | Windows 10 | edge 16.0 | 1366x768",
+        "start_ts": "2016-11-02 15:18:27",
+        "end_ts": "2016-12-02 18:18:27"
+      },
+      "rows": 63,
+      "ms": 37.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | Windows 10 | edge 16.0 | 1366x768'], cards=['C10434-K1'])",
+      "params": {
+        "k": 8,
+        "pattern": "",
+        "devices": [
+          "Windows | Windows 10 | edge 16.0 | 1366x768"
+        ],
+        "cards": [
+          "C10434-K1"
+        ]
+      },
+      "rows": 16,
+      "ms": 13.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 0.0,
+      "via": "mirror"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3506725 is highly suspicious as it represents a significant deviation from the customer's historical baseline, exceeding the previous maximum transaction amount of $670.04. The transaction was initiated from a new Windows device using anonymous email domains, which contrasts sharply with the previous online transaction 3492086 that used a MacOS device and standard email providers.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3506725 ($1,000.03) significantly exceeds the customer's baseline maximum transaction amount of $670.04.",
+        "The transaction was completed on a new Windows device with anonymous email domains ('anonymous.com'), whereas the previous online transaction 3492086 used a MacOS device and 'comcast.net'/'gmail.com' emails.",
+        "The device profile used in transaction 3506725 is highly active across the system, appearing in 1,249 other transactions, which is unusual for a legitimate personal device."
+      ],
+      "open_questions": [
+        "Can we confirm if the cardholder authorized the sudden change in device, email addresses, and the unusually high transaction amount?",
+        "Is the high volume of 1,249 transactions on this specific Windows device profile indicative of a shared public terminal or a coordinated fraud tool?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The transaction of $1,000.03 on account C10434-K1|469.0|153 is highly suspicious due to being the very first transaction on the account, executed from a newly seen device profile. The high transaction value combined with a complete lack of account history and a high model risk score of 0.90 strongly suggests potential card-not-present fraud.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3506725 was flagged with a high risk score of 0.90 for a large amount of $1,000.03.",
+        "The account C10434-K1|469.0|153 has no prior transaction history (n_txn: 1) and no historical records.",
+        "The transaction was made using a new device profile ('Windows | Windows 10 | edge 16.0 | 1366x768') that has never been seen on this card before."
+      ],
+      "open_questions": [
+        "Is the cardholder aware of this transaction, or has the card been compromised?",
+        "Are there other associated accounts or transactions sharing this specific device profile?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "The alert transaction 3506725 is flagged with a high risk score of 0.90. While it shares a device profile ('Windows | Windows 10 | edge 16.0 | 1366x768') with 208 other cards, this profile represents a highly generic browser signature rather than a rare, specific device linking a fraud ring. However, several individual transactions sharing this profile, such as 3485180 (risk 0.87) and 3491096 (risk 0.74), also show elevated risk scores.",
+      "risk": "high",
+      "key_points": [
+        "Alert transaction 3506725 has a high risk score of 0.90 for a $1,000.03 online purchase.",
+        "The shared device profile 'Windows | Windows 10 | edge 16.0 | 1366x768' is highly generic, connecting 208 cards all-time, and does not inherently constitute evidence of a coordinated fraud ring.",
+        "Multiple other transactions on this generic device profile show high risk scores, including transaction 3485180 ($100.04, risk 0.87) and transaction 3491096 ($24.91, risk 0.74)."
+      ],
+      "open_questions": [
+        "What are the specific card, customer, and location details for the alert transaction 3506725?",
+        "Are there any chargeback histories or confirmed fraud cases associated with the other high-risk transactions sharing this generic device profile?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "precedent": {
+      "assessment": "Transaction 3506725 has been flagged with a high risk score of 0.90 for a large online purchase of $1,000.03. While a previous case CC-0873 on card C10434-K1 was cleared as legitimate travel, the significantly higher value of the current transaction warrants immediate verification. We must confirm if this transaction is authorized before clearing the alert.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3506725 was flagged with a high model risk score of 0.90 for $1,000.03.",
+        "Prior case CC-0873 on card C10434-K1 was closed as cleared after the customer confirmed travel in July 2016.",
+        "The current transaction value of $1,000.03 is substantially larger than the $50.05 transaction cleared in the previous case."
+      ],
+      "open_questions": [
+        "Is the customer currently traveling, or is this transaction originating from their home region?",
+        "Has the customer authorized this specific high-value online transaction of $1,000.03?"
+      ],
+      "suggested_pattern": "undocumented"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Account Takeover (ATO) where an unauthorized user is making a high-value online purchase ($1,000.03) using a new device profile.",
+      "Legitimate transaction by the genuine cardholder making an unusually large purchase from a newly acquired or updated Windows 10 device.",
+      "Fraud ring activity involving a shared device profile used across multiple compromised card accounts."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the card's full transaction history, checking for recent velocity spikes, location changes, or other suspicious patterns leading up to this high-value transaction.",
+        "days_back": 30
+      },
+      {
+        "tool": "device_neighbors",
+        "why": "To determine if this specific device profile (Windows 10, Edge 16.0, 1366x768) has been used by other cards or customers, which would indicate a shared device or potential fraud ring.",
+        "days_back": 30
+      }
+    ],
+    "focus": "Determine if the new device profile is unique to this cardholder or shared across other accounts, and evaluate the cardholder's historical spending patterns to assess the likelihood of ATO."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "DECLINE_TRANSACTION is incorrectly included in initial_actions. The policy does not authorize declining a transaction as a temporary hold while waiting for verification. R4 explicitly states to apply DECLINE_TRANSACTION only after 24 hours of no reply."
+    ],
+    "what_would_change_verdict": "Remove DECLINE_TRANSACTION from initial_actions to comply with R1 and R4, applying it only in final_actions after the 24-hour no-reply condition is met."
+  },
+  "problems": [],
+  "written": {
+    "ok": false
+  }
+}

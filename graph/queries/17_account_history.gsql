@@ -3,7 +3,7 @@ CREATE OR REPLACE QUERY account_history(VERTEX<Transaction> txn, INT lookback_da
      flagged transaction (card + billing region + account-open day), and the closed / investigation cases those
      transactions belong to. Prior confirmed fraud on the same account is the strongest single fraud signal. */
   SetAccum<STRING> @closed_cases, @outcomes, @patterns, @inv_cases;
-  SumAccum<STRING> @device, @is_new;
+  SumAccum<STRING> @device, @new_flag;
   MaxAccum<DATETIME> @@t0;
   DATETIME since;
   T0 = {txn};
@@ -14,8 +14,8 @@ CREATE OR REPLACE QUERY account_history(VERTEX<Transaction> txn, INT lookback_da
   X = SELECT t FROM H:t -(rev_INVOLVES:e)-> ClosedCase:cc
       ACCUM t.@closed_cases += cc.id, t.@outcomes += cc.outcome, t.@patterns += cc.pattern;
   Y = SELECT t FROM H:t -(rev_CASE_TXN:e)-> InvestigationCase:ic ACCUM t.@inv_cases += ic.case_ref;
-  Z = SELECT t FROM H:t -(FROM_DEVICE:e)-> DeviceProfile:d ACCUM t.@device = d.id, t.@is_new = e.is_new;
+  Z = SELECT t FROM H:t -(FROM_DEVICE:e)-> DeviceProfile:d ACCUM t.@device = d.id, t.@new_flag = e.dev_new;
   PRINT A[A.id, A.card_id, A.addr1, A.open_day, A.n_txn, A.first_ts, A.last_ts] AS account;
-  PRINT H[H.id, H.ts, H.amt, H.product, H.channel, H.addr1, H.risk_score, H.@device, H.@is_new,
+  PRINT H[H.id, H.ts, H.amt, H.product, H.channel, H.addr1, H.risk_score, H.@device, H.@new_flag,
           H.@closed_cases, H.@outcomes, H.@patterns, H.@inv_cases] AS history;
 }

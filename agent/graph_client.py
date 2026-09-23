@@ -26,9 +26,22 @@ load_dotenv(ROOT / ".env")
 sys.path.insert(0, str(ROOT / "graph"))
 
 
+_RENAME = {"new_flag": "is_new", "proxy_type": "proxy"}  # GSQL reserves is_new; map back to the agent's names
+VERTEX_PARAMS = {"txn_context": ("txn",), "card_window": ("card",), "card_profile": ("card",),
+                 "recurring_match": ("card",), "device_neighbors": ("dev",), "region_activity": ("region",),
+                 "prior_cases": ("card",), "account_history": ("txn",), "case_graph": ("ic",)}
+SET_VERTEX_PARAMS = {"similar_cases": ("devices", "cards")}
+ALLOWED_MCP_TOOLS = ",".join([
+    "run_installed_query", "get_query_description", "get_query_metadata", "is_query_installed", "show_query",
+    "search_top_k_similarity", "get_graph_schema", "get_node", "get_nodes", "get_neighbors", "get_vertex_count",
+    "get_edge_count",
+])
+
+
 def _clean_key(k: str) -> str:
     """'T.@device' -> 'device', 'T.amt' -> 'amt'."""
-    return k.split(".")[-1].lstrip("@")
+    k = k.split(".")[-1].lstrip("@")
+    return _RENAME.get(k, k)
 
 
 def _flatten_vertices(items: list) -> list[dict]:
@@ -123,7 +136,9 @@ class _MCPBridge:
                     "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""), "PYTHONIOENCODING": "utf-8"})
         if "tgcloud" in env.get("TG_HOST", ""):
             env.setdefault("TG_TGCLOUD", "true")
-        params = StdioServerParameters(command=exe, args=["--allowed-tools", "read-only"], env=env)
+        # Least privilege: the reasoning agent may read and run installed investigation queries, nothing else
+        # (no schema, loading, DML or GSQL tools). Writes go through agent/case_writer.py only.
+        params = StdioServerParameters(command=exe, args=["--allowed-tools", ALLOWED_MCP_TOOLS], env=env)
         self._ctx = stdio_client(params)
         read, write = await self._ctx.__aenter__()
         self._session_ctx = ClientSession(read, write)
@@ -134,7 +149,14 @@ class _MCPBridge:
         async def _go():
             res = await self.session.call_tool(tool, args)
             text = "".join(getattr(c, "text", "") for c in res.content)
-            return json.loads(text) if text.strip().startswith("{") else {"success": False, "error": text}
+            # the server returns a ```json fenced ToolResponse followed by markdown suggestions/metadata
+            import re as _re
+            m = _re.search(r"```json\s*(\{.*?\})\s*```", text, _re.S)
+            body = m.group(1) if m else text[text.find("{"):text.rfind("}") + 1]
+            try:
+                return json.loads(body)
+            except json.JSONDecodeError:
+                return {"success": False, "error": text[:500]}
         return asyncio.run_coroutine_threadsafe(_go(), self.loop).result(timeout=timeout)
 
 
@@ -152,25 +174,38 @@ class GraphClient:
                 self._mcp = None
 
     # ---- core -------------------------------------------------------------------------------
+    @staticmethod
+    def _post_params(query: str, params: dict) -> dict:
+        """JSON POST form for installed queries: VERTEX<T> -> {"id": v}, SET<VERTEX<T>> -> [{"id": v}, ...]."""
+        out = dict(params)
+        for k in VERTEX_PARAMS.get(query, ()):
+            if k in out and not isinstance(out[k], dict):
+                out[k] = {"id": str(out[k])}
+        for k in SET_VERTEX_PARAMS.get(query, ()):
+            if k in out:
+                out[k] = [{"id": str(v)} for v in (out[k] or [])]
+        return out
+
     def run(self, query: str, params: dict | None = None, agent: str | None = None) -> dict:
         params = params or {}
+        post = self._post_params(query, params)
         t0 = time.time()
         via = "mcp" if self._mcp else "rest"
         ok = True
         try:
             if self._mcp:
-                resp = self._mcp.call("tigergraph__run_installed_query", {"query_name": query, "params": params})
+                resp = self._mcp.call("tigergraph__run_installed_query", {"query_name": query, "params": post})
                 if not resp.get("success", False):
                     raise RuntimeError(resp.get("error") or resp.get("summary"))
                 raw = resp["data"]["result"]
             else:
                 from tg import run_query
-                raw = run_query(query, params)
+                raw = run_query(query, post)
         except Exception as e:  # noqa: BLE001
             if self._mcp:  # one REST retry keeps the investigation alive if the MCP call fails
                 from tg import run_query
                 via = "rest"
-                raw = run_query(query, params)
+                raw = run_query(query, post)
                 print(f"[graph] MCP call failed for {query}: {str(e)[:120]} -> REST ok")
             else:
                 ok = False

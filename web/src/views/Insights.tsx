@@ -1,5 +1,5 @@
 import {
-  CartesianGrid, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis, Bar, BarChart, Line, ComposedChart,
+  CartesianGrid, Cell, LabelList, Pie, PieChart, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis, Bar, BarChart, Line, ComposedChart,
 } from "recharts";
 import { Info, Network } from "lucide-react";
 import { useLoad } from "../api";
@@ -46,7 +46,12 @@ export default function InsightsView() {
   const rel = (b?.reliability || []).map((r) => ({ ...r, label: r.bin }));
   const verdicts = p ? Object.entries(p.verdicts).filter(([, n]) => n > 0).map(([k, n]) => ({ name: k, value: n })) : [];
   const nCases = verdicts.reduce((s, x) => s + x.value, 0);
-  const patterns = p ? Object.entries(p.patterns).map(([k, n]) => ({ name: patternLabel(k), value: n })).sort((a, b) => b.value - a.value) : [];
+  const patterns = p
+    ? Object.entries(p.patterns).filter(([k]) => k !== "none").map(([k, n]) => ({ name: patternLabel(k), value: n })).sort((a, b) => b.value - a.value)
+    : [];
+  const noPattern = p?.patterns?.none || 0;
+  const pMax = Math.max(1, ...patterns.map((x) => x.value));
+  const pTicks = Array.from({ length: Math.floor(pMax / (pMax > 8 ? 2 : 1)) + 1 }, (_, i) => i * (pMax > 8 ? 2 : 1));
 
   return (
     <div className="mx-auto max-w-[1560px] px-8 py-6">
@@ -183,14 +188,16 @@ export default function InsightsView() {
         )}
 
         {p && (
-          <Panel className="col-span-12 xl:col-span-6" title="Patterns found" aside={<span>cases per pattern</span>}>
+          <Panel className="col-span-12 xl:col-span-6" title="Patterns found" aside={<span>fraud and uncertain cases per pattern{noPattern ? `; ${noPattern} legitimate cases have none` : ""}</span>}>
             <div style={{ height: Math.max(90, patterns.length * 34 + 30) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={patterns} layout="vertical" margin={{ top: 0, right: 30, bottom: 0, left: 0 }} barCategoryGap={8}>
-                  <XAxis type="number" allowDecimals={false} domain={[0, (m: number) => Math.max(1, m)]} tick={AXIS} axisLine={{ stroke: "#2B3544" }} tickLine={false} />
+                  <XAxis type="number" allowDecimals={false} domain={[0, pMax]} ticks={pTicks} tick={AXIS} axisLine={{ stroke: "#2B3544" }} tickLine={false} />
                   <YAxis type="category" dataKey="name" width={150} tick={{ fill: "#C3CBD7", fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip cursor={{ fill: "rgba(255,255,255,0.03)" }} content={<SimpleTip />} />
-                  <Bar dataKey="value" fill="#F58025" radius={[0, 4, 4, 0]} maxBarSize={18} label={{ position: "right", fill: "#C3CBD7", fontSize: 11 }} />
+                  <Bar dataKey="value" fill="#F58025" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                    <LabelList dataKey="value" position="right" fill="#C3CBD7" fontSize={11} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

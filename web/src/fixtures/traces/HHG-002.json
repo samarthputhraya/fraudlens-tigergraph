@@ -1,0 +1,477 @@
+{
+  "case_id": "HHG-002",
+  "events": [
+    {
+      "t": 1790177921.27,
+      "kind": "trigger",
+      "case_id": "HHG-002",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3478782 ($292.36, online) at 0.79. Review and decide.",
+      "opened_at": "2016-11-22 23:27:07"
+    },
+    {
+      "t": 1790177921.27,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1790177921.36,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is a Card-Not-Present (CNP) fraud or Account Takeover (ATO) attempt, as the amount ($292.36) is significantly higher than any previous transaction on this card ($121.32) and lacks device or billing address details.",
+        "The transaction is a legitimate high-value purchase by the genuine cardholder, possibly related to holiday shopping given the late November timestamp."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the card's full transaction history over the last 90 days to assess the cardholder's typical purchasing patterns, frequency, and any other recent unusual activity.",
+          "days_back": 90
+        },
+        {
+          "tool": "similar_cases_by_pattern",
+          "why": "To identify if there are closed fraud cases with a similar pattern of high-value online transactions, missing device/address data, and hotmail.com emails.",
+          "pattern": "account_takeover"
+        }
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3478782 ($292.36) represents a significant deviation from the customer's established purchasing baseline, where the maximum historical transaction was $121.32. Although the email domain (hotmail.com) matches some historical transactions, the high risk score of 0.79 and the lack of device or location data raise concerns of potential card-not-present fraud.",
+      "key_points": [
+        "Transaction 3478782 is a major value outlier at $292.36, more than double the historical baseline maximum of $121.32.",
+        "The transaction was flagged with a high real-time model risk score of 0.79.",
+        "Historical transactions show a transition from anonymous.com emails (e.g., 3215277, 3230270) to hotmail.com (e.g., 3272926, 3273763), which matches the flagged transaction."
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The flagged transaction 3478782 ($292.36) has an elevated risk score of 0.79, while the associated account C11891-K1||-305 shows a limited history of only two transactions. The prior transaction 3043555 was completed successfully with a low risk score of 0.21 and a lower amount of $121.32. Both transactions lack device fingerprinting data, preventing a conclusive device-based link.",
+      "key_points": [
+        "Transaction 3478782 is flagged with a high risk score of 0.79, representing a significant increase in transaction value compared to the historical transaction 3043555 ($121.32).",
+        "The resolved account C11891-K1||-305 has a very sparse history with only 2 transactions recorded.",
+        "Device data is entirely missing for both the flagged transaction and the historical transaction 3043555, with device_seen_on_card returning 0."
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The network analysis for transaction 3478782 reveals no connected cards, shared devices, or regional anomalies in the provided evidence. Without any network links or historical device data, we cannot identify any fraud rings or shared device profiles associated with this transaction. Consequently, there is no network-based evidence to support the high real-time model risk score of 0.79.",
+      "key_points": [
+        "Transaction 3478782 has no associated device neighbors or historical transactions in the provided dataset.",
+        "No other cards or connected cases were found linked to the device profile or transaction region.",
+        "The lack of network connections prevents the identification of any shared device profiles or fraud rings."
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Transaction 3478782 is flagged with a high risk score of 0.79. The customer has a history of confirmed fraud under case CC-4160, which involved card-not-present fraud on card C11891-K1. Given this prior exposure and the high model score, the transaction is highly suspicious.",
+      "key_points": [
+        "Transaction 3478782 is an online transaction for $292.36 with a high risk score of 0.79.",
+        "The customer has a prior confirmed fraud case, CC-4160, on card C11891-K1, which was classified as card-not-present fraud.",
+        "Similar cases such as CC-1620 and CC-3208 show patterns of confirmed fraud with comparable transaction amounts."
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "finding",
+      "key": "amount_above_max",
+      "claim": "$292.36 is above every earlier purchase on this card (previous maximum $121.32)",
+      "lr": 1.3,
+      "family": "amount",
+      "ref": "query:card_profile(card=C11891-K1, before_ts=2016-11-22 17:27:07, recent_days=30)",
+      "entity_ids": [
+        "3478782"
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "assessment",
+      "p": 0.3,
+      "prior": 0.25235670170115937,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "amount_above_max",
+          "family": "amount",
+          "lr": 1.3,
+          "delta_logodds": 0.262
+        }
+      ],
+      "exposure": 292.36,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.30 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed the purchase; amount unusual but consistent with their stated intent; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $292.36 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed the purchase; amount unusual but consistent with their stated intent",
+      "asked_after_step": 8
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed the purchase; amount unusual but consistent with their stated intent; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-4160",
+        "CC-2323",
+        "CC-2742",
+        "CC-2285",
+        "CC-5236",
+        "CC-5324",
+        "CC-0138"
+      ],
+      "knowledge": [
+        "No fraud",
+        "Glossary",
+        "Things to know",
+        "R5 Card testing",
+        "Notes",
+        "R3 Customer confirms the transaction"
+      ]
+    },
+    {
+      "t": 1790177921.38,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The draft incorrectly sets the initial_probability to 0.30 to justify applying R1, despite the trigger explicitly stating the real-time model scored the transaction at 0.79. Since 0.79 is not < 0.70, R1 does not apply.",
+        "The precedent specialist notes a history of confirmed fraud on this exact card (CC-4160). This prior compromise conflicts with the decision to assume the customer confirmed the transaction and close the case as legitimate."
+      ],
+      "what_would_change_verdict": "Using the correct initial probability of 0.79 and factoring in the prior confirmed fraud on the card would invalidate the assumed customer confirmation, changing the verdict to fraud and requiring the card to be blocked."
+    },
+    {
+      "t": 1790177921.39,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "mirror",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3478782)",
+      "params": {
+        "txn": "3478782"
+      },
+      "rows": 1,
+      "ms": 9.1,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11891-K1, start_ts=2016-11-08 17:27:07, end_ts=2016-11-22 23:27:07)",
+      "params": {
+        "card": "C11891-K1",
+        "start_ts": "2016-11-08 17:27:07",
+        "end_ts": "2016-11-22 23:27:07"
+      },
+      "rows": 1,
+      "ms": 5.1,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C11891-K1, before_ts=2016-11-22 17:27:07, recent_days=30)",
+      "params": {
+        "card": "C11891-K1",
+        "before_ts": "2016-11-22 17:27:07",
+        "recent_days": 30
+      },
+      "rows": 35,
+      "ms": 24.7,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C11891-K1, amt=292.36, tol=2.92, before_ts=2016-11-22 17:27:07)",
+      "params": {
+        "card": "C11891-K1",
+        "amt": 292.36,
+        "tol": 2.92,
+        "before_ts": "2016-11-22 17:27:07"
+      },
+      "rows": 0,
+      "ms": 15.7,
+      "via": "mirror"
+    },
+    {
+      "agent": "identity",
+      "tool": "mirror",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3478782, lookback_days=200)",
+      "params": {
+        "txn": "3478782",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 29.2,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C11891-K1)",
+      "params": {
+        "card": "C11891-K1"
+      },
+      "rows": 1,
+      "ms": 5.6,
+      "via": "mirror"
+    },
+    {
+      "agent": "transaction",
+      "tool": "mirror",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11891-K1, start_ts=2016-08-24 17:27:07, end_ts=2016-11-22 23:27:07)",
+      "params": {
+        "card": "C11891-K1",
+        "start_ts": "2016-08-24 17:27:07",
+        "end_ts": "2016-11-22 23:27:07"
+      },
+      "rows": 29,
+      "ms": 3.9,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=5, pattern=account_takeover, devices=[], cards=['C11891-K1'])",
+      "params": {
+        "k": 5,
+        "pattern": "account_takeover",
+        "devices": [],
+        "cards": [
+          "C11891-K1"
+        ]
+      },
+      "rows": 6,
+      "ms": 11.1,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(k=8, pattern=, devices=[], cards=['C11891-K1'])",
+      "params": {
+        "k": 8,
+        "pattern": "",
+        "devices": [],
+        "cards": [
+          "C11891-K1"
+        ]
+      },
+      "rows": 9,
+      "ms": 1.0,
+      "via": "mirror"
+    },
+    {
+      "agent": "precedent",
+      "tool": "mirror",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 0.0,
+      "via": "mirror"
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3478782 ($292.36) represents a significant deviation from the customer's established purchasing baseline, where the maximum historical transaction was $121.32. Although the email domain (hotmail.com) matches some historical transactions, the high risk score of 0.79 and the lack of device or location data raise concerns of potential card-not-present fraud.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3478782 is a major value outlier at $292.36, more than double the historical baseline maximum of $121.32.",
+        "The transaction was flagged with a high real-time model risk score of 0.79.",
+        "Historical transactions show a transition from anonymous.com emails (e.g., 3215277, 3230270) to hotmail.com (e.g., 3272926, 3273763), which matches the flagged transaction."
+      ],
+      "open_questions": [
+        "What is the physical billing or shipping address associated with transaction 3478782, as addr1 is missing?",
+        "Is the sudden spike in transaction amount a legitimate high-value purchase by the cardholder?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "identity": {
+      "assessment": "The flagged transaction 3478782 ($292.36) has an elevated risk score of 0.79, while the associated account C11891-K1||-305 shows a limited history of only two transactions. The prior transaction 3043555 was completed successfully with a low risk score of 0.21 and a lower amount of $121.32. Both transactions lack device fingerprinting data, preventing a conclusive device-based link.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3478782 is flagged with a high risk score of 0.79, representing a significant increase in transaction value compared to the historical transaction 3043555 ($121.32).",
+        "The resolved account C11891-K1||-305 has a very sparse history with only 2 transactions recorded.",
+        "Device data is entirely missing for both the flagged transaction and the historical transaction 3043555, with device_seen_on_card returning 0."
+      ],
+      "open_questions": [
+        "Why is device fingerprinting data missing for both the current transaction 3478782 and the historical transaction 3043555?",
+        "What is the details and status of the second transaction associated with account C11891-K1||-305, as only one is detailed in the history?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The network analysis for transaction 3478782 reveals no connected cards, shared devices, or regional anomalies in the provided evidence. Without any network links or historical device data, we cannot identify any fraud rings or shared device profiles associated with this transaction. Consequently, there is no network-based evidence to support the high real-time model risk score of 0.79.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3478782 has no associated device neighbors or historical transactions in the provided dataset.",
+        "No other cards or connected cases were found linked to the device profile or transaction region.",
+        "The lack of network connections prevents the identification of any shared device profiles or fraud rings."
+      ],
+      "open_questions": [
+        "What triggered the high real-time model risk score of 0.79 for transaction 3478782?",
+        "Are there any transaction-specific details, such as IP address or billing address, that link this transaction to other accounts outside the network graph?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "Transaction 3478782 is flagged with a high risk score of 0.79. The customer has a history of confirmed fraud under case CC-4160, which involved card-not-present fraud on card C11891-K1. Given this prior exposure and the high model score, the transaction is highly suspicious.",
+      "risk": "high",
+      "key_points": [
+        "Transaction 3478782 is an online transaction for $292.36 with a high risk score of 0.79.",
+        "The customer has a prior confirmed fraud case, CC-4160, on card C11891-K1, which was classified as card-not-present fraud.",
+        "Similar cases such as CC-1620 and CC-3208 show patterns of confirmed fraud with comparable transaction amounts."
+      ],
+      "open_questions": [
+        "Is transaction 3478782 being conducted from the same device or IP address as the fraudulent transaction in case CC-4160?",
+        "Has the customer reported this transaction or any other unrecognized activity recently?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is a Card-Not-Present (CNP) fraud or Account Takeover (ATO) attempt, as the amount ($292.36) is significantly higher than any previous transaction on this card ($121.32) and lacks device or billing address details.",
+      "The transaction is a legitimate high-value purchase by the genuine cardholder, possibly related to holiday shopping given the late November timestamp."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the card's full transaction history over the last 90 days to assess the cardholder's typical purchasing patterns, frequency, and any other recent unusual activity.",
+        "days_back": 90
+      },
+      {
+        "tool": "similar_cases_by_pattern",
+        "why": "To identify if there are closed fraud cases with a similar pattern of high-value online transactions, missing device/address data, and hotmail.com emails.",
+        "pattern": "account_takeover"
+      }
+    ],
+    "focus": "The primary focus is to determine whether the sudden increase in transaction value represents a legitimate change in cardholder behavior or unauthorized card usage."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The draft incorrectly sets the initial_probability to 0.30 to justify applying R1, despite the trigger explicitly stating the real-time model scored the transaction at 0.79. Since 0.79 is not < 0.70, R1 does not apply.",
+      "The precedent specialist notes a history of confirmed fraud on this exact card (CC-4160). This prior compromise conflicts with the decision to assume the customer confirmed the transaction and close the case as legitimate."
+    ],
+    "what_would_change_verdict": "Using the correct initial probability of 0.79 and factoring in the prior confirmed fraud on the card would invalidate the assumed customer confirmation, changing the verdict to fraud and requiring the card to be blocked."
+  },
+  "problems": [],
+  "written": {
+    "ok": false
+  }
+}
