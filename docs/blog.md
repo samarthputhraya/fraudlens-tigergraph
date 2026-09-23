@@ -44,7 +44,7 @@ transaction ID. A validator rejects any answer that mentions an ID that doesn't 
 ![architecture](architecture.png)
 
 1. **Trigger**: a model score, a customer report, an analyst request or our autonomous monitor.
-2. **Investigate**: seven core GSQL queries, plus up to three the Lead Investigator chooses. All go through the **official TigerGraph MCP server** (`tigergraph__run_installed_query`), started with `--allowed-tools read-only` and tool-call logging.
+2. **Investigate**: seven core GSQL queries, plus up to three the Lead Investigator chooses. All go through the **official TigerGraph MCP server** (`tigergraph__run_installed_query`), started with a least-privilege `--allowed-tools` allowlist (query, vector and read tools only; no schema, loading, DML or raw GSQL) and tool-call logging.
 3. **Assess**: detectors emit typed findings, each with a likelihood ratio, the entity IDs it rests on, and a replayable reference such as `query:card_window(card=C07297-K1, start_ts=…, end_ts=…)`.
 4. **Decide**: the policy engine computes the initial action, the evidence request, and **all three counterfactual branches**:
    - the customer confirms (R3);
@@ -90,6 +90,13 @@ from the alert's device profile and cards. It then runs `vectorSearch()` inside 
 (HHG-014) this pulled the exact four August–September cases where the same Samsung device profile hit other
 cardholders. No text query would have found them.
 
+We ran the same query two ways:
+
+| Search (query text: "shared device ring, anonymous proxy, new device, several cardholders") | Top hits |
+|---|---|
+| Vector only | CC-2060, CC-3977 (ordinary new-device fraud), CC-3035, CC-4491, CC-2649 |
+| Vector inside the graph candidate set | **CC-2985, CC-2971, CC-3035, CC-2649**: exactly the four ring cases |
+
 **Graph algorithms.** For ring discovery we project rare device profiles that appeared as a *new* device on several
 cards in a time window into Card–`RING_LINK`–Card edges. We then run TigerGraph's built-in
 `GDBMS_ALGO.community.wcc` over the projection. The time window matters: a global WCC over card–device edges
@@ -124,7 +131,32 @@ never used has a likelihood ratio of **0.46**: in this data it usually means tra
 
 ## Results
 
-<!-- filled from cases/ and eval/report.json -->
+<!-- RESULTS_TABLE -->
+| Case | Trigger | Verdict | p | Pattern | Exposure | SAR | Initial → Final actions | Graph |
+|---|---|---|---|---|---|---|---|---|
+| [HHG-001](cases/HHG-001.json) | risk score | legitimate | 0.09 | none | $0.00 | — | ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-002](cases/HHG-002.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-003](cases/HHG-003.json) | customer report | fraud | 0.66 | out of region use | $165.93 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-004](cases/HHG-004.json) | customer report | fraud | 0.67 | card not present new device | $128.33 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-005](cases/HHG-005.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-006](cases/HHG-006.json) | customer report | fraud | 0.97 | undocumented | $1,906.07 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT ESCALATE_TO_ANALYST | ✅ |
+| [HHG-007](cases/HHG-007.json) | risk score | fraud | 0.97 | account takeover | $111.92 | — | CREATE_CASE DECLINE_TRANSACTION VERIFY_WITH_CUSTOMER **→** BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-008](cases/HHG-008.json) | customer report | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER WARN_CUSTOMER **→** CREATE_CASE WARN_CUSTOMER CLOSE_NO_FRAUD | ✅ |
+| [HHG-009](cases/HHG-009.json) | customer report | fraud | 0.60 | card not present fraud | $30.02 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-010](cases/HHG-010.json) | risk score | uncertain | 0.56 | card not present new device | $1,000.03 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION ESCALATE_TO_ANALYST | ✅ |
+| [HHG-011](cases/HHG-011.json) | customer report | fraud | 0.92 | card not present new device | $235.66 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-012](cases/HHG-012.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-013](cases/HHG-013.json) | risk score | uncertain | 0.51 | card not present new device | $35.66 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION | ✅ |
+| [HHG-014](cases/HHG-014.json) | analyst request | fraud | 0.97 | undocumented | $187.33 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS ESCALATE_TO_ANALYST | ✅ |
+| [HHG-015](cases/HHG-015.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-016](cases/HHG-016.json) | customer report | fraud | 0.68 | card not present new device | $59.67 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-017](cases/HHG-017.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-018](cases/HHG-018.json) | customer report | fraud | 0.90 | out of region use | $39.08 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-019](cases/HHG-019.json) | risk score | fraud | 0.97 | card not present new device | $99.92 | ✅ | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH MONITOR_CONNECTED_CARDS **→** BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-020](cases/HHG-020.json) | risk score | uncertain | 0.59 | card not present new device | $125.08 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION | ✅ |
+
+Average per case: **12.2 graph/retrieval tool calls**, **8,563 LLM tokens**, **97 s**. Every file passes the schema + ID + policy validator.
+
 
 ## What we'd improve with more time
 

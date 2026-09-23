@@ -139,7 +139,9 @@ class Investigator:
                         "region": ep.region or ep.extra.get("region_wide") or {},
                         "connected_cases": (ep.prior or {}).get("connected_cases", [])},
             "precedent": {"closed_cases_on_customer": (ep.prior or {}).get("closed_cases", [])[-12:],
-                          "similar_by_pattern": {k: v for k, v in ep.extra.items() if k.startswith("similar_")}},
+                          "connected_cases": (ep.prior or {}).get("connected_cases", []),
+                          "similar_by_pattern": {k: v for k, v in ep.extra.items() if k.startswith("similar_")},
+                          "memory_recall": self._early_recall(s)},
         }
         self.emit("stage", {"stage": "specialists", "agent": "lead", "msg": "Four specialist analysts reviewing their evidence in parallel"})
         out = roles.run_specialists(s["case"], slices)
@@ -311,6 +313,21 @@ class Investigator:
         return {"answer": ans, "problems": problems, "written": written}
 
     # ------------------------------------------------------------------ helpers
+    def _early_recall(self, s: State) -> dict:
+        """Graph-filtered memory search on the lead's hypotheses, so the Precedent Analyst has case memory to read."""
+        ep = s["ep"]
+        try:
+            from agent.evidence import memory_query_text
+            from agent.llm import embed_query
+            focus = (s.get("lead") or {}).get("focus") or ""
+            devs = [ep.txn["device"]] if ep.txn.get("device") else []
+            out = self.g.similar_cases(embed_query(memory_query_text(ep, focus)), devs, [ep.case["card_id"]], 6, "", agent="precedent")
+            slim = lambda hs: [{k: h.get(k) for k in ("id", "outcome", "pattern", "exposure_usd", "report_filed", "analyst_notes")} for h in (hs or [])]  # noqa: E731
+            return {"graph_filtered": slim(out.get("graph_hits")), "vector": slim(out.get("vector_hits"))[:4],
+                    "earlier_investigations": out.get("investigation_hits", [])[:3]}
+        except Exception as e:  # noqa: BLE001
+            return {"error": str(e)[:200]}
+
     def _draft(self, s: State) -> dict:
         r, ep = s["result"], s["ep"]
         rows = {w["id"]: w for w in ep.window + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]}
@@ -325,7 +342,7 @@ class Investigator:
             "evidence": [{"claim": f.claim, "ref": f.ref} for f in r["findings"]],
             "evidence_request": r["evidence_requests"], "initial_actions": r["initial"], "final_actions": r["final"],
             "status": r["status"], "similar_prior_cases": similar_prior_cases(r),
-            "sar_filed": any(a["action"] == "FILE_REPORT" for a in r["final"]),
+            "sar_recommended_pending_L2_approval": any(a["action"] == "FILE_REPORT" for a in r["final"]),
             "assumed_reply_branch": r.get("reply"),
         }
 

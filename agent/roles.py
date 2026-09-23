@@ -115,7 +115,7 @@ def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) ->
     schema = {"type": "object", "properties": props, "required": req}
     decision = (f"verdict={draft['verdict']}, fraud_probability={draft['fraud_probability']}, pattern={draft['pattern']}, "
                 f"status={draft['status']}, final actions={[a['action'] for a in draft['final_actions']]}, "
-                f"suspicious activity report filed={draft['sar_filed']}")
+                f"suspicious activity report recommended={draft['sar_recommended_pending_L2_approval']}")
     prompt = (
         "Write the case text for this fraud investigation. The DECISION below was made by the bank's policy engine and is "
         "FINAL: describe it exactly. Do not add, remove or soften actions, do not change the verdict, do not mention a "

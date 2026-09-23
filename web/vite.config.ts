@@ -8,11 +8,12 @@ const API_TARGET: string = (globalThis as any).process?.env?.API_TARGET || "http
 // The dev server proxies /api to the FastAPI backend; SSE responses are streamed through untouched.
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  base: "/",
   build: {
     outDir: "../api/static",
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 2500,
+    sourcemap: true,
   },
   server: {
     port: 5173,

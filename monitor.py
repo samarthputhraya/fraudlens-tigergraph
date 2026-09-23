@@ -70,15 +70,22 @@ def scan(g) -> list[dict]:
             HAVING count(DISTINCT d.customer_id) >= 4 AND avg(CASE WHEN d.id_15='New' THEN 1.0 ELSE 0.0 END) >= 0.6
                AND avg(CASE WHEN d.proxy IN ('IP_PROXY:ANONYMOUS','IP_PROXY:HIDDEN') THEN 1.0 ELSE 0.0 END) >= 0.5""", [START, END])
     else:
+        # TigerGraph path: GSQL projection of New-device + anonymising-proxy cliques, then GDBMS_ALGO WCC components
         g.run("build_ring_links", {"start_ts": START, "end_ts": END, "max_cards": 60, "min_cards": 4}, agent="monitor")
-        from graph.tg import gsql
-        gsql('USE GRAPH Fraud\nCALL GDBMS_ALGO.community.wcc(["Card"], ["RING_LINK"], 0, FALSE, "wcc_id", "")')
+        from tg import gsql
+        print(gsql('USE GRAPH Fraud\nCALL GDBMS_ALGO.community.wcc(["Card"], ["RING_LINK"], 0, FALSE, "wcc_id", "")')[-300:])
         comps = g.ring_components(agent="monitor")
         rings = []
         for cid, members in (comps.get("members") or {}).items():
-            devs = (comps.get("devices") or {}).get(cid, [])
-            rings.append({"dev": devs[0] if devs else "", "n_cust": len(members), "n_all": len(members), "new_share": 1.0,
-                          "uses": [], "members": members})
+            devs = sorted((comps.get("devices") or {}).get(cid, []))
+            if len(members) < 4 or not devs:
+                continue
+            nb = g.device_neighbors(devs[0], START, END, agent="monitor")
+            uses = [f"{x['card_id']}|{x['id']}|{x['ts']}" for x in nb.get("txns", [])]
+            new_share = sum(1 for x in nb.get("txns", []) if x.get("is_new") == "New") / max(len(uses), 1)
+            rings.append({"dev": devs[0], "n_cust": len({m.split('-')[0] for m in members}), "n_all": nb.get("n_cards_all_time"),
+                          "new_share": new_share, "uses": uses, "members": sorted(members), "wcc_id": cid,
+                          "fraud_cases": (comps.get("fraud_cases") or {}).get(cid, [])})
     ring_summ = []
     for r in rings:
         uses = sorted((tuple(u.split("|")) for u in r.get("uses", [])), key=lambda x: x[2])

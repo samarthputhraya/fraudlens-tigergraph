@@ -130,16 +130,16 @@
           ]
         },
         {
-          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3984 (confirmed_fraud, card_not_present_fraud); CC-3871 (confirmed_fraud, card_not_present_fraud); CC-2573 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud)",
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3871 (confirmed_fraud, card_not_present_fraud); CC-0583 (confirmed_fraud, card_not_present_fraud); CC-2573 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud)",
           "source": "graph",
-          "ref": "query:similar_cases(k=8, pattern=, devices=['Windows |  | opera 53.0 | '], cards=['C06744-K2'])",
+          "ref": "query:similar_cases(devices=['Windows |  | opera 53.0 | '], cards=['C06744-K2'], k=8, pattern=)",
           "entity_ids": [
-            "CC-3984",
             "CC-3871",
+            "CC-0583",
             "CC-2573",
             "CC-2655",
-            "CC-2593",
-            "CC-0583"
+            "CC-0688",
+            "CC-2570"
           ]
         },
         {
@@ -158,23 +158,22 @@
         }
       ],
       "similar_prior_cases": [
-        "CC-3984",
         "CC-3871",
+        "CC-0583",
         "CC-2573",
         "CC-2655",
-        "CC-2593",
-        "CC-0583",
         "CC-0688",
+        "CC-2570",
         "CC-3416"
       ],
-      "summary": "Analyst request on 2016-12-14: $0.92 online transaction 3541294 on card C06744-K2. Verdict: uncertain (probability 0.53), pattern card_not_present_fraud. Another transaction on the same resolved account 0.6 hours earlier (3541216, $0.79) was also scored 0.76 by the model. The resolved account (C06744-K2||163) has 44 earlier transactions and none were ever part of a fraud case. Recommended: MONITOR_CARD, DECLINE_TRANSACTION.",
-      "written_to_graph": false,
-      "graph_case_id": ""
+      "summary": "The investigation was triggered by an autonomous monitor detecting 15 online authorizations under $5 within an hour on card C06744-K2, specifically flagging a $0.92 transaction. Graph evidence revealed that the account has 44 prior non-fraudulent transactions and the device profile was already used 14 times on this card before the alert. A step-up authentication request was sent, but no reply was received from the cardholder within 24 hours. Due to the lack of response and ambiguous evidence, the verdict is uncertain. The final actions taken are to monitor the card and decline the transaction.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-005"
     },
     "evidence_requests": [
       {
         "type": "step_up_auth",
-        "asked_after_step": 7,
+        "asked_after_step": 9,
         "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
       }
     ],
@@ -208,7 +207,7 @@
           "reason": "R4: decline the pending authorisation"
         }
       ],
-      "what_changed": ""
+      "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.53; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
     },
     "sar": {
       "file": false,
@@ -218,9 +217,9 @@
       "total_amount_usd": 0,
       "activity_dates": []
     },
-    "stop_reason": "Verification did not settle the question; the case is handed to an analyst rather than guessed (R8, section 6).",
-    "tool_calls": 9,
-    "tokens": 0,
-    "latency_s": 2.0
+    "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
+    "tool_calls": 12,
+    "tokens": 13915,
+    "latency_s": 299.3
   }
 }

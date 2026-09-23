@@ -370,11 +370,18 @@ def metrics():
         toks += a["tokens"]
         lat += a["latency_s"]
         n += 1
-    rings = ROOT / "runs" / "rings.json"
+    rings_path = ROOT / "runs" / "rings.json"
+    rings = []
+    for r in (json.loads(rings_path.read_text()) if rings_path.exists() else []):
+        rings.append({"component": r.get("wcc_id") or r.get("component") or (r.get("device") or "")[:40],
+                      "members": r.get("members", []),
+                      "devices": r.get("devices") or ([r["device"]] if r.get("device") else []),
+                      "fraud_cases": r.get("device_cases") or r.get("fraud_cases_on_device") or []})
+    rings.sort(key=lambda r: -len(r["members"]))
     return {"backtest": backtest, "portfolio": {"verdicts": verdicts, "patterns": patterns, "sar_filed": sar,
                                                 "total_exposure": round(exp, 2), "avg_tool_calls": round(calls / max(n, 1), 1),
                                                 "avg_tokens": round(toks / max(n, 1)), "avg_latency_s": round(lat / max(n, 1), 1)},
-            "rings": json.loads(rings.read_text()) if rings.exists() else []}
+            "rings": rings}
 
 
 STATIC = ROOT / "api" / "static"

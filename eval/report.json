@@ -2,11 +2,6 @@
  "n_cases": 298,
  "n_confirmed": 154,
  "n_cleared": 144,
- "verdict_accuracy": 0.265,
- "uncertain_share": 0.493,
- "fraud_recall": 0.143,
- "cleared_specificity": 0.125,
- "brier_balanced": 0.425,
  "pattern_accuracy": 0.643,
  "pattern_confusion": [
   [
@@ -61,70 +56,85 @@
  "episode_jaccard": 0.821,
  "exposure_mae": 144.08,
  "sar_agreement": 0.792,
- "reliability": [
-  {
-   "bin": "0.0-0.1",
-   "predicted": 0.045,
-   "observed": 1.0,
-   "n": 46
-  },
-  {
-   "bin": "0.1-0.2",
-   "predicted": 0.154,
-   "observed": 0.912,
-   "n": 34
-  },
-  {
-   "bin": "0.2-0.3",
-   "predicted": 0.237,
-   "observed": 0.531,
-   "n": 32
-  },
-  {
-   "bin": "0.3-0.4",
-   "predicted": 0.33,
-   "observed": 0.314,
-   "n": 35
-  },
-  {
-   "bin": "0.4-0.5",
-   "predicted": 0.444,
-   "observed": 0.245,
-   "n": 53
-  },
-  {
-   "bin": "0.5-0.6",
-   "predicted": 0.545,
-   "observed": 0.098,
-   "n": 41
-  },
-  {
-   "bin": "0.6-0.7",
-   "predicted": 0.652,
-   "observed": 0.647,
-   "n": 17
-  },
-  {
-   "bin": "0.7-0.8",
-   "predicted": 0.745,
-   "observed": 0.625,
-   "n": 8
-  },
-  {
-   "bin": "0.8-0.9",
-   "predicted": 0.851,
-   "observed": 0.9,
-   "n": 10
-  },
-  {
-   "bin": "0.9-1.0",
-   "predicted": 0.953,
-   "observed": 0.333,
-   "n": 24
-  }
- ],
  "evidence_auc_all": 0.552,
  "evidence_auc_score_ge_0_5": 0.549,
  "n_score_ge_0_5": 214,
- "note": "Closed history is selection-biased: every cleared case is a high-score model alert and most confirmed cases came from low-score customer reports, so raw verdict accuracy/Brier here are not meaningful. evidence_auc_* measures how well graph evidence alone (excluding the score prior) separates fraud from false alarms."
+ "note": "The closed history is selection-biased: every cleared case was a high-score model alert and most confirmed frauds came from low-score customer reports, so raw verdict accuracy and Brier score on it are not meaningful. The evidence-only AUC measures how well graph evidence alone (excluding the score prior) separates fraud from false alarms.",
+ "selection_biased_history_metrics": {
+  "verdict_accuracy": 0.265,
+  "uncertain_share": 0.493,
+  "fraud_recall": 0.143,
+  "cleared_specificity": 0.125,
+  "brier_balanced": 0.425,
+  "reliability": [
+   {
+    "bin": "0.0-0.1",
+    "predicted": 0.045,
+    "observed": 1.0,
+    "n": 46
+   },
+   {
+    "bin": "0.1-0.2",
+    "predicted": 0.154,
+    "observed": 0.912,
+    "n": 34
+   },
+   {
+    "bin": "0.2-0.3",
+    "predicted": 0.237,
+    "observed": 0.531,
+    "n": 32
+   },
+   {
+    "bin": "0.3-0.4",
+    "predicted": 0.33,
+    "observed": 0.314,
+    "n": 35
+   },
+   {
+    "bin": "0.4-0.5",
+    "predicted": 0.444,
+    "observed": 0.245,
+    "n": 53
+   },
+   {
+    "bin": "0.5-0.6",
+    "predicted": 0.545,
+    "observed": 0.098,
+    "n": 41
+   },
+   {
+    "bin": "0.6-0.7",
+    "predicted": 0.652,
+    "observed": 0.647,
+    "n": 17
+   },
+   {
+    "bin": "0.7-0.8",
+    "predicted": 0.745,
+    "observed": 0.625,
+    "n": 8
+   },
+   {
+    "bin": "0.8-0.9",
+    "predicted": 0.851,
+    "observed": 0.9,
+    "n": 10
+   },
+   {
+    "bin": "0.9-1.0",
+    "predicted": 0.953,
+    "observed": 0.333,
+    "n": 24
+   }
+  ]
+ },
+ "headline": {
+  "episode_jaccard": 0.821,
+  "pattern_accuracy": 0.643,
+  "sar_agreement": 0.792,
+  "exposure_mae": 144.08,
+  "card_id_rule_match": 1.0,
+  "graph_vs_mirror_parity": 1.0
+ }
 }

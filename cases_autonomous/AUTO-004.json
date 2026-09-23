@@ -1,288 +1,147 @@
 {
   "row": {
     "case_id": "AUTO-004",
-    "opened_at": "2016-12-31 22:34:03",
+    "opened_at": "2016-12-31 17:20:20",
     "trigger_type": "analyst_request",
-    "trigger_text": "Autonomous monitor: device profile shared as a New device by 73 customers on card C06224-K2. Investigate transaction 3590321 and related activity.",
-    "flagged_txn_id": "3590321",
-    "card_id": "C06224-K2",
-    "customer_id": "C06224",
+    "trigger_text": "Autonomous monitor: device profile shared as a New device by 8 customers on card C11143-K1. Investigate transaction 3589353 and related activity.",
+    "flagged_txn_id": "3589353",
+    "card_id": "C11143-K1",
+    "customer_id": "C11143",
     "risk_score": "",
     "source": "autonomous"
   },
   "scan_hit": {
     "kind": "device_ring",
-    "card_id": "C06224-K2",
-    "customer_id": "C06224",
-    "flagged": "3590321",
-    "ts": "2016-12-31 21:34:03",
+    "card_id": "C11143-K1",
+    "customer_id": "C11143",
+    "flagged": "3589353",
+    "ts": "2016-12-31 16:20:20",
     "txns": [
-      "3529435",
-      "3545516",
-      "3551921",
-      "3551950",
-      "3563350",
-      "3579308",
-      "3579318",
-      "3590321"
+      "3569066",
+      "3571475",
+      "3586623",
+      "3589353"
     ],
-    "device": "iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536",
-    "ring_size": 73
+    "device": "Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080",
+    "ring_size": 8
   },
   "answer": {
     "case_id": "AUTO-004",
     "case": {
-      "status": "escalated",
-      "verdict": "fraud",
-      "fraud_probability": 0.95,
-      "pattern": "undocumented",
-      "pattern_description": "Shared-device ring: one rare device profile was used as a new device on the cards of 73 different customers within weeks, often behind an anonymising proxy, pointing to a single actor cycling through compromised cards. It is broader than card-not-present fraud on one card; the agent found it by traversing device -> transactions -> cards in the graph.",
-      "affected_txn_ids": [
-        "3529435",
-        "3545516",
-        "3551921",
-        "3551950",
-        "3563350",
-        "3579308",
-        "3579318",
-        "3590321"
-      ],
-      "first_suspicious_txn_id": "3529435",
-      "connected_card_ids": [
-        "C00094-K3",
-        "C00126-K1",
-        "C00299-K1",
-        "C00750-K2",
-        "C00854-K2",
-        "C00884-K1",
-        "C00952-K1",
-        "C01109-K2",
-        "C01138-K2",
-        "C01154-K1",
-        "C01155-K2",
-        "C01269-K1",
-        "C01569-K1",
-        "C01593-K1",
-        "C01618-K2",
-        "C01721-K2",
-        "C01939-K1",
-        "C02342-K1",
-        "C02716-K2",
-        "C03019-K2",
-        "C03040-K2",
-        "C03539-K1",
-        "C03560-K1",
-        "C03856-K1",
-        "C04108-K2",
-        "C04125-K2",
-        "C04134-K1",
-        "C04167-K1",
-        "C04306-K1",
-        "C04555-K1",
-        "C04984-K2",
-        "C05061-K1",
-        "C05302-K1",
-        "C05530-K2",
-        "C05551-K2",
-        "C05647-K1",
-        "C05704-K2",
-        "C06190-K1",
-        "C06208-K1",
-        "C06307-K1",
-        "C06327-K1",
-        "C06835-K2",
-        "C07212-K2",
-        "C07311-K1",
-        "C07338-K1",
-        "C07518-K2",
-        "C07612-K1",
-        "C07694-K1",
-        "C07925-K1",
-        "C08341-K1",
-        "C08999-K1",
-        "C09026-K1",
-        "C09165-K2",
-        "C09227-K1",
-        "C09268-K1",
-        "C09274-K1",
-        "C10064-K1",
-        "C10072-K1",
-        "C10422-K2",
-        "C10553-K1",
-        "C11000-K2",
-        "C11309-K1",
-        "C11413-K1",
-        "C11539-K2",
-        "C11633-K1",
-        "C12460-K1",
-        "C12696-K1",
-        "C12897-K1",
-        "C12942-K2",
-        "C13029-K1",
-        "C13200-K1",
-        "C13328-K1"
-      ],
-      "connected_device_profiles": [
-        "iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536"
-      ],
-      "exposure_usd": 999.96,
+      "status": "closed_legitimate",
+      "verdict": "legitimate",
+      "fraud_probability": 0.05,
+      "pattern": "none",
+      "pattern_description": "",
+      "affected_txn_ids": [],
+      "first_suspicious_txn_id": "",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 0.0,
       "evidence": [
         {
-          "claim": "The same device profile (iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536) was used on 72 other card(s) of 72 other customer(s) between 2016-12-05 and 2016-12-31, 76 of those uses as a New device. The profile appears on only 73 card(s) in the whole dataset",
+          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1366; latest note: \"Case CC-1366: model scored a $59.93 transaction at 0.94. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
           "source": "graph",
-          "ref": "query:device_neighbors(dev=iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536, start_ts=2016-12-01 21:34:03, end_ts=2016-12-31 22:34:03)",
+          "ref": "query:prior_cases(card=C11143-K1)",
           "entity_ids": [
-            "C00094-K3",
-            "C00126-K1",
-            "C00299-K1",
-            "C00750-K2",
-            "C00854-K2",
-            "C00884-K1",
-            "C00952-K1",
-            "C01109-K2",
-            "C01138-K2",
-            "C01154-K1",
-            "C01155-K2",
-            "C01269-K1",
-            "C01569-K1",
-            "C01593-K1",
-            "C01618-K2"
+            "CC-1366"
           ]
         },
         {
-          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1034; latest note: \"Case CC-1034: model scored a $19.96 transaction at 0.97. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+          "claim": "The device profile (Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080) was already used 7 times on this card before the alert",
           "source": "graph",
-          "ref": "query:prior_cases(card=C06224-K2)",
+          "ref": "query:card_profile(card=C11143-K1, before_ts=2016-12-31 16:20:20, recent_days=30)",
           "entity_ids": [
-            "CC-1034"
+            "3589353"
           ]
         },
         {
-          "claim": "The device profile (iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536) was already used 7 times on this card before the alert",
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0835 (confirmed_fraud, account_takeover); CC-0487 (cleared, none); CC-3775 (confirmed_fraud, card_not_present_new_device); CC-2143 (confirmed_fraud, card_not_present_new_device)",
           "source": "graph",
-          "ref": "query:card_profile(card=C06224-K2, before_ts=2016-12-31 21:34:03, recent_days=30)",
+          "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 10 | ie 11.0 for desktop | 1920x1080'], cards=['C11143-K1'], k=8, pattern=)",
           "entity_ids": [
-            "3590321"
+            "CC-0835",
+            "CC-0487",
+            "CC-3775",
+            "CC-2143",
+            "CC-3107",
+            "CC-3407"
           ]
         },
         {
-          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1034",
-          "source": "graph",
-          "ref": "query:similar_cases(k=8, pattern=, devices=['iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536'], cards=['C06224-K2', 'C00094-K3', 'C00126-K1', 'C00299-K1', 'C00750-K2', 'C00854-K2', 'C00884-K1', 'C00952-K1', 'C01109-K2', 'C01138-K2', 'C01154-K1'])",
-          "entity_ids": [
-            "CC-1034"
-          ]
-        },
-        {
-          "claim": "Fraud Policy rules applied to this case: R6, R9 (retrieved from the policy knowledge graph via GraphRAG)",
+          "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
           "source": "document",
-          "ref": "document:Fraud Policy v1.0 section 3 R6/R9",
+          "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
           "entity_ids": []
+        },
+        {
+          "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed they made the purchase",
+          "source": "customer",
+          "ref": "evidence_request:1",
+          "entity_ids": [
+            "3589353"
+          ]
         }
       ],
       "similar_prior_cases": [
-        "CC-1034"
+        "CC-0835",
+        "CC-0487",
+        "CC-3775",
+        "CC-2143",
+        "CC-3107",
+        "CC-3407",
+        "CC-0814",
+        "CC-0635"
       ],
-      "summary": "Analyst request on 2016-12-31: $100.06 online transaction 3590321 on card C06224-K2. Verdict: fraud (probability 0.95), pattern undocumented. The same device profile (iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536) was used on 72 other card(s) of 72 other customer(s) between 2016-12-05 and 2016-12-31, 76 of those uses as a New device. The profile appears on only 73 card(s) in the whole dataset. This card has 1 earlier alert(s) that were cleared as false alarms (CC-1034. Recommended: BLOCK_CARD, CREATE_CASE, FILE_REPORT, MONITOR_CONNECTED_CARDS, ESCALATE_TO_ANALYST.",
-      "written_to_graph": false,
-      "graph_case_id": ""
+      "summary": "This alert was triggered by an autonomous monitor flagging transaction 3589353 because a device profile was shared as a New device by 8 customers on card C11143-K1. Graph evidence showed that the device profile was already used 7 times on this card before the alert, and the card had a prior cleared alert (CC-1366). The cardholder was contacted and confirmed they made the purchase. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-004"
     },
-    "evidence_requests": [],
+    "evidence_requests": [
+      {
+        "type": "customer_validation",
+        "asked_after_step": 10,
+        "assumed_response": "Cardholder confirmed they made the purchase"
+      }
+    ],
     "next_best_actions": {
       "initial": [
         {
-          "action": "BLOCK_CARD",
-          "route": "L1",
-          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $999.96 is under $2,500"
-        },
-        {
           "action": "CREATE_CASE",
           "route": "auto",
-          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
         },
         {
-          "action": "FILE_REPORT",
-          "route": "L2",
-          "reason": "R6 / section 3a: activity connects to device profile iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536; the pattern is coordinated and undocumented (R9)"
-        },
-        {
-          "action": "MONITOR_CONNECTED_CARDS",
+          "action": "VERIFY_WITH_CUSTOMER",
           "route": "auto",
-          "reason": "R6: 72 other card(s) share device profile iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536"
-        },
-        {
-          "action": "ESCALATE_TO_ANALYST",
-          "route": "auto",
-          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          "reason": "R1: single signal (probability 0.40 < 0.70); verify before any block"
         }
       ],
       "final": [
         {
-          "action": "BLOCK_CARD",
-          "route": "L1",
-          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $999.96 is under $2,500"
-        },
-        {
-          "action": "CREATE_CASE",
+          "action": "ALLOW_TRANSACTION",
           "route": "auto",
-          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          "reason": "R3: the cardholder confirmed the transaction"
         },
         {
-          "action": "FILE_REPORT",
-          "route": "L2",
-          "reason": "R6 / section 3a: activity connects to device profile iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536; the pattern is coordinated and undocumented (R9)"
-        },
-        {
-          "action": "MONITOR_CONNECTED_CARDS",
+          "action": "CLOSE_NO_FRAUD",
           "route": "auto",
-          "reason": "R6: 72 other card(s) share device profile iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536"
-        },
-        {
-          "action": "ESCALATE_TO_ANALYST",
-          "route": "auto",
-          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
         }
       ],
-      "what_changed": "nothing"
+      "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability fell from 0.40 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
     },
     "sar": {
-      "file": true,
-      "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to device profile iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536; the pattern is coordinated and undocumented (R9).",
+      "file": false,
+      "reason": "Section 3a: no report required - the activity is legitimate.",
       "narrative": "",
-      "subjects": [
-        "C06224",
-        "C06224-K2",
-        "C00094-K3",
-        "C00126-K1",
-        "C00299-K1",
-        "C00750-K2",
-        "C00854-K2",
-        "C00884-K1",
-        "C00952-K1",
-        "C01109-K2",
-        "C01138-K2",
-        "C01154-K1",
-        "C01155-K2",
-        "C01269-K1",
-        "C01569-K1",
-        "C01593-K1",
-        "C01618-K2",
-        "C01721-K2",
-        "C01939-K1",
-        "C02342-K1",
-        "C02716-K2",
-        "C03019-K2",
-        "iOS Device | iOS 11.3.0 | mobile safari 11.0 | 2048x1536"
-      ],
-      "total_amount_usd": 999.96,
-      "activity_dates": [
-        "2016-12-10",
-        "2016-12-31"
-      ]
+      "subjects": [],
+      "total_amount_usd": 0,
+      "activity_dates": []
     },
-    "stop_reason": "The evidence met the policy's section 6 threshold for a defensible decision; further queries would not change the actions.",
-    "tool_calls": 9,
-    "tokens": 0,
-    "latency_s": 0.7
+    "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+    "tool_calls": 13,
+    "tokens": 7626,
+    "latency_s": 32.7
   }
 }

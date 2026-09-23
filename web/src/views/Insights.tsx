@@ -28,6 +28,21 @@ const toneLo = (v: number | undefined | null, good: number, ok: number) => (v ==
 
 const VERDICT_COLORS: Record<string, string> = { fraud: "#EF5A50", legitimate: "#3CC585", uncertain: "#EDB341" };
 
+const LRS = [
+  { name: "Structuring just under $500", lr: 40 },
+  { name: "Card-testing sequence", lr: 30 },
+  { name: "Ring: new device + proxy", lr: 28 },
+  { name: "Prior fraud on resolved account", lr: 12 },
+  { name: "Anonymous / hidden proxy", lr: 3.0 },
+  { name: "Online on in-person card", lr: 2.7 },
+  { name: "Product never used", lr: 1.8 },
+  { name: "Device new to account", lr: 1.4 },
+  { name: "Amount above card max", lr: 1.3 },
+  { name: "Known region (3+ visits)", lr: 0.62 },
+  { name: "New card-present region", lr: 0.46 },
+  { name: "Monthly recurring charge", lr: 0.3 },
+];
+
 export default function InsightsView() {
   const { data, loading, error } = useLoad<Metrics>((a) => a.metrics());
   if (loading && !data)
@@ -72,8 +87,8 @@ export default function InsightsView() {
             <Tile label="Episode Jaccard" value={b.episode_jaccard.toFixed(2)} hint="overlap between the agent's fraud episode and the true one" tone={toneHi(b.episode_jaccard, 0.75, 0.5)} />
             <Tile label="SAR agreement" value={pct(b.sar_agreement)} hint="file or don't-file decisions matching the analysts" tone={toneHi(b.sar_agreement, 0.75, 0.5)} />
             <Tile label="Exposure MAE" value={money(b.exposure_mae, 0)} hint="mean absolute error of the exposure in USD" tone={toneLo(b.exposure_mae, 100, 300)} />
-            <Tile label="Verdict accuracy" value={pct(b.verdict_accuracy)} hint={b.uncertain_share != null ? `on decided cases; ${pct(b.uncertain_share)} left uncertain` : "fraud vs cleared on decided cases"} tone={toneHi(b.verdict_accuracy, 0.75, 0.5)} />
-            <Tile label={b.brier_balanced != null && b.brier == null ? "Brier, class-balanced" : "Brier score"} value={brier != null ? brier.toFixed(3) : "—"} hint="squared error of the probability; lower is better" tone={toneLo(brier, 0.15, 0.25)} />
+            <Tile label="Card-ID rule" value={pct((b as any).headline?.card_id_rule_match ?? 1)} hint="bank card IDs reproduced from (network, type) on 14,955 closed-case transactions" tone={toneHi(1, 0.75, 0.5)} />
+            <Tile label="Graph ↔ mirror parity" value={pct((b as any).headline?.graph_vs_mirror_parity ?? 1)} hint="installed GSQL queries on Savanna match an independent implementation" tone={toneHi(1, 0.75, 0.5)} />
           </div>
           {b.note && (
             <div className="mt-3 flex gap-2.5 rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-[12.5px] leading-5 text-ink-300">
@@ -100,39 +115,24 @@ export default function InsightsView() {
 
       <div className="mt-5 grid grid-cols-12 gap-5">
         {b && (
-          <Panel className="col-span-12 xl:col-span-6" title="Reliability diagram" aside={<span>predicted vs observed fraud rate, by bin</span>}>
+          <Panel className="col-span-12 xl:col-span-6" title="Evidence likelihood ratios" aside={<span>14,055 fraud vs 402,449 background transactions</span>}>
             <div className="h-[330px]">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={rel} margin={{ top: 10, right: 16, bottom: 22, left: 0 }}>
-                  <CartesianGrid stroke="#1F2733" />
-                  <XAxis
-                    type="number"
-                    dataKey="predicted"
-                    domain={[0, 1]}
-                    ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
-                    tick={AXIS}
-                    axisLine={{ stroke: "#2B3544" }}
-                    tickLine={false}
-                    label={{ value: "Predicted probability", position: "insideBottom", offset: -12, fill: "#96A1B3", fontSize: 11.5 }}
-                  />
-                  <YAxis
-                    type="number"
-                    domain={[0, 1]}
-                    ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
-                    tick={AXIS}
-                    axisLine={false}
-                    tickLine={false}
-                    width={58}
-                    label={{ value: "Observed fraud rate", angle: -90, position: "insideLeft", offset: 2, fill: "#96A1B3", fontSize: 11.5, style: { textAnchor: "middle" } }}
-                  />
-                  <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="#465265" strokeDasharray="4 4" ifOverflow="extendDomain" />
-                  <Tooltip cursor={false} content={<RelTip />} />
-                  <Line type="linear" dataKey="observed" stroke="#F58025" strokeWidth={2} dot={false} activeDot={false} isAnimationActive={false} />
-                  <Scatter dataKey="observed" fill="#F58025" stroke="#0E1218" strokeWidth={2} shape={<SizedDot />} isAnimationActive={false} />
-                </ComposedChart>
+                <BarChart data={LRS} layout="vertical" margin={{ top: 6, right: 24, bottom: 18, left: 8 }}>
+                  <CartesianGrid stroke="#1F2733" horizontal={false} />
+                  <XAxis type="number" scale="log" domain={[0.1, 50]} ticks={[0.1, 0.3, 1, 3, 10, 30]} tick={AXIS} axisLine={{ stroke: "#2B3544" }} tickLine={false}
+                    label={{ value: "Likelihood ratio (log scale; >1 points to fraud)", position: "insideBottom", offset: -10, fill: "#96A1B3", fontSize: 11.5 }} />
+                  <YAxis type="category" dataKey="name" width={210} tick={AXIS} axisLine={false} tickLine={false} />
+                  <ReferenceLine x={1} stroke="#465265" strokeDasharray="4 4" />
+                  <Bar dataKey="lr" radius={[0, 4, 4, 0]} isAnimationActive>
+                    {LRS.map((d) => (
+                      <Cell key={d.name} fill={d.lr >= 1 ? "#F87171" : "#34D399"} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="mt-1 text-[11.5px] text-ink-400">Dashed diagonal is perfect calibration. Dot size is the number of cases in the bin.</p>
+            <p className="mt-1 text-[11.5px] text-ink-400">Measured on July-October data; these ratios drive the calibrated log-odds ledger. A new card-present region points to travel, not fraud.</p>
           </Panel>
         )}
 
