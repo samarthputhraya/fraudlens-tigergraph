@@ -10,7 +10,7 @@ Built for the **TigerGraph × Hacker House Goa 2026, Task 4: Agentic Fraud Inves
 
 | | |
 |---|---|
-| Demo video | _link_ |
+| Demo video | [youtu.be/hMCUqjbN9js](https://youtu.be/hMCUqjbN9js) (3:50) |
 | Technical blog | _link_ |
 | Answer files | [`cases/`](cases/): 20 files, schema-validated, with IDs checked against the graph |
 | Autonomous finds | [`cases_autonomous/`](cases_autonomous/): cases the agent opened with no alert |
