@@ -11,7 +11,7 @@ Built for the **TigerGraph × Hacker House Goa 2026, Task 4: Agentic Fraud Inves
 | | |
 |---|---|
 | Demo video | [youtu.be/hMCUqjbN9js](https://youtu.be/hMCUqjbN9js) (3:50) |
-| Technical blog | _link_ |
+| Technical blog | [The model predicts. TigerGraph proves (dev.to)](https://dev.to/rishabh_arun_c17a00aa9bf3/the-model-predicts-tigergraph-proves-building-an-agentic-fraud-investigator-on-a-graph-5325) |
 | Answer files | [`cases/`](cases/): 20 files, schema-validated, with IDs checked against the graph |
 | Autonomous finds | [`cases_autonomous/`](cases_autonomous/): cases the agent opened with no alert |
 
