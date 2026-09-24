@@ -150,7 +150,7 @@ The policy is code. `policy.plan()` is a pure function that returns the recommen
 
 ## Results
 
-**The transaction model on October, which it never saw:** AUC **0.973** on all transactions and **0.933** on alerts the bank scored ≥ 0.5. The bank's own score gets 0.866 and 0.598 on the same transactions ([model card](../eval/model_card.md)).
+**The transaction model on October, which it never saw:** AUC **0.973** on all transactions and **0.933** on alerts the bank scored ≥ 0.5. The bank's own score gets 0.866 and 0.598 on the same transactions ([model card](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/eval/model_card.md)).
 
 <!-- BACKTEST_TABLE -->
 | Agent replay on October closed cases | Value |
@@ -165,26 +165,26 @@ The policy is code. `policy.plan()` is a pure function that returns the recommen
 <!-- RESULTS_TABLE -->
 | Case | Trigger | Verdict | p | Pattern | Exposure | SAR | Initial → Final actions | Graph |
 |---|---|---|---|---|---|---|---|---|
-| [HHG-001](cases/HHG-001.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-002](cases/HHG-002.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-003](cases/HHG-003.json) | customer report | fraud | 0.97 | out of region use | $165.93 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-004](cases/HHG-004.json) | customer report | fraud | 0.76 | card not present new device | $128.33 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-005](cases/HHG-005.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-006](cases/HHG-006.json) | customer report | fraud | 0.97 | undocumented | $1,906.07 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT ESCALATE_TO_ANALYST | ✅ |
-| [HHG-007](cases/HHG-007.json) | risk score | fraud | 0.97 | account takeover | $148.89 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-008](cases/HHG-008.json) | customer report | fraud | 0.97 | card not present fraud | $55.68 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-009](cases/HHG-009.json) | customer report | fraud | 0.97 | card not present fraud | $30.02 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-010](cases/HHG-010.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-011](cases/HHG-011.json) | customer report | fraud | 0.97 | card not present new device | $131.30 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
-| [HHG-012](cases/HHG-012.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-013](cases/HHG-013.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-014](cases/HHG-014.json) | analyst request | fraud | 0.97 | undocumented | $187.33 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS ESCALATE_TO_ANALYST | ✅ |
-| [HHG-015](cases/HHG-015.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-016](cases/HHG-016.json) | customer report | fraud | 0.97 | card not present new device | $59.67 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-017](cases/HHG-017.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-018](cases/HHG-018.json) | customer report | fraud | 0.97 | out of region use | $251.53 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-019](cases/HHG-019.json) | risk score | fraud | 0.97 | card not present new device | $99.92 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
-| [HHG-020](cases/HHG-020.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-001](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-001.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-002](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-002.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-003](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-003.json) | customer report | fraud | 0.97 | out of region use | $165.93 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-004](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-004.json) | customer report | fraud | 0.76 | card not present new device | $128.33 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-005](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-005.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-006](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-006.json) | customer report | fraud | 0.97 | undocumented | $1,906.07 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT ESCALATE_TO_ANALYST | ✅ |
+| [HHG-007](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-007.json) | risk score | fraud | 0.97 | account takeover | $148.89 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-008](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-008.json) | customer report | fraud | 0.97 | card not present fraud | $55.68 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-009](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-009.json) | customer report | fraud | 0.97 | card not present fraud | $30.02 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-010](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-010.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-011](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-011.json) | customer report | fraud | 0.97 | card not present new device | $131.30 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-012](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-012.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-013](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-013.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-014](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-014.json) | analyst request | fraud | 0.97 | undocumented | $187.33 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS ESCALATE_TO_ANALYST | ✅ |
+| [HHG-015](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-015.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-016](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-016.json) | customer report | fraud | 0.97 | card not present new device | $59.67 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-017](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-017.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-018](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-018.json) | customer report | fraud | 0.97 | out of region use | $251.53 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-019](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-019.json) | risk score | fraud | 0.97 | card not present new device | $99.92 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-020](https://github.com/samarthputhraya/fraudlens-tigergraph/blob/main/cases/HHG-020.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
 
 Average per case: **13.3 graph/retrieval tool calls**, **9,108 LLM tokens**, **121 s**. Every file passes the schema + ID + policy validator.
 
@@ -196,5 +196,5 @@ Average per case: **13.3 graph/retrieval tool calls**, **9,108 LLM tokens**, **1
 - Replace simulated customer replies with a real two-way channel, and learn which verification step (OTP vs call) resolves which alert type fastest.
 - Use Louvain communities over the full shared-entity graph to find rings that share emails or regions, not only devices.
 
-*Code, answer files and the demo video: [GitHub](#). Built with TigerGraph Savanna, TigerGraph MCP, GSQL, TigerVector
+*Code, answer files and the demo video: [GitHub](https://github.com/samarthputhraya/fraudlens-tigergraph). Built with TigerGraph Savanna, TigerGraph MCP, GSQL, TigerVector
 and Gemini on Vertex AI.* @TigerGraphDB
