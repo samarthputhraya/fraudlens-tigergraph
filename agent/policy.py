@@ -137,8 +137,6 @@ def plan(s: Situation) -> dict:
 
     verify = "STEP_UP_AUTH" if s.online and s.p >= 0.5 else "VERIFY_WITH_CUSTOMER"
     initial = [act("CREATE_CASE", "Section 3a: evidence is being requested" + (" and probability >= 0.30" if s.p >= 0.3 else ""), e)]
-    if s.p >= 0.5 and not s.card_testing:
-        initial.append(act("DECLINE_TRANSACTION", f"R1 / R4: hold the flagged authorisation while it is verified (probability {s.p:.2f})", e))
     initial.append(act(verify, f"R1: {'single signal' if s.single_signal else 'evidence not yet conclusive'} "
                                f"(probability {s.p:.2f} < 0.70); verify before any block", e))
     if s.connected_cards:

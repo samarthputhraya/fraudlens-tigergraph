@@ -1,0 +1,125 @@
+{
+ "title": "FraudLens: an agentic fraud investigator on TigerGraph",
+ "voice": "Charon",
+ "model": "gemini-2.5-pro-tts",
+ "direction": "You are narrating a premium product film for a panel of engineers. Voice: calm, confident and warm, at a natural, measured pace, never slow or drawn out, like a great documentary narrator. Real pauses at full stops, light ones at commas. Give key numbers a little weight. Never salesy.",
+ "lines": [
+  {
+   "id": "hook1",
+   "scene": "cold_open",
+   "text": "Every day, a bank's fraud model raises thousands of alerts, and most of the high-scoring ones are false alarms.",
+   "style": "quietly intriguing, as if opening a story"
+  },
+  {
+   "id": "hook2",
+   "scene": "cold_open",
+   "text": "Real fraud hides where no single alert can see it: on other cards, on shared devices, in cases the bank already closed.",
+   "style": "a touch of tension"
+  },
+  {
+   "id": "hook3",
+   "scene": "cold_open",
+   "text": "This is FraudLens: a team of AI investigators that works every case on TigerGraph, and proves every claim it makes.",
+   "style": "confident reveal"
+  },
+  {
+   "id": "arch1",
+   "scene": "architecture",
+   "text": "An alert comes in: a model score, a customer complaint, or an analyst's hunch. A lead investigator sends four specialists after it."
+  },
+  {
+   "id": "arch2",
+   "scene": "architecture",
+   "text": "Every question goes to TigerGraph through the official MCP server, read-only, limited to eighteen installed queries.",
+   "say": "Every question goes to TigerGraph through the official M C P server, read-only, limited to eighteen installed queries."
+  },
+  {
+   "id": "arch3",
+   "scene": "architecture",
+   "text": "A model trained on the bank's own closed cases estimates the odds. Code, not the language model, owns the policy, the numbers and the approvals."
+  },
+  {
+   "id": "live1",
+   "scene": "live",
+   "text": "Here's an analyst's lead: several cards this month made purchases from the same unusual phone."
+  },
+  {
+   "id": "live2",
+   "scene": "live",
+   "text": "The network specialist asks TigerGraph who else used this phone. Nineteen other cardholders in eight days, the phone new to every one of them, every session behind an anonymous proxy.",
+   "style": "clear on the numbers"
+  },
+  {
+   "id": "live3",
+   "scene": "live",
+   "text": "The precedent specialist searches case memory with a graph-filtered vector search, and finds four confirmed cases from the summer, with the very same device."
+  },
+  {
+   "id": "live4",
+   "scene": "live",
+   "text": "It fits none of the five known patterns. So the agent names a new one: a shared-device ring.",
+   "style": "matter-of-fact, steady"
+  },
+  {
+   "id": "dec1",
+   "scene": "decide",
+   "text": "Every finding moves a calibrated ledger. At ninety-seven percent, on independent evidence, the policy says: stop investigating, and act."
+  },
+  {
+   "id": "dec2",
+   "scene": "decide",
+   "text": "Block the card, file a suspicious activity report, and watch all nineteen connected cards. Every action cites its rule, and who must approve it."
+  },
+  {
+   "id": "proof1",
+   "scene": "proof",
+   "text": "Nothing is taken on faith. Every claim carries the exact query behind it. Press re-prove, and it runs again, live, on TigerGraph Savanna.",
+   "say": "Nothing is taken on faith. Every claim carries the exact query behind it. Press ree-prove, and it runs again, live, on TigerGraph Savanna.",
+   "keep_pauses": true
+  },
+  {
+   "id": "proof2",
+   "scene": "proof",
+   "text": "The suspicious activity report is written to FinCEN's standard: who, what, when, where, how, and why.",
+   "say": "The suspicious activity report is written to Fin-Sen's standard: who, what, when, where, how, and why."
+  },
+  {
+   "id": "unc1",
+   "scene": "uncertain",
+   "text": "Most alerts aren't fraud. This one scored ninety percent: a thousand dollars, from a device the card had never used."
+  },
+  {
+   "id": "unc2",
+   "scene": "uncertain",
+   "text": "Our transaction model puts it below one percent. So the agent verifies before it blocks, and plans for every reply."
+  },
+  {
+   "id": "unc3",
+   "scene": "metrics",
+   "text": "On October's high-score alerts, which the model never saw, the bank's own score ranks a real fraud above a false alarm sixty times in a hundred. Ours does it ninety-three times.",
+   "style": "measured, let the two numbers land"
+  },
+  {
+   "id": "gov1",
+   "scene": "governance",
+   "text": "The agent only executes automatic actions. A team lead can't approve a suspicious activity report; only a fraud manager can."
+  },
+  {
+   "id": "gov2",
+   "scene": "governance",
+   "text": "And every decision is written back to the graph, so the next investigation remembers it."
+  },
+  {
+   "id": "out1",
+   "scene": "autonomy",
+   "text": "With no alert at all, the monitor sweeps the graph by itself, and finds rings that nobody reported."
+  },
+  {
+   "id": "out2",
+   "scene": "outro",
+   "text": "FraudLens. Agentic, calibrated, and provable. The model predicts. TigerGraph proves.",
+   "style": "confident close, slower, a small pause after each sentence",
+   "keep_pauses": true
+  }
+ ]
+}

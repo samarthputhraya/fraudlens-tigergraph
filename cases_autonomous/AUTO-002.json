@@ -31,7 +31,7 @@
       "verdict": "fraud",
       "fraud_probability": 0.97,
       "pattern": "undocumented",
-      "pattern_description": "The undocumented pattern involves rapid, successive online purchases with amounts deliberately structured just below a specific authorization threshold, in this case $500. It affects cardholders targeted by actors attempting to maximize extraction before triggering standard high-value alerts. This pattern was identified by an autonomous monitor analyzing the velocity and specific dollar amounts of the transactions within a 30-minute window.",
+      "pattern_description": "The undocumented pattern involves a rapid succession of online purchases with amounts deliberately structured to stay just under a $500 authorization threshold. It affects customer C05423 and was identified by observing four transactions within 30 minutes across multiple generic device profiles. This coordinated activity attempts to bypass standard authorization limits while maximizing the extracted value.",
       "affected_txn_ids": [
         "3509526",
         "3509535",
@@ -55,9 +55,17 @@
           ]
         },
         {
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.089, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+          "source": "graph",
+          "ref": "query:txn_context(txn=3509576)",
+          "entity_ids": [
+            "3509576"
+          ]
+        },
+        {
           "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0252; latest note: \"Case CC-0252: model scored a $3.91 transaction at 0.92. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
           "source": "graph",
-          "ref": "query:prior_cases(card=C05423-K1)",
+          "ref": "query:prior_cases(card=C05423-K1, before_ts=2016-12-03 13:30:00)",
           "entity_ids": [
             "CC-0252"
           ]
@@ -79,10 +87,15 @@
           ]
         },
         {
-          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0252",
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3841; CC-4124; CC-3748; CC-4086",
           "source": "graph",
-          "ref": "query:similar_cases(devices=[' |  | mobile safari generic | ', ' |  | safari generic | ', 'Windows |  | chrome 63.0 | '], cards=['C05423-K1'], k=8, pattern=)",
+          "ref": "query:similar_cases(devices=[' |  | mobile safari generic | ', ' |  | safari generic | ', 'Windows |  | chrome 63.0 | '], cards=['C05423-K1'], k=8, pattern=, before_ts=2016-12-03 13:30:00)",
           "entity_ids": [
+            "CC-3841",
+            "CC-4124",
+            "CC-3748",
+            "CC-4086",
+            "CC-3907",
             "CC-0252"
           ]
         },
@@ -94,11 +107,16 @@
         }
       ],
       "similar_prior_cases": [
+        "CC-3841",
+        "CC-4124",
+        "CC-3748",
+        "CC-4086",
+        "CC-3907",
         "CC-0252"
       ],
-      "summary": "The alert was triggered by an autonomous monitor detecting four online purchases just under $500 within an hour on card C05423-K1, totaling $1,884.76. Graph evidence showed these transactions occurred within 30 minutes, with amounts seemingly chosen to avoid a $500 authorization threshold, and the flagged transaction amount of $479.86 was in the top 3 percent of the card's purchase history. The policy engine returned a final verdict of fraud with a 0.97 probability. The final actions taken were BLOCK_CARD, CREATE_CASE, FILE_REPORT, and ESCALATE_TO_ANALYST.",
+      "summary": "This alert was triggered by an autonomous monitor detecting four online purchases just under $500 within an hour, totaling $1,884.76 on card C05423-K1. Graph evidence confirmed four transactions within 30 minutes, with amounts deliberately chosen to stay under a $500 authorization threshold. The transaction model scored the flagged transaction at 0.089. The final verdict is fraud. The final actions taken are BLOCK_CARD, CREATE_CASE, FILE_REPORT, and ESCALATE_TO_ANALYST.",
       "written_to_graph": true,
-      "graph_case_id": "CASE-2016-002"
+      "graph_case_id": "CASE-2016-AUTO-002"
     },
     "evidence_requests": [],
     "next_best_actions": {
@@ -151,7 +169,7 @@
     "sar": {
       "file": true,
       "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $1,884.76 exceeds $1,000; the pattern is coordinated and undocumented (R9).",
-      "narrative": "This Suspicious Activity Report details suspected fraudulent activity involving customer C05423 and their card C05423-K1. On December 3, 2016, between 12:00:00 and 12:30:00, four online transactions were conducted totaling $1,884.76. The transactions occurred in rapid succession for amounts of $457.09, $492.56, $455.25, and $479.86. These purchases were made through the online channel using various generic device profiles, including Safari and Chrome browsers. The activity is highly suspicious because the transaction amounts appear deliberately structured to stay just under a $500 authorization threshold. Furthermore, the final flagged amount of $479.86 is in the top 3 percent of the cardholder's historical purchase amounts. Although the device profile used for the final transaction had been seen 16 times previously, the rapid sequence and structured amounts indicate unauthorized use. The total exposure for this incident is $1,884.76.",
+      "narrative": "This Suspicious Activity Report details suspected fraudulent activity by customer C05423 using card C05423-K1. On December 3, 2016, between 12:00:00 and 12:30:00, four online purchases were made in rapid succession. The transactions occurred across multiple generic device profiles, including Safari, mobile Safari, Chrome 63.0, and Chrome 65.0 on Windows. The amounts were $457.09, $492.56, $455.25, and $479.86, totaling $1,884.76. This activity is highly suspicious as the amounts appear deliberately chosen to stay just under a $500 authorization threshold. Furthermore, the final transaction of $479.86 is in the top 3% of this card's historical purchase amounts. The bank's real-time risk score for the final transaction was 0.08, while the transaction model scored it at 0.089. Due to the coordinated nature of this undocumented pattern and the exposure exceeding $1,000, the activity is being reported.",
       "subjects": [
         "C05423",
         "C05423-K1"
@@ -162,9 +180,9 @@
         "2016-12-03"
       ]
     },
-    "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (behaviour); further queries would not change the actions.",
-    "tool_calls": 11,
-    "tokens": 12058,
-    "latency_s": 146.8
+    "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (behaviour, model); further queries would not change the actions.",
+    "tool_calls": 13,
+    "tokens": 10604,
+    "latency_s": 64.7
   }
 }

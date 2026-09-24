@@ -5,5 +5,5 @@ CREATE OR REPLACE QUERY recurring_match(VERTEX<Card> card, DOUBLE amt, DOUBLE to
   T = SELECT t FROM Start:c -(MADE:e)-> Transaction:t
       WHERE t.ts < before_ts AND abs(t.amt - amt) <= tol;
   D = SELECT t FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d ACCUM t.@device = d.id;
-  PRINT T[T.id, T.ts, T.amt, T.product, T.channel, T.addr1, T.p_email, T.r_email, T.@device] AS matches;
+  PRINT T[T.id, T.ts, T.amt, T.product, T.channel, T.addr1, T.p_email, T.r_email, T.@device, T.model_p] AS matches;
 }

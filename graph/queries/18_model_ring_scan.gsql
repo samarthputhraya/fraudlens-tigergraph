@@ -1,0 +1,23 @@
+CREATE OR REPLACE QUERY model_ring_scan(DATETIME start_ts, DATETIME end_ts, DOUBLE min_p = 0.6, INT min_customers = 3, INT max_cards_all = 12) FOR GRAPH Fraud {
+  /* Rare device profiles through which several different customers' cards made purchases that the transaction model
+     scores as fraud (Transaction.model_p >= min_p) inside the window: shared-origin rings (policy R6) that no alert,
+     complaint or analyst raised. A device seen on more than max_cards_all cards in the whole dataset is too common to
+     mean a shared origin, and generic browser/OS-only profiles are skipped. */
+  SetAccum<STRING> @custs, @cards, @all_cards;
+  ListAccum<STRING> @hits;
+  SumAccum<INT> @n_customers, @n_all;
+  All = {Transaction.*};
+  T = SELECT t FROM All:t WHERE t.ts >= start_ts AND t.ts <= end_ts AND t.model_p >= min_p;
+  D = SELECT d FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
+      WHERE d.is_generic == FALSE
+      ACCUM d.@custs += t.customer_id, d.@cards += t.card_id,
+            d.@hits += (t.card_id + "|" + t.id + "|" + datetime_format(t.ts, "%Y-%m-%d %H:%M:%S") + "|" + to_string(t.amt) + "|" +
+                        to_string(t.model_p) + "|" + e.dev_new)
+      POST-ACCUM d.@n_customers = d.@custs.size();
+  D = SELECT d FROM D:d WHERE d.@n_customers >= min_customers;
+  X = SELECT d FROM D:d -(rev_FROM_DEVICE:e)-> Transaction:t
+      ACCUM d.@all_cards += t.card_id
+      POST-ACCUM d.@n_all = d.@all_cards.size();
+  X = SELECT d FROM X:d WHERE d.@n_all <= max_cards_all;
+  PRINT X[X.id, X.@n_customers, X.@n_all, X.@hits] AS devices;
+}

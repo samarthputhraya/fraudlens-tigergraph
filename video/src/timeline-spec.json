@@ -1,0 +1,14 @@
+{
+  "xfade": 12,
+  "scenes": [
+    { "id": "cold_open", "lines": ["hook1", "hook2", "hook3"], "lead": 24, "gaps": [26, 22], "tail": 46 },
+    { "id": "architecture", "lines": ["arch1", "arch2", "arch3"], "lead": 14, "gaps": 18, "tail": 26 },
+    { "id": "investigate", "lines": ["live1", "live2", "live3", "live4", "dec1", "dec2"], "lead": 28, "gaps": [22, 14, 16, 26, 14], "tail": 18 },
+    { "id": "proof", "lines": ["proof1", "proof2"], "lead": 14, "gaps": 20, "tail": 18 },
+    { "id": "uncertain", "lines": ["unc1", "unc2"], "lead": 14, "gaps": 16, "tail": 16 },
+    { "id": "metrics", "lines": ["unc3"], "lead": 16, "gaps": 0, "tail": 44 },
+    { "id": "governance", "lines": ["gov1", "gov2"], "lead": 14, "gaps": 16, "tail": 18 },
+    { "id": "autonomy", "lines": ["out1"], "lead": 12, "gaps": 0, "tail": 22 },
+    { "id": "outro", "lines": ["out2"], "lead": 20, "gaps": 0, "tail": 84 }
+  ]
+}

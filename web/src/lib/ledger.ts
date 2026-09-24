@@ -20,9 +20,25 @@ export function priorFor(trigger: string, score: number | null | undefined) {
   return PRIORS[trigger] ?? 0.4;
 }
 
-export function runningP(prior: number, findings: { lr: number; family: string }[]) {
+const DISPUTE_PRIOR = 0.86;
+const MODEL_BASE_RATE = 0.0275;
+
+type LiveFinding = { lr: number; family: string; key?: string; in_model?: boolean; model_p?: number };
+
+/** v2: the transaction model's calibrated probability is the starting point; findings the model already sees are
+ * shown but not counted again (mirror of agent/assess.py). */
+export function modelPrior(trigger: string, findings: LiveFinding[]): number | null {
+  const m = findings.find((f) => f.key === "model_score" && typeof f.model_p === "number");
+  if (!m) return null;
+  const mp = Math.min(0.999, Math.max(0.001, m.model_p as number));
+  if (trigger === "customer_report") return sigmoid(logit(DISPUTE_PRIOR) + logit(mp) - logit(MODEL_BASE_RATE));
+  return mp;
+}
+
+export function runningP(prior: number, findings: LiveFinding[]) {
   const fam: Record<string, number> = {};
   for (const f of findings) {
+    if (f.in_model || f.key === "model_score") continue;
     const w = Math.log(Math.max(f.lr, 1e-6));
     fam[f.family] = (fam[f.family] || 0) + w;
   }

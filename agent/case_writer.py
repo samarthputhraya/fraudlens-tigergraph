@@ -20,7 +20,10 @@ PENDING = {"L1": "pending_approval_team_lead", "L2": "pending_approval_fraud_man
 
 
 def graph_case_id(case_id: str) -> str:
-    return f"CASE-2016-{case_id.split('-')[-1]}"
+    """HHG-006 -> CASE-2016-006. Autonomous finds keep their own namespace (AUTO-007 -> CASE-2016-AUTO-007), so they
+    can never overwrite a benchmark case's vertex."""
+    prefix, num = case_id.rsplit("-", 1)
+    return f"CASE-2016-{num}" if prefix == "HHG" else f"CASE-2016-{prefix}-{num}"
 
 
 def write_case(ans: dict, r: dict, opened_at: str, dry: bool = False) -> dict:

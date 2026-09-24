@@ -3,7 +3,7 @@
   "case": {
     "status": "closed_fraud",
     "verdict": "fraud",
-    "fraud_probability": 0.67,
+    "fraud_probability": 0.76,
     "pattern": "card_not_present_new_device",
     "pattern_description": "",
     "affected_txn_ids": [
@@ -15,6 +15,14 @@
     "exposure_usd": 128.33,
     "evidence": [
       {
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.011, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3583227)",
+        "entity_ids": [
+          "3583227"
+        ]
+      },
+      {
         "claim": "The purchase came from a device profile marked New for this account and never seen on this card before ( |  | firefox 47.0 | )",
         "source": "graph",
         "ref": "query:txn_context(txn=3583227)",
@@ -25,7 +33,7 @@
       {
         "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0696; latest note: \"Case CC-0696: model scored a $13.68 transaction at 0.83. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
         "source": "graph",
-        "ref": "query:prior_cases(card=C08106-K1)",
+        "ref": "query:prior_cases(card=C08106-K1, before_ts=2016-12-29 07:53:54)",
         "entity_ids": [
           "CC-0696"
         ]
@@ -39,16 +47,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0403 (confirmed_fraud, card_not_present_new_device); CC-2843 (confirmed_fraud, card_not_present_new_device); CC-4714 (confirmed_fraud, card_not_present_new_device); CC-3123 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4714 (confirmed_fraud, card_not_present_new_device); CC-2843 (confirmed_fraud, card_not_present_new_device); CC-3123 (confirmed_fraud, card_not_present_new_device); CC-3193 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'])",
+        "ref": "query:similar_cases(devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'], k=8, pattern=, before_ts=2016-12-29 07:53:54)",
         "entity_ids": [
-          "CC-0403",
-          "CC-2843",
           "CC-4714",
+          "CC-2843",
           "CC-3123",
           "CC-3193",
-          "CC-2833"
+          "CC-0403",
+          "CC-3473"
         ]
       },
       {
@@ -67,17 +75,17 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-0403",
-      "CC-2843",
       "CC-4714",
+      "CC-2843",
       "CC-3123",
       "CC-3193",
-      "CC-2833",
+      "CC-0403",
+      "CC-3473",
       "CC-0696"
     ],
-    "summary": "Customer C08106 reported an unauthorized online transaction of $128.33 (ID 3583227). The transaction was made from a new device profile running Firefox 47.0, which had never been associated with this card before. The amount is in the top 3% of the card's purchase history, and the device is linked to 6 different cards. The verdict is fraud. The bank will block the card to prevent further unauthorized charges.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "The alert was triggered when customer C08106 reported an unrecognized online purchase of $128.33 (transaction 3583227). Evidence shows the transaction was made from a new device profile never seen on this card before, and the amount was in the top 3% of the card's history. Although the transaction model scored the event low at 0.011, the customer's direct denial confirms the unauthorized activity. The case is closed as fraud matching a card-not-present from a new device pattern, with final actions to block the card and create a case.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-004"
   },
   "evidence_requests": [],
   "next_best_actions": {
@@ -109,14 +117,14 @@
   },
   "sar": {
     "file": false,
-    "reason": "No SAR will be filed under Section 3a because the total exposure of $128.33 is below the required threshold.",
+    "reason": "Section 3a: no report required - exposure $128.33 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "The investigation concluded because the customer explicitly denied making the transaction, confirming fraud.",
-  "tool_calls": 12,
-  "tokens": 8073,
-  "latency_s": 33.8
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (the pattern detector) support a defensible decision at probability 0.76; further queries would not change the actions.",
+  "tool_calls": 13,
+  "tokens": 8506,
+  "latency_s": 106.0
 }

@@ -20,21 +20,20 @@
     "exposure_usd": 99.92,
     "evidence": [
       {
-        "claim": "The same device profile (Windows | other | chrome 61.0 | 1280x720) was used on 2 other card(s) of 2 other customer(s) between 2016-11-29 and 2016-12-01, 1 of those uses as a New device. The profile appears on only 5 card(s) in the whole dataset",
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.799, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3503878)",
+        "entity_ids": [
+          "3503878"
+        ]
+      },
+      {
+        "claim": "The same device profile (Windows | other | chrome 61.0 | 1280x720) was used on 2 other card(s) of 2 other customer(s) between 2016-11-29 and 2016-12-01, 1 of those uses as a New device. The profile appears on only 5 card(s) in the whole dataset. The transaction model scores 2 of those other-card uses as fraud (3497738 0.83, 3503988 0.80)",
         "source": "graph",
         "ref": "query:device_neighbors(dev=Windows | other | chrome 61.0 | 1280x720, start_ts=2016-11-01 17:28:53, end_ts=2016-12-01 22:28:53)",
         "entity_ids": [
           "C06224-K2",
           "C11309-K1"
-        ]
-      },
-      {
-        "claim": "The same amount (+/-1%) recurs on this card on the same day of the month: 2016-09-02 $100.08, 2016-11-01 $100.01 (11 matching charge(s) in the last six months), consistent with a recurring charge",
-        "source": "graph",
-        "ref": "query:recurring_match(card=C07987-K2, amt=99.92, tol=1.0, before_ts=2016-12-01 17:28:53)",
-        "entity_ids": [
-          "3228957",
-          "3419333"
         ]
       },
       {
@@ -48,7 +47,7 @@
       {
         "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-2087; latest note: \"Case CC-2087: model scored a $150.00 transaction at 0.94. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
         "source": "graph",
-        "ref": "query:prior_cases(card=C07987-K2)",
+        "ref": "query:prior_cases(card=C07987-K2, before_ts=2016-12-01 22:28:53)",
         "entity_ids": [
           "CC-2087"
         ]
@@ -56,7 +55,7 @@
       {
         "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1263 (confirmed_fraud, card_not_present_new_device); CC-5221 (confirmed_fraud, card_not_present_new_device); CC-2087",
         "source": "graph",
-        "ref": "query:similar_cases(k=8, pattern=, devices=['Windows | other | chrome 61.0 | 1280x720'], cards=['C07987-K2', 'C06224-K2', 'C11309-K1'])",
+        "ref": "query:similar_cases(devices=['Windows | other | chrome 61.0 | 1280x720'], cards=['C07987-K2', 'C06224-K2', 'C11309-K1'], k=8, pattern=, before_ts=2016-12-01 22:28:53)",
         "entity_ids": [
           "CC-1263",
           "CC-5221",
@@ -64,18 +63,10 @@
         ]
       },
       {
-        "claim": "Fraud Policy rules applied to this case: R1, R2, R4, R6 (retrieved from the policy knowledge graph via GraphRAG)",
+        "claim": "Fraud Policy rules applied to this case: R6 (retrieved from the policy knowledge graph via GraphRAG)",
         "source": "document",
-        "ref": "document:Fraud Policy v1.0 section 3 R1/R2/R4/R6",
+        "ref": "document:Fraud Policy v1.0 section 3 R6",
         "entity_ids": []
-      },
-      {
-        "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): Cardholder states they did not make the flagged transaction(s) and still has the card",
-        "source": "customer",
-        "ref": "evidence_request:1",
-        "entity_ids": [
-          "3503878"
-        ]
       }
     ],
     "similar_prior_cases": [
@@ -83,45 +74,17 @@
       "CC-5221",
       "CC-2087"
     ],
-    "summary": "On 2016-12-01, a $99.92 online transaction on card C07987-K2 was flagged by the real-time model. The transaction originated from a new device profile that was also linked to two other customers' cards. The bank contacted the customer, who confirmed they did not authorize the transaction. The verdict is fraud, and the bank will block the card, monitor connected cards, and file a suspicious activity report.",
-    "written_to_graph": false,
-    "graph_case_id": ""
+    "summary": "The alert was triggered when the real-time risk score flagged an online transaction of $99.92 at 0.90. Graph evidence revealed the transaction originated from a rare device profile marked as new for this account, which was also recently used on two other customers' cards, indicating a potential fraud ring. The verdict is fraud with a 97 percent probability, matching the card-not-present fraud from a new device pattern. The final actions are to block the card, create a case, file a suspicious activity report, and monitor the connected cards.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-019"
   },
-  "evidence_requests": [
-    {
-      "type": "step_up_auth",
-      "asked_after_step": 10,
-      "assumed_response": "Cardholder states they did not make the flagged transaction(s) and still has the card"
-    }
-  ],
+  "evidence_requests": [],
   "next_best_actions": {
     "initial": [
       {
-        "action": "CREATE_CASE",
-        "route": "auto",
-        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
-      },
-      {
-        "action": "DECLINE_TRANSACTION",
-        "route": "L1",
-        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.83)"
-      },
-      {
-        "action": "STEP_UP_AUTH",
-        "route": "auto",
-        "reason": "R1: evidence not yet conclusive (probability 0.83 < 0.70); verify before any block"
-      },
-      {
-        "action": "MONITOR_CONNECTED_CARDS",
-        "route": "auto",
-        "reason": "R6: 2 card(s) share device profile Windows | other | chrome 61.0 | 1280x720"
-      }
-    ],
-    "final": [
-      {
         "action": "BLOCK_CARD",
         "route": "L1",
-        "reason": "R2: the cardholder denied the transaction; exposure $99.92 is under $2,500"
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $99.92 is under $2,500"
       },
       {
         "action": "CREATE_CASE",
@@ -139,12 +102,34 @@
         "reason": "R6: 2 other card(s) share device profile Windows | other | chrome 61.0 | 1280x720"
       }
     ],
-    "what_changed": "The initial recommendation was to hold the transaction and verify it with the customer. After the customer denied making the transaction, the final recommendation escalated to blocking the card and filing a report."
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $99.92 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R6 / section 3a: activity connects to device profile Windows | other | chrome 61.0 | 1280x720"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: 2 other card(s) share device profile Windows | other | chrome 61.0 | 1280x720"
+      }
+    ],
+    "what_changed": "nothing"
   },
   "sar": {
     "file": true,
-    "reason": "A SAR is being filed under Policy R6 and Section 3a because the fraudulent activity connects to a device profile shared with other customers.",
-    "narrative": "This Suspicious Activity Report details a confirmed card-not-present fraud incident involving customer C07987 and card C07987-K2. On 2016-12-01 at 17:28:53, an online transaction of $99.92 was attempted. The transaction was initiated from a device profile (Windows | other | chrome 61.0 | 1280x720) that was marked as new for this account. Investigation revealed that this same device profile was used on two other cards belonging to two different customers between 2016-11-29 and 2016-12-01. While the amount of $99.92 was consistent with the customer's recurring charges, the use of an unrecognized, shared device raised suspicion. The bank contacted the customer via step-up authentication. The customer stated they still had their card but did not authorize the flagged transaction. Due to the customer's denial and the device's association with multiple accounts, the activity is deemed fraudulent. The total exposure for this incident is $99.92.",
+    "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to device profile Windows | other | chrome 61.0 | 1280x720.",
+    "narrative": "This report details suspected card-not-present fraud involving customer C07987 and card C07987-K2. On 2016-12-01 at 17:28:53, an online transaction of $99.92 was attempted in billing region 264. The purchase was made using a device profile (Windows | other | chrome 61.0 | 1280x720) that was marked as new for this account. While the transaction amount was typical for the cardholder's history, the transaction model scored the event at 0.799. Graph analysis revealed that this rare device profile was used on two other cards (C06224-K2 and C11309-K1) belonging to two other customers between 2016-11-29 and 2016-12-01. One of those uses was also marked as a new device, and the transaction model scored two of those related transactions as highly suspicious. This shared use of a rare, fully specified device profile across multiple unrelated accounts strongly indicates a coordinated fraud ring. The total exposure for this case is $99.92. Consequently, the bank has blocked the card, created a case, and initiated monitoring on the connected cards.",
     "subjects": [
       "C07987",
       "C07987-K2",
@@ -158,8 +143,8 @@
       "2016-12-01"
     ]
   },
-  "stop_reason": "The investigation was concluded because the customer confirmed the transaction was unauthorized, providing sufficient evidence to block the card and close the case.",
-  "tool_calls": 12,
-  "tokens": 10548,
-  "latency_s": 106.3
+  "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (model, network); further queries would not change the actions.",
+  "tool_calls": 14,
+  "tokens": 11843,
+  "latency_s": 50.2
 }

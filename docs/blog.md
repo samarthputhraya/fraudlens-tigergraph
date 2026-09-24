@@ -14,8 +14,8 @@ and write it all up. A risk score doesn't settle an alert. In this dataset the b
 transactions above 0.7, and **most of them were legitimate**. Some real fraud scored close to zero.
 
 The challenge gave us 590,742 IEEE-CIS card transactions with no fraud label. It also gave us 5,565 closed
-investigations, a five-pattern typology, a ten-rule fraud policy, and 20 alerts to investigate. Our goal was not a
-better classifier. It was an **investigator** that:
+investigations, a five-pattern typology, a ten-rule fraud policy, and 20 alerts to investigate. Our goal was not just a
+better classifier (though we trained one). It was an **investigator** that:
 - knows what to look at;
 - knows when the evidence is not enough and asks for more;
 - follows the policy to the letter;
@@ -31,6 +31,7 @@ FraudLens is a virtual fraud team:
   - *Identity & Device*: new devices, proxies, the resolved cardholder account.
   - *Network & Ring*: what happened on *other* cards.
   - *Precedent*: closed cases and policy documents.
+- **A transaction model** trained only on the bank's 5,565 closed cases (LightGBM, no look-ahead features). Its calibrated score is stored on every `Transaction` vertex in TigerGraph, and it is where each assessment starts.
 - **A deterministic core** covering detectors, a calibrated log-odds ledger, and the policy engine. It owns every number, ID, route and SAR decision.
 - **Compliance Reviewer**. A red-team agent that checks the draft against the policy before anything is written.
 - **Writer**. Produces the analyst summary and a FinCEN-style suspicious activity report.
@@ -45,7 +46,7 @@ transaction ID. A validator rejects any answer that mentions an ID that doesn't 
 
 1. **Trigger**: a model score, a customer report, an analyst request or our autonomous monitor.
 2. **Investigate**: seven core GSQL queries, plus up to three the Lead Investigator chooses. All go through the **official TigerGraph MCP server** (`tigergraph__run_installed_query`), started with a least-privilege `--allowed-tools` allowlist (query, vector and read tools only; no schema, loading, DML or raw GSQL) and tool-call logging.
-3. **Assess**: detectors emit typed findings, each with a likelihood ratio, the entity IDs it rests on, and a replayable reference such as `query:card_window(card=C07297-K1, start_ts=…, end_ts=…)`.
+3. **Assess**: the transaction model's calibrated score is the starting point. Detectors then emit typed findings, each with a likelihood ratio, the entity IDs it rests on, and a replayable reference such as `query:card_window(card=C07297-K1, start_ts=…, end_ts=…)`. Only evidence the model can't see moves the probability: other cards, rings, structuring, testing sequences, the customer's own dispute.
 4. **Decide**: the policy engine computes the initial action, the evidence request, and **all three counterfactual branches**:
    - the customer confirms (R3);
    - the customer denies (R2);
@@ -60,7 +61,7 @@ transaction ID. A validator rejects any answer that mentions an ID that doesn't 
 **Schema.**
 - Customer → Card → Transaction, with DeviceProfile, EmailDomain and BillingRegion.
 - ClosedCase, PolicyRule, FraudPattern and DocChunk for knowledge.
-- InvestigationCase, EvidenceRequest and ActionRecord for the agent's own memory.
+- InvestigationCase, EvidenceRequest and ActionRecord for the agent's own memory. Memory is as-of: `prior_cases`, `similar_cases`, `device_neighbors` and `account_history` only return investigations opened before the case being worked, so no case can recall itself or anything opened after it.
 
 The most useful vertex we added was **Account**. The dataset's `customer_id` is really a card-issuer bucket; one
 "customer" has more than 10,000 transactions. We resolve the hidden cardholder account as card + billing region +
@@ -71,11 +72,27 @@ step, and it produced the single strongest signal in the project:
 > against a **2.7%** base rate. None of the 144 cleared alerts had it.
 
 We also recovered how the bank derived card IDs: the rank of the card network and type within the customer, which
-matches **100%** of the 14,955 closed-case transactions. We found how it cut fraud *episodes*: consecutive
-transactions on the same account are at most 48 hours apart in 99% of confirmed cases. That became our episode
-builder, and it reproduces closed-case transaction sets with a Jaccard overlap of **0.82**.
+matches **100%** of the 14,955 closed-case transactions. And we read off two rules the bank's analysts followed
+when they closed cases.
 
-**17 installed GSQL queries.** Each is described with `UPDATE DESCRIPTION OF QUERY`, so an agent can discover it
+**How the bank cut fraud episodes.** It chained fraud on the same *card* while consecutive transactions stayed within
+48 hours. A gap between two cases on the same card is never shorter than that. Our episode builder samples that
+chain 4,000 times from the model's calibrated per-transaction scores, and keeps every transaction that is in the
+chain in at least half of the draws.
+
+**How the bank named patterns.**
+
+| Episode | Pattern | Share of closed cases that follow it |
+|---|---|---|
+| All online, any device marked New | `card_not_present_new_device` | 100% |
+| All online, no device marked New | `card_not_present_fraud` | 100% |
+| Mixed channels | `account_takeover` | 100% |
+| Card-present, only in the card's home region | `account_takeover` | 95% |
+| Card-present elsewhere, or across regions | `out_of_region_use` | 95% |
+
+Applying that rule took our pattern accuracy on October's closed cases from 64% to **91%**.
+
+**18 installed GSQL queries.** Each is described with `UPDATE DESCRIPTION OF QUERY`, so an agent can discover it
 through MCP. They include:
 - `card_window`, `card_profile` (baseline strictly before the alert, so no look-ahead) and `recurring_match`;
 - `account_history`, `device_neighbors`, `region_activity`, `prior_cases`;
@@ -106,23 +123,25 @@ collapses into one giant component, because generic browser profiles connect eve
 
 The policy is code. `policy.plan()` is a pure function that returns the recommendation for every possible reply:
 
-- **Verify before blocking.** Probability 0.46 on a $1,000.03 online purchase from a new device (HHG-010) → `CREATE_CASE`, `DECLINE_TRANSACTION` (L1) and `STEP_UP_AUTH` (R1).
-  - The evidence can't settle it, so we assume no reply.
-  - R4 then gives `MONITOR_CARD` and `DECLINE_TRANSACTION`, plus `ESCALATE_TO_ANALYST`, because $1,000.03 is over the $500 escalation limit (R8).
-  - The verdict stays `uncertain`. The README says that is the right answer for designed ambiguity.
-- **Know when to stop.** A 0.61-score purchase in a region the card had used ten times before, on an account with a clean history → probability 0.09 on two independent legitimate signals. Section 6 says stop, so `ALLOW_TRANSACTION` and `CLOSE_NO_FRAUD`, with no customer contact.
-- **Case vs report.** The rules come from section 3a. A $128 online fraud gets a case only. Four online purchases of $456–$488 in 30 minutes (HHG-006, $1,906.07) get a case **and** a SAR under R9, because amounts chosen to stay under a $500 threshold match none of the five documented patterns.
-- **Disputed but legitimate.** A customer disputes a $55.68 charge that recurs on the same day each month (HHG-008). R7 applies: `CREATE_CASE`, `VERIFY_WITH_CUSTOMER` and `WARN_CUSTOMER`, and no block.
+- **Verify, don't block.** HHG-010 is a $1,000.03 online purchase from a device the card had never used, and the bank scored it 0.90. Our transaction model puts it at 0.5%. The agent opens a case and asks the customer to verify (R1), and plans every reply:
+  - if the customer confirms, it closes the case (R3);
+  - if they deny, it blocks the card and files a SAR, because $1,000.03 is over the $1,000 line (R2, section 3a);
+  - if there's no reply, it declines the charge and escalates (R4, R8).
 
-**Calibration** is a Bayesian log-odds ledger:
-- The prior for a model alert is the base fraud rate times the likelihood ratio of its score band.
-- We measured that ratio on 14,055 fraud vs 402,449 background transactions. It gives about 47% for scores of 0.85 and above, which matches the README's warning.
-- Each finding adds its own measured ratio.
+  The evidence points to confirmation, so the case closes as legitimate.
+- **Know when to stop.** In the device ring (HHG-014), the same device turns up on 19 other cardholders' cards in eight days, and four confirmed cases from the summer used it too. That independent evidence takes the probability to 0.97. Section 6 says stop and act, so it blocks the card (L1), opens a case, files a SAR (L2), monitors all 19 connected cards and escalates to an analyst. It asks the customer nothing.
+- **Case vs report.** The rules come from section 3a. A $128 online fraud gets a case only. Four online purchases of $456–$488 in 30 minutes (HHG-006, $1,906.07) get a case **and** a SAR under R9, because amounts chosen to stay under a $500 threshold match none of the five documented patterns. The agent cites all five earlier structuring cases from the bank's history.
+- **"Recurring" has to be the same person.** A customer disputed a $55.68 charge (HHG-008). Other ~$55 charges exist on that card ID, so it looks like R7 (disputed but legitimate). But a `customer_id` here is an anonymised issuer bucket shared by hundreds of people, and those earlier charges came from other e-mail domains and devices. Two of the $55.6 charges came 20 minutes apart that evening, and the model scores the disputed one 0.60. So it's fraud under R2, not a recurring charge.
 
-Some classic "red flags" turned out *not* to be red here. A card-present purchase in a billing region the card had
-never used has a likelihood ratio of **0.46**: in this data it usually means travel.
+**Calibration** is a Bayesian log-odds ledger that starts from the model.
+- **Model alerts.** The prior is the model's calibrated probability for the flagged transaction. That already includes the bank's score, the identity record and the account's history.
+- **Customer disputes.** These start at 0.86: every confirmed case in the bank's history began as a customer report, and we keep a margin for recurring charges. The model's likelihood ratio then moves that.
+- **Graph findings.** Each finding the model can't see adds its own ratio, capped per family of evidence.
+- **No double counting.** Signals the model already sees, like a new device, a proxy or an unusual amount, stay in the evidence as explanation but are never counted twice.
 
 ## What we learned
+
+0. **Measure the core question first.** Our first engine combined hand-set likelihood ratios. On October's high-score alerts, its graph evidence separated fraud from false alarms with an AUC of just 0.55. A gradient-boosted model trained only on the bank's own closed cases reaches **0.933** on those same alerts, where the bank's own score reaches 0.598. Its features never look past the transaction being scored, and October stayed held out. We kept the graph for what a per-transaction model can't see: other cards, rings, precedent and policy.
 
 1. **Graph memory beats better prompts.** Our biggest accuracy gains came from entity resolution and graph-filtered retrieval, not from the LLM.
 2. **Keep the LLM away from arithmetic and IDs.** Every hallucination we saw early on was a plausible-looking transaction ID. A validator backed by an `ids_exist` query fixed that for good.
@@ -131,36 +150,48 @@ never used has a likelihood ratio of **0.46**: in this data it usually means tra
 
 ## Results
 
+**The transaction model on October, which it never saw:** AUC **0.973** on all transactions and **0.933** on alerts the bank scored ≥ 0.5. The bank's own score gets 0.866 and 0.598 on the same transactions ([model card](../eval/model_card.md)).
+
+<!-- BACKTEST_TABLE -->
+| Agent replay on October closed cases | Value |
+|---|---|
+| Cases replayed | 498 (354 confirmed, 144 cleared) |
+| Fraud vs false alarm, final probability (AUC) | **0.881** (0.957 on alerts scored ≥ 0.5) |
+| Pattern accuracy (confirmed cases, 5 known patterns + undocumented) | **91%** |
+| Episode reconstruction (Jaccard vs the case's txn_ids) | **0.82** |
+| SAR decision agreement with the bank's filings | **81%** |
+| Exposure mean absolute error | $165.83 |
+
 <!-- RESULTS_TABLE -->
 | Case | Trigger | Verdict | p | Pattern | Exposure | SAR | Initial → Final actions | Graph |
 |---|---|---|---|---|---|---|---|---|
-| [HHG-001](cases/HHG-001.json) | risk score | legitimate | 0.09 | none | $0.00 | — | ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-001](cases/HHG-001.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
 | [HHG-002](cases/HHG-002.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-003](cases/HHG-003.json) | customer report | fraud | 0.66 | out of region use | $165.93 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-004](cases/HHG-004.json) | customer report | fraud | 0.67 | card not present new device | $128.33 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-003](cases/HHG-003.json) | customer report | fraud | 0.97 | out of region use | $165.93 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-004](cases/HHG-004.json) | customer report | fraud | 0.76 | card not present new device | $128.33 | — | BLOCK_CARD CREATE_CASE | ✅ |
 | [HHG-005](cases/HHG-005.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
 | [HHG-006](cases/HHG-006.json) | customer report | fraud | 0.97 | undocumented | $1,906.07 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT ESCALATE_TO_ANALYST | ✅ |
-| [HHG-007](cases/HHG-007.json) | risk score | fraud | 0.97 | account takeover | $111.92 | — | CREATE_CASE DECLINE_TRANSACTION VERIFY_WITH_CUSTOMER **→** BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-008](cases/HHG-008.json) | customer report | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER WARN_CUSTOMER **→** CREATE_CASE WARN_CUSTOMER CLOSE_NO_FRAUD | ✅ |
-| [HHG-009](cases/HHG-009.json) | customer report | fraud | 0.60 | card not present fraud | $30.02 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-010](cases/HHG-010.json) | risk score | uncertain | 0.56 | card not present new device | $1,000.03 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION ESCALATE_TO_ANALYST | ✅ |
-| [HHG-011](cases/HHG-011.json) | customer report | fraud | 0.92 | card not present new device | $235.66 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-007](cases/HHG-007.json) | risk score | fraud | 0.97 | account takeover | $148.89 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-008](cases/HHG-008.json) | customer report | fraud | 0.97 | card not present fraud | $55.68 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-009](cases/HHG-009.json) | customer report | fraud | 0.97 | card not present fraud | $30.02 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-010](cases/HHG-010.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
+| [HHG-011](cases/HHG-011.json) | customer report | fraud | 0.97 | card not present new device | $131.30 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
 | [HHG-012](cases/HHG-012.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-013](cases/HHG-013.json) | risk score | uncertain | 0.51 | card not present new device | $35.66 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION | ✅ |
+| [HHG-013](cases/HHG-013.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
 | [HHG-014](cases/HHG-014.json) | analyst request | fraud | 0.97 | undocumented | $187.33 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS ESCALATE_TO_ANALYST | ✅ |
 | [HHG-015](cases/HHG-015.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-016](cases/HHG-016.json) | customer report | fraud | 0.68 | card not present new device | $59.67 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-016](cases/HHG-016.json) | customer report | fraud | 0.97 | card not present new device | $59.67 | — | BLOCK_CARD CREATE_CASE | ✅ |
 | [HHG-017](cases/HHG-017.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
-| [HHG-018](cases/HHG-018.json) | customer report | fraud | 0.90 | out of region use | $39.08 | — | BLOCK_CARD CREATE_CASE | ✅ |
-| [HHG-019](cases/HHG-019.json) | risk score | fraud | 0.97 | card not present new device | $99.92 | ✅ | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH MONITOR_CONNECTED_CARDS **→** BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
-| [HHG-020](cases/HHG-020.json) | risk score | uncertain | 0.59 | card not present new device | $125.08 | — | CREATE_CASE DECLINE_TRANSACTION STEP_UP_AUTH **→** MONITOR_CARD DECLINE_TRANSACTION | ✅ |
+| [HHG-018](cases/HHG-018.json) | customer report | fraud | 0.97 | out of region use | $251.53 | — | BLOCK_CARD CREATE_CASE | ✅ |
+| [HHG-019](cases/HHG-019.json) | risk score | fraud | 0.97 | card not present new device | $99.92 | ✅ | BLOCK_CARD CREATE_CASE FILE_REPORT MONITOR_CONNECTED_CARDS | ✅ |
+| [HHG-020](cases/HHG-020.json) | risk score | legitimate | 0.05 | none | $0.00 | — | CREATE_CASE VERIFY_WITH_CUSTOMER **→** ALLOW_TRANSACTION CLOSE_NO_FRAUD | ✅ |
 
-Average per case: **12.2 graph/retrieval tool calls**, **8,563 LLM tokens**, **97 s**. Every file passes the schema + ID + policy validator.
+Average per case: **13.3 graph/retrieval tool calls**, **9,108 LLM tokens**, **121 s**. Every file passes the schema + ID + policy validator.
 
 
 ## What we'd improve with more time
 
-- Replace the hand-set likelihood ratios for the graph-only signals with a model trained on graph features (FastRP embeddings of the card–device–account neighbourhood).
+- Learn the remaining graph-only likelihood ratios (rings, shared devices, recurrence) jointly with the transaction model, using graph features such as FastRP embeddings of the card–device–account neighbourhood computed in TigerGraph.
 - Stream new transactions into TigerGraph and run the monitor continuously instead of as a sweep.
 - Replace simulated customer replies with a real two-way channel, and learn which verification step (OTP vs call) resolves which alert type fastest.
 - Use Louvain communities over the full shared-entity graph to find rings that share emails or regions, not only devices.

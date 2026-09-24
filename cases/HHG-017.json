@@ -13,6 +13,14 @@
     "exposure_usd": 0.0,
     "evidence": [
       {
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.140, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3450629)",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
         "claim": "The session was routed through an hidden proxy",
         "source": "graph",
         "ref": "query:txn_context(txn=3450629)",
@@ -23,7 +31,7 @@
       {
         "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1383; latest note: \"Case CC-1383: model scored a $99.98 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
         "source": "graph",
-        "ref": "query:prior_cases(card=C04570-K1)",
+        "ref": "query:prior_cases(card=C04570-K1, before_ts=2016-11-12 00:46:24)",
         "entity_ids": [
           "CC-1383"
         ]
@@ -37,16 +45,16 @@
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-5217 (confirmed_fraud, card_not_present_new_device); CC-5455 (confirmed_fraud, card_not_present_new_device); CC-5292 (cleared, none); CC-5181 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-5217 (confirmed_fraud, card_not_present_new_device); CC-5172 (confirmed_fraud, card_not_present_fraud); CC-5292 (cleared, none); CC-5481 (confirmed_fraud, card_not_present_new_device)",
         "source": "graph",
-        "ref": "query:similar_cases(devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'], k=8, pattern=)",
+        "ref": "query:similar_cases(devices=['Windows | Windows 10 | chrome 65.0 | 1920x1080'], cards=['C04570-K1'], k=8, pattern=, before_ts=2016-11-12 00:46:24)",
         "entity_ids": [
           "CC-5217",
-          "CC-5455",
+          "CC-5172",
           "CC-5292",
-          "CC-5181",
+          "CC-5481",
           "CC-0699",
-          "CC-3105"
+          "CC-0099"
         ]
       },
       {
@@ -66,22 +74,22 @@
     ],
     "similar_prior_cases": [
       "CC-5217",
-      "CC-5455",
+      "CC-5172",
       "CC-5292",
-      "CC-5181",
+      "CC-5481",
       "CC-0699",
-      "CC-3105",
-      "CC-1008",
+      "CC-0099",
+      "CC-0058",
       "CC-0997"
     ],
-    "summary": "This case was opened because the real-time model scored online transaction 3450629 for $100.09 at 0.57. Investigation showed the transaction amount is typical for the card, and the device profile had been used three times previously by this customer, despite the use of a hidden proxy. Additionally, the card had a prior alert (CC-1383) that was cleared as a false alarm. The bank contacted the customer, who confirmed they made the purchase, leading to a legitimate verdict. The final actions taken are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "This alert was triggered when the bank's real-time risk score flagged an online transaction of $100.09 with a score of 0.57. The transaction model scored the event at a low 0.140, and graph evidence showed the device profile had already been used three times on this card prior to the alert. Although a hidden proxy was used, the purchase amount was typical for the customer, and the cardholder confirmed making the transaction when contacted. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-017"
   },
   "evidence_requests": [
     {
       "type": "customer_validation",
-      "asked_after_step": 11,
+      "asked_after_step": 12,
       "assumed_response": "Cardholder confirmed they made the purchase"
     }
   ],
@@ -90,12 +98,12 @@
       {
         "action": "CREATE_CASE",
         "route": "auto",
-        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        "reason": "Section 3a: evidence is being requested"
       },
       {
         "action": "VERIFY_WITH_CUSTOMER",
         "route": "auto",
-        "reason": "R1: single signal (probability 0.34 < 0.70); verify before any block"
+        "reason": "R1: single signal (probability 0.14 < 0.70); verify before any block"
       }
     ],
     "final": [
@@ -110,7 +118,7 @@
         "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
       }
     ],
-    "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability fell from 0.34 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
+    "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability fell from 0.14 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
   },
   "sar": {
     "file": false,
@@ -121,7 +129,7 @@
     "activity_dates": []
   },
   "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
-  "tool_calls": 14,
-  "tokens": 7221,
-  "latency_s": 133.2
+  "tool_calls": 15,
+  "tokens": 9389,
+  "latency_s": 197.8
 }

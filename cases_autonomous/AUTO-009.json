@@ -1,0 +1,170 @@
+{
+  "row": {
+    "case_id": "AUTO-009",
+    "opened_at": "2016-12-15 17:43:53",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: purchases by 4 different customers through one rare device profile, all scored as fraud by the transaction model (total $999.97) on card C05416-K1. Investigate transaction 3545605 and related activity.",
+    "flagged_txn_id": "3545605",
+    "card_id": "C05416-K1",
+    "customer_id": "C05416",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "model_ring",
+    "card_id": "C05416-K1",
+    "customer_id": "C05416",
+    "flagged": "3545605",
+    "ts": "2016-12-15 16:43:53",
+    "txns": [
+      "3545605"
+    ],
+    "device": "SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081",
+    "ring_size": 4,
+    "amount": 999.97,
+    "members": [
+      "C05416-K1",
+      "C08450-K2",
+      "C11000-K2",
+      "C11923-K2"
+    ]
+  },
+  "answer": {
+    "case_id": "AUTO-009",
+    "case": {
+      "status": "closed_fraud",
+      "verdict": "fraud",
+      "fraud_probability": 0.97,
+      "pattern": "card_not_present_fraud",
+      "pattern_description": "",
+      "affected_txn_ids": [
+        "3545605"
+      ],
+      "first_suspicious_txn_id": "3545605",
+      "connected_card_ids": [
+        "C11000-K2",
+        "C11923-K2"
+      ],
+      "connected_device_profiles": [
+        "SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+      ],
+      "exposure_usd": 200.07,
+      "evidence": [
+        {
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 1.000, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+          "source": "graph",
+          "ref": "query:txn_context(txn=3545605)",
+          "entity_ids": [
+            "3545605"
+          ]
+        },
+        {
+          "claim": "The same device profile (SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081) was used on 2 other card(s) of 3 other customer(s) between 2016-12-13 and 2016-12-15, 1 of those uses as a New device. The profile appears on only 6 card(s) in the whole dataset. The transaction model scores 2 of those other-card uses as fraud (3542529 0.83, 3545523 0.68)",
+          "source": "graph",
+          "ref": "query:device_neighbors(dev=SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081, start_ts=2016-11-15 16:43:53, end_ts=2016-12-15 17:43:53)",
+          "entity_ids": [
+            "C11000-K2",
+            "C11923-K2"
+          ]
+        },
+        {
+          "claim": "This card has never used product code R before",
+          "source": "graph",
+          "ref": "query:card_profile(card=C05416-K1, before_ts=2016-12-15 16:43:53, recent_days=30)",
+          "entity_ids": [
+            "3545605"
+          ]
+        },
+        {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3190 (confirmed_fraud, card_not_present_fraud)",
+          "source": "graph",
+          "ref": "query:similar_cases(devices=['SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081'], cards=['C05416-K1', 'C11000-K2', 'C11923-K2'], k=8, pattern=, before_ts=2016-12-15 17:43:53)",
+          "entity_ids": [
+            "CC-3190"
+          ]
+        },
+        {
+          "claim": "Fraud Policy rules applied to this case: R6 (retrieved from the policy knowledge graph via GraphRAG)",
+          "source": "document",
+          "ref": "document:Fraud Policy v1.0 section 3 R6",
+          "entity_ids": []
+        }
+      ],
+      "similar_prior_cases": [
+        "CC-3190"
+      ],
+      "summary": "The alert was triggered by an autonomous monitor detecting purchases by four different customers through one rare device profile, totaling $999.97. Graph evidence showed this specific Samsung device profile was used across multiple unrelated cards and customers between December 13 and December 15, 2016, with the transaction model scoring several of these events as fraud. The final verdict is fraud with a 97 percent probability, matching a card-not-present fraud pattern. The final actions are to block the card, create a case, file a report, and monitor connected cards.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-AUTO-009"
+    },
+    "evidence_requests": [],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $200.07 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to device profile SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 2 other card(s) share device profile SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+        }
+      ],
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $200.07 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to device profile SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 2 other card(s) share device profile SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+        }
+      ],
+      "what_changed": "nothing"
+    },
+    "sar": {
+      "file": true,
+      "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to device profile SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081.",
+      "narrative": "This report concerns suspected card-not-present fraud involving customer C05416 and card C05416-K1. On 2016-12-15 at 16:43:53, an online transaction of $200.07 was attempted for product code R from billing address 191. The transaction was flagged with a real-time risk score of 0.91 and a transaction model score of 1.000. While the amount was typical for the cardholder, the product code R had never been used before on this account. The activity is highly suspicious because it was conducted using a rare device profile, SAMSUNG SM-G965U Build/R16NW Android 8.0.0 samsung browser 7.0 2220x1081. This exact device profile was used on two other cards belonging to three other customers between 2016-12-13 and 2016-12-15, indicating a coordinated fraud effort. The transaction model also scored two of those other-card uses as fraud. The exposure for this specific transaction is $200.07, though the autonomous monitor noted a total of $999.97 across the shared device.",
+      "subjects": [
+        "C05416",
+        "C05416-K1",
+        "C11000-K2",
+        "C11923-K2",
+        "SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081"
+      ],
+      "total_amount_usd": 200.07,
+      "activity_dates": [
+        "2016-12-15",
+        "2016-12-15"
+      ]
+    },
+    "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (model, network); further queries would not change the actions.",
+    "tool_calls": 13,
+    "tokens": 12529,
+    "latency_s": 167.7
+  }
+}

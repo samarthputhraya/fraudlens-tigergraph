@@ -12,7 +12,7 @@ from pathlib import Path
 import duckdb
 import numpy as np
 
-from agent.graph_client import ToolCall, Trace, fmt_ts
+from agent.graph_client import AS_OF_NOW, ToolCall, Trace, fmt_ts
 
 ROOT = Path(__file__).resolve().parents[1]
 DB = ROOT / "data" / "prep" / "hhgoa.duckdb"
@@ -24,12 +24,19 @@ TXN_COLS = """t.TransactionID AS id, t.card_id, t.customer_id, strftime(t.ts_dt,
   coalesce(t.M1,'')||coalesce(t.M2,'')||coalesce(t.M3,'') AS m123, coalesce(t.M7,'')||coalesce(t.M8,'')||coalesce(t.M9,'') AS m789,
   coalesce(try_cast(t.C1 AS DOUBLE), -1) AS c1, coalesce(try_cast(t.C13 AS DOUBLE), -1) AS c13,
   coalesce(try_cast(t.D1 AS DOUBLE), -1) AS d1, coalesce(try_cast(t.D15 AS DOUBLE), -1) AS d15,
-  coalesce(i.device_profile,'') AS device, coalesce(i.id_15,'') AS is_new, coalesce(i.id_23,'') AS proxy"""
+  coalesce(i.device_profile,'') AS device, coalesce(i.id_15,'') AS is_new, coalesce(i.id_23,'') AS proxy,
+  coalesce(ms.p_cal, -1.0) AS model_p"""
 
 
 class MirrorGraph:
     def __init__(self) -> None:
         self.con = duckdb.connect(str(DB), read_only=True)
+        scores = ROOT / "data" / "prep" / "model_scores.parquet"
+        if scores.exists():
+            self.con.execute(f"CREATE TEMP VIEW ms AS SELECT CAST(TransactionID AS VARCHAR) tid, p_cal "
+                             f"FROM read_parquet('{scores.as_posix()}')")
+        else:
+            self.con.execute("CREATE TEMP VIEW ms AS SELECT '' tid, -1.0 p_cal WHERE false")
         self.trace = Trace()
         self.agent = "lead"
         self._closed_emb = None
@@ -67,7 +74,7 @@ class MirrorGraph:
         import time
         t0 = time.time()
         rows = self._rows(f"""SELECT {TXN_COLS}, coalesce(i.id_34,'') AS id_34, coalesce(i.DeviceType,'') AS device_type
-            FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID WHERE t.TransactionID = ?""", [txn_id])
+            FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID WHERE t.TransactionID = ?""", [txn_id])
         txn = rows[0] if rows else {}
         if txn.get("device"):
             d = self._rows("SELECT count(*) n FROM ident WHERE device_profile = ?", [txn["device"]])[0]
@@ -83,7 +90,7 @@ class MirrorGraph:
     def card_window(self, card_id: str, start, end, agent: str | None = None) -> list[dict]:
         import time
         t0 = time.time()
-        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID
+        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID
             WHERE t.card_id = ? AND t.ts_dt BETWEEN CAST(? AS TIMESTAMP) AND CAST(? AS TIMESTAMP)
             ORDER BY t.ts_dt, t.TransactionID""", [card_id, fmt_ts(start), fmt_ts(end)])
         self._log("card_window", {"card": card_id, "start_ts": fmt_ts(start), "end_ts": fmt_ts(end)}, len(rows), t0, agent)
@@ -93,7 +100,7 @@ class MirrorGraph:
         import time
         t0 = time.time()
         b = fmt_ts(before)
-        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID
+        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID
             WHERE t.card_id = ? AND t.ts_dt < CAST(? AS TIMESTAMP)""", [card_id, b])
         prof: dict = {"n_txn": len(rows), "amts": [r["amt"] for r in rows]}
         recent_start = (datetime.fromisoformat(b) - timedelta(days=recent_days)).strftime("%Y-%m-%d %H:%M:%S")
@@ -125,7 +132,7 @@ class MirrorGraph:
     def recurring_match(self, card_id: str, amt: float, tol: float, before, agent: str | None = None) -> list[dict]:
         import time
         t0 = time.time()
-        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID
+        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t LEFT JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID
             WHERE t.card_id = ? AND t.ts_dt < CAST(? AS TIMESTAMP) AND abs(t.amt - ?) <= ? ORDER BY t.ts_dt""",
                           [card_id, fmt_ts(before), amt, tol])
         self._log("recurring_match", {"card": card_id, "amt": amt, "tol": tol, "before_ts": fmt_ts(before)}, len(rows), t0, agent)
@@ -134,7 +141,7 @@ class MirrorGraph:
     def device_neighbors(self, device_id: str, start, end, agent: str | None = None) -> dict:
         import time
         t0 = time.time()
-        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t JOIN ident i ON i.TransactionID = t.TransactionID
+        rows = self._rows(f"""SELECT {TXN_COLS} FROM txn t JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID
             WHERE i.device_profile = ? AND t.ts_dt BETWEEN CAST(? AS TIMESTAMP) AND CAST(? AS TIMESTAMP)
             ORDER BY t.ts_dt""", [device_id, fmt_ts(start), fmt_ts(end)])
         ids = [r["id"] for r in rows]
@@ -167,7 +174,7 @@ class MirrorGraph:
         self._log("region_activity", {"region": region, "start_ts": fmt_ts(start), "end_ts": fmt_ts(end)}, len(rows), t0, agent)
         return {"n_cards": len(rows), "n_new_cards": len(new), "new_cards": new[:max_cards]}
 
-    def prior_cases(self, card_id: str, agent: str | None = None) -> dict:
+    def prior_cases(self, card_id: str, before=None, agent: str | None = None) -> dict:
         import time
         t0 = time.time()
         cust = card_id.split("-")[0]
@@ -179,7 +186,7 @@ class MirrorGraph:
             WHERE list_contains(string_split(coalesce(connected_card_ids,''), '|'), ?)""", [card_id])
         cc = [c for c in cc if self._visible(c["id"], c["opened_at"])]
         cx = [c for c in cx if self._visible(c["id"], c["opened_at"])]
-        self._log("prior_cases", {"card": card_id}, len(cc) + len(cx), t0, agent)
+        self._log("prior_cases", {"card": card_id, "before_ts": fmt_ts(before) if before else AS_OF_NOW}, len(cc) + len(cx), t0, agent)
         return {"customer_cards": cards, "closed_cases": cc, "connected_cases": cx, "investigations": []}
 
     def _ensure_accounts(self) -> None:
@@ -205,7 +212,7 @@ class MirrorGraph:
         since = (datetime.fromisoformat(ts) - timedelta(days=lookback_days)).strftime("%Y-%m-%d %H:%M:%S")
         rows = self._rows(f"""SELECT {TXN_COLS}, coalesce(ct.cases, []) closed_cases, coalesce(ct.outcomes, []) outcomes,
                coalesce(ct.patterns, []) patterns
-            FROM acct a JOIN txn t ON t.TransactionID = a.tid LEFT JOIN ident i ON i.TransactionID = t.TransactionID
+            FROM acct a JOIN txn t ON t.TransactionID = a.tid LEFT JOIN ident i ON i.TransactionID = t.TransactionID LEFT JOIN ms ON ms.tid = t.TransactionID
             LEFT JOIN case_txn ct ON ct.tid = t.TransactionID
             WHERE a.account_id = ? AND t.ts_dt < CAST(? AS TIMESTAMP) AND t.ts_dt >= CAST(? AS TIMESTAMP) ORDER BY t.ts_dt""",
                           [aid, ts, since])
@@ -219,7 +226,7 @@ class MirrorGraph:
         self._log("account_history", {"txn": txn_id, "lookback_days": lookback_days}, len(rows), t0, agent)
         return {"account": {"id": aid, "n_txn": n}, "history": rows}
 
-    def similar_cases(self, qv, devices, cards, k: int = 8, pattern: str = "", agent: str | None = None) -> dict:
+    def similar_cases(self, qv, devices, cards, k: int = 8, pattern: str = "", before=None, agent: str | None = None) -> dict:
         import time
         t0 = time.time()
         if self._closed_emb is None:
@@ -257,7 +264,8 @@ class MirrorGraph:
                    and self._visible(g, self._closed_meta[g]["opened_at"])]
             for i in sorted(idx, key=lambda j: -sims[j])[:k]:
                 ghits.append({**self._closed_meta[self._closed_ids[i]], "distance": float(1 - sims[i])})
-        self._log("similar_cases", {"k": k, "pattern": pattern, "devices": devices, "cards": cards}, len(hits) + len(ghits), t0, agent)
+        self._log("similar_cases", {"k": k, "pattern": pattern, "devices": devices, "cards": cards,
+                                    "before_ts": fmt_ts(before) if before else AS_OF_NOW}, len(hits) + len(ghits), t0, agent)
         return {"vector_hits": hits, "graph_hits": ghits, "investigation_hits": []}
 
     def search_knowledge(self, qv, k: int = 6, agent: str | None = None) -> dict:
@@ -275,6 +283,27 @@ class MirrorGraph:
         chunks = [{k2: v for k2, v in self._know[i].items() if k2 != "emb"} | {"distance": float(1 - sims[i])} for i in order]
         self._log("search_knowledge", {"k": k}, len(chunks), t0, agent)
         return {"chunks": chunks}
+
+    def model_ring_scan(self, start, end, min_p: float = 0.6, min_customers: int = 3, max_cards_all: int = 12,
+                        agent: str | None = None) -> list[dict]:
+        """Same contract as the installed `model_ring_scan` GSQL query."""
+        import time
+        t0 = time.time()
+        rows = self._rows("""WITH x AS (
+              SELECT i.device_profile dev, t.card_id, t.customer_id, t.TransactionID tid, t.ts_dt, t.amt, ms.p_cal p, coalesce(i.id_15,'') nw
+              FROM txn t JOIN ident i ON i.TransactionID = t.TransactionID JOIN ms ON ms.tid = t.TransactionID
+              WHERE t.ts_dt BETWEEN CAST(? AS TIMESTAMP) AND CAST(? AS TIMESTAMP) AND ms.p_cal >= ?),
+            d AS (SELECT dev, count(DISTINCT customer_id) n_customers,
+                    list(card_id || '|' || tid || '|' || strftime(ts_dt, '%Y-%m-%d %H:%M:%S') || '|' || CAST(amt AS VARCHAR) || '|' ||
+                         CAST(round(p, 4) AS VARCHAR) || '|' || nw) hits
+                  FROM x WHERE split_part(dev, ' | ', 1) NOT IN ('', 'Windows', 'iOS Device', 'MacOS') GROUP BY dev
+                  HAVING count(DISTINCT customer_id) >= ?),
+            a AS (SELECT i.device_profile dev, count(DISTINCT t.card_id) n_all FROM ident i JOIN txn t ON t.TransactionID = i.TransactionID
+                  WHERE i.device_profile IN (SELECT dev FROM d) GROUP BY 1)
+            SELECT d.dev AS id, d.n_customers, a.n_all, d.hits FROM d JOIN a USING (dev) WHERE a.n_all <= ? ORDER BY d.n_customers DESC""",
+                          [fmt_ts(start), fmt_ts(end), min_p, min_customers, max_cards_all])
+        self._log("model_ring_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "min_p": min_p}, len(rows), t0, agent)
+        return rows
 
     def describe_queries(self, agent: str = "lead") -> dict:
         import time

@@ -14,7 +14,7 @@ import { EvidenceWaterfall } from "../components/live/Waterfall";
 import { ActionList, BranchTree, EvidenceRequestCard, FlowArrow, diffActions } from "../components/Actions";
 import { Badge, Button, IdChip, Panel, Segmented, VerdictBadge, cx, RuleText } from "../components/ui";
 import { money, patternLabel, triggerLabel } from "../lib/format";
-import { priorFor, runningP, STOP_HI, STOP_LO } from "../lib/ledger";
+import { modelPrior, priorFor, runningP, STOP_HI, STOP_LO } from "../lib/ledger";
 import { traceToEvents } from "../lib/replay";
 
 function useElapsed(s: RunState) {
@@ -64,6 +64,10 @@ function families(contribs: Contribution[]) {
   for (const c of contribs) fam[c.family] = (fam[c.family] || 0) + c.delta_logodds;
   const fraud = Object.entries(fam).filter(([, w]) => w >= Math.log(1.5)).map(([k]) => k);
   const legit = Object.entries(fam).filter(([, w]) => w <= -Math.log(1.4)).map(([k]) => k);
+  // the transaction model is an independent family of its own; it is the starting point, so it adds no log-odds above
+  const model = contribs.find((c) => c.key === "model_score");
+  if (model && Number(model.lr) >= 1.5) fraud.push("model");
+  else if (model && Number(model.lr) <= 1 / 1.4) legit.push("model");
   return { fraud, legit };
 }
 
@@ -101,10 +105,11 @@ export default function LiveView() {
   const row = detail?.row;
   const trigger = s.trigger?.trigger_type || row?.trigger_type || "analyst_request";
   const score = row?.risk_score !== "" && row?.risk_score != null ? Number(row.risk_score) : Number(/at (0\.\d+)/.exec(s.trigger?.text || "")?.[1] || NaN);
-  const prior = s.assessment?.prior ?? priorFor(trigger, Number.isNaN(score) ? null : score);
+  const prior = s.assessment?.prior ?? modelPrior(trigger, s.findings as any) ?? priorFor(trigger, Number.isNaN(score) ? null : score);
   const contributions: Contribution[] =
     s.assessment?.contributions ||
-    s.findings.map((f) => ({ key: f.key, family: f.family, lr: f.lr, delta_logodds: Math.log(Math.max(Number(f.lr), 1e-6)) }));
+    s.findings.map((f) => ({ key: f.key, family: f.family, lr: f.lr,
+      delta_logodds: (f as any).in_model || f.key === "model_score" ? 0 : Math.log(Math.max(Number(f.lr), 1e-6)) }));
   const pNow = s.decision?.p ?? s.assessment?.p ?? (s.findings.length ? runningP(prior, s.findings as any) : s.trigger ? prior : null);
   const gaugeState = s.decision ? "decided" : s.assessment ? "assessed" : s.findings.length ? "running estimate" : s.trigger ? "prior" : "waiting";
   const fams = families(contributions);

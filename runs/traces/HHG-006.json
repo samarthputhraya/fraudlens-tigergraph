@@ -2,7 +2,7 @@
   "case_id": "HHG-006",
   "events": [
     {
-      "t": 1790183096.69,
+      "t": 1790260300.57,
       "kind": "trigger",
       "case_id": "HHG-006",
       "trigger_type": "customer_report",
@@ -10,95 +10,105 @@
       "opened_at": "2016-11-22 02:30:00"
     },
     {
-      "t": 1790183096.69,
+      "t": 1790260300.57,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1790183103.84,
+      "t": 1790260305.04,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
-        "Account Takeover (ATO) / Card-Not-Present (CNP) Fraud: An unauthorized third party obtained the card details and conducted rapid online transactions (structuring) to bypass authorization limits.",
-        "Friendly Fraud / Authorized User Activity: The customer or a family member made the purchases, supported by the fact that the device profile was previously used twice on this card.",
-        "Coordinated Fraud Ring: The device profile and structuring pattern are part of a wider cash-out campaign involving multiple compromised cards."
+        "Account Takeover (ATO) where a fraudster compromised the card and made structured online purchases just under the $500 threshold.",
+        "Friendly Fraud / Customer Denial, as the device profile used for the transaction was already used twice on this card prior to the alert.",
+        "Family Use / Unauthorized Card Sharing, where a household member used the customer's established device and card without their direct knowledge."
       ],
       "calls": [
         {
           "tool": "card_window",
-          "why": "To analyze the full sequence of the 4 rapid online purchases, verify if they all occurred on this card, and inspect the behavioral shift from in-person to online.",
-          "days_back": 30
+          "why": "To retrieve the full details of the other three transactions in the suspected structuring pattern (amounts $478.95, $456.96, $488.04) and verify if they share the same device, timestamps, and location.",
+          "days_back": 14
         },
         {
           "tool": "device_neighbors",
-          "why": "To determine if this specific device profile is associated with other cards, customers, or confirmed fraud cases, which would indicate a shared fraud device rather than a customer's own device.",
+          "why": "To check if this specific desktop device profile (Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080) has been used by other unrelated cards or customers, which would point to a broader compromise or shared fraud tool.",
           "days_back": 30
-        },
-        {
-          "tool": "similar_cases_by_pattern",
-          "why": "To find closed cases with similar structuring patterns (multiple online purchases just under $500) to understand typical outcomes and MOs.",
-          "pattern": "structuring"
         }
       ]
     },
     {
-      "t": 1790183104.03,
+      "t": 1790260305.77,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1790183110.37,
+      "t": 1790260376.82,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
-      "assessment": "The customer's card was compromised and used for two high-value online purchases within a 30-minute window on a new desktop device. This activity represents a stark departure from the customer's historical baseline, which consists almost entirely of low-to-moderate value in-person transactions.",
+      "assessment": "The customer reported transaction 3476682 as unauthorized, which is part of a highly suspicious burst of four high-value online transactions totaling over $1,900 within a 30-minute window on 2016-11-21. This sudden online activity strongly deviates from the card's historical baseline of primarily in-person transactions, indicating a severe compromise.",
       "key_points": [
-        "The flagged transaction 3476682 ($482.12) and its precursor 3476602 ($478.95) were executed within 30 minutes of each other using a new desktop device profile.",
-        "The customer's baseline is heavily dominated by in-person transactions (194 out of 199), making this sudden burst of high-value online transactions highly anomalous.",
-        "The device used, while new to this customer, has been associated with 1,220 transactions across the platform, suggesting potential use by a scaled fraud actor."
+        "Transaction 3476682 ($482.12) was flagged by the customer, but it is closely linked to three other rapid online transactions: 3476602 ($478.95), 3476633 ($456.96), and 3476665 ($488.04).",
+        "The card's baseline shows 194 out of 199 historical transactions were in-person, making this sudden burst of high-value online purchases highly anomalous.",
+        "The fraudulent burst utilized two distinct 'New' device profiles (a Windows 7 desktop and an iOS mobile device using a transparent proxy) and different email domains (gmail.com and yahoo.com) within minutes of each other."
       ]
     },
     {
-      "t": 1790183110.37,
+      "t": 1790260376.82,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
-      "assessment": "The customer C07297 reported an unauthorized transaction of $482.12 (ID 3476682). The account history shows a very short lifespan with only two transactions occurring within 30 minutes on 2016-11-21, both utilizing a newly registered Windows 7 desktop device profile. This pattern of rapid, high-value transactions on a newly seen device strongly indicates card-not-present fraud.",
+      "assessment": "Customer C07297 has disputed a transaction of $482.12 (ID 3476682) as unauthorized. The account history shows a prior transaction 3476602 of $478.95 on the same day, which utilized a newly seen desktop device profile. This pattern of rapid, high-value transactions on a new device strongly suggests card-not-present fraud or account takeover.",
       "key_points": [
-        "Customer C07297 reported transaction 3476682 ($482.12) as unauthorized.",
-        "The account C07297-K1|264.0|142 has only 2 transactions in total, starting with transaction 3476602 ($478.95) at 20:00:00 and ending 30 minutes later.",
-        "Both transactions were conducted using a 'New' device profile ('Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080') which has only been seen twice on this card."
+        "Customer C07297 reported unauthorized activity on card C07297-K1, specifically referencing transaction 3476682.",
+        "A prior transaction 3476602 for $478.95 was authorized just 30 minutes earlier using a 'New' device profile ('Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080').",
+        "The transaction model score for 3476602 was low at 0.088924, and the bank's real-time risk score was 0.26, failing to prevent the subsequent disputed transaction."
       ]
     },
     {
-      "t": 1790183110.37,
+      "t": 1790260376.82,
       "kind": "specialist",
       "agent": "network",
-      "risk": "high",
-      "assessment": "The customer reported transaction 3476682 as unauthorized, indicating confirmed card-not-present fraud on card C07297. However, the shared device profile is highly generic, linking to 543 cards all-time, which represents a common browser signature rather than a coordinated fraud ring.",
+      "risk": "low",
+      "assessment": "The device profile associated with the transactions is shared by 543 cards all-time, indicating it is a generic browser signature rather than a unique device fingerprint. Consequently, the connections between these cards do not provide evidence of a coordinated fraud ring or account takeover. The individual customer report for transaction 3476682 must be evaluated independently of these neighbor transactions.",
       "key_points": [
-        "Customer C07297 reported unauthorized activity on transaction 3476682 for $482.12.",
-        "The device profile associated with the transaction is highly generic, shared by 543 cards all-time, and does not provide evidence of a coordinated fraud ring."
+        "The device profile is highly generic, shared by 543 cards all-time, which explains the large volume of unrelated transactions (e.g., 3454654, 3459672, and 3468251) appearing as neighbors.",
+        "Multiple distinct customers, such as C05560 (transactions 3462762, 3462792, 3462800, 3462820) and C07102 (transactions 3465154, 3465188), share this generic signature without any other indicators of connection.",
+        "There are no active or closed investigation cases associated with any of the neighboring transactions listed in the evidence."
       ]
     },
     {
-      "t": 1790183110.37,
+      "t": 1790260376.82,
       "kind": "specialist",
       "agent": "precedent",
-      "risk": "medium",
-      "assessment": "Customer C07297 has disputed transaction 3476682 for $482.12, claiming it was unauthorized. As there are no prior closed cases or similar pattern matches in the system, this currently appears to be an isolated incident of potential card abuse.",
+      "risk": "high",
+      "assessment": "Customer C07297 has reported an unrecognized transaction of $482.12 (ID 3476682). Based on historical precedents of similar high-value unrecognized card-not-present transactions (e.g., CC-3624 and CC-1476) which were confirmed as fraud, this case is highly likely to be fraudulent.",
       "key_points": [
         "Customer C07297 reported transaction 3476682 ($482.12) as unauthorized.",
-        "No prior closed cases exist for customer C07297 in the database.",
-        "No similar cases or patterns were returned in the query results."
+        "Historical cases like CC-3624 ($449.89) and CC-1476 ($499.89) show similar high-value unauthorized card-not-present transactions that were confirmed as fraud.",
+        "Multiple past confirmed fraud cases (e.g., CC-3368, CC-0781, CC-1960) involved unauthorized online transactions using similar desktop browser signatures."
       ]
     },
     {
-      "t": 1790183110.38,
+      "t": 1790260376.82,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.083, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+      "lr": 4.258789593584994,
+      "family": "model",
+      "ref": "query:txn_context(txn=3476682)",
+      "entity_ids": [
+        "3476682"
+      ],
+      "in_model": false,
+      "model_p": 0.083333
+    },
+    {
+      "t": 1790260376.82,
       "kind": "finding",
       "key": "structuring",
       "claim": "4 online purchases within 30 minutes, each just under $500 ($478.95, $456.96, $488.04, $482.12; total $1,906.07): amounts appear chosen to stay under a $500 authorisation threshold",
@@ -110,10 +120,11 @@
         "3476633",
         "3476665",
         "3476682"
-      ]
+      ],
+      "in_model": false
     },
     {
-      "t": 1790183110.38,
+      "t": 1790260376.82,
       "kind": "finding",
       "key": "known_device",
       "claim": "The device profile (Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080) was already used 2 times on this card before the alert",
@@ -122,10 +133,11 @@
       "ref": "query:card_profile(card=C07297-K1, before_ts=2016-11-21 20:30:00, recent_days=30)",
       "entity_ids": [
         "3476682"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790183110.38,
+      "t": 1790260376.82,
       "kind": "finding",
       "key": "channel_shift",
       "claim": "This card is used almost only in person (5 of 199 earlier transactions online); this purchase is online",
@@ -134,33 +146,44 @@
       "ref": "query:card_profile(card=C07297-K1, before_ts=2016-11-21 20:30:00, recent_days=30)",
       "entity_ids": [
         "3476682"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790183110.38,
+      "t": 1790260376.82,
       "kind": "assessment",
       "p": 0.97,
-      "prior": 0.6,
+      "prior": 0.9631826887784388,
       "verdict": "fraud",
       "pattern": "undocumented",
       "contributions": [
         {
+          "key": "model_score",
+          "family": "model",
+          "lr": 4.26,
+          "delta_logodds": 0.0,
+          "note": "starting point"
+        },
+        {
           "key": "structuring",
           "family": "behaviour",
           "lr": 40.0,
-          "delta_logodds": 3.689
+          "delta_logodds": 3.689,
+          "note": ""
         },
         {
           "key": "known_device",
           "family": "device",
           "lr": 1.0,
-          "delta_logodds": 0.0
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "channel_shift",
           "family": "behaviour",
           "lr": 2.7,
-          "delta_logodds": 0.993
+          "delta_logodds": 0.0,
+          "note": "in model score"
         }
       ],
       "exposure": 1906.07,
@@ -256,7 +279,7 @@
       }
     },
     {
-      "t": 1790183110.38,
+      "t": 1790260376.82,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -293,10 +316,16 @@
       ]
     },
     {
-      "t": 1790183110.62,
+      "t": 1790260377.22,
       "kind": "memory",
       "agent": "precedent",
-      "similar": [],
+      "similar": [
+        "CC-3841",
+        "CC-3907",
+        "CC-4124",
+        "CC-3748",
+        "CC-4086"
+      ],
       "knowledge": [
         "The five known fraud patterns",
         "Card-not-present fraud",
@@ -307,26 +336,27 @@
       ]
     },
     {
-      "t": 1790183124.58,
+      "t": 1790260387.36,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The draft invents a case ID ('HHG-006'), which violates the instruction never to invent case IDs.",
-        "There is a contradiction regarding the device: the evidence claims the Trident device was used 2 times before the alert, but the flagged transaction explicitly states 'is_new': 'New'.",
-        "Incorrect rule application: The draft applies R9 (undocumented coordinated abuse) and escalates the case. However, this is a standard single-card compromise where the customer denies the transaction, which is fully covered by R2. The actions should be BLOCK_CARD, CREATE_CASE, and FILE_REPORT (since exposure > $1,000) without escalating under R9."
+        "The draft invents case IDs in the 'similar_prior_cases' field, which violates the instruction never to invent case IDs.",
+        "The evidence claims the Trident device was used 2 times on this card before the alert, but the episode shows it was only used on the flagged transaction itself.",
+        "The transaction model score is 0.083 (low risk), which contradicts the assigned fraud probability of 0.97.",
+        "R9 (undocumented coordinated abuse) is incorrectly applied. This is a standard customer dispute involving multiple transactions on a single card, which falls under R2, not a coordinated ring."
       ],
-      "what_would_change_verdict": "If the customer confirmed making these transactions, the verdict would change to false positive and the case would be closed under R3."
+      "what_would_change_verdict": "Remove the invented case IDs, correct the evidence regarding the device history, adjust the fraud probability to reflect the low model score (or explain the discrepancy), and apply R2 instead of R9 for the actions."
     },
     {
-      "t": 1790183154.9,
+      "t": 1790260419.77,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-006",
         "n_vertices": 10,
-        "n_edges": 18
+        "n_edges": 23
       }
     }
   ],
@@ -340,7 +370,7 @@
         "txn": "3476682"
       },
       "rows": 2,
-      "ms": 51.5,
+      "ms": 46.3,
       "via": "mcp"
     },
     {
@@ -354,7 +384,7 @@
         "end_ts": "2016-11-22 02:30:00"
       },
       "rows": 25,
-      "ms": 44.0,
+      "ms": 46.7,
       "via": "mcp"
     },
     {
@@ -368,7 +398,7 @@
         "recent_days": 30
       },
       "rows": 199,
-      "ms": 42.1,
+      "ms": 48.6,
       "via": "mcp"
     },
     {
@@ -383,7 +413,7 @@
         "before_ts": "2016-11-21 20:30:00"
       },
       "rows": 1,
-      "ms": 37.8,
+      "ms": 44.8,
       "via": "mcp"
     },
     {
@@ -396,7 +426,7 @@
         "lookback_days": 200
       },
       "rows": 2,
-      "ms": 47.2,
+      "ms": 47.1,
       "via": "mcp"
     },
     {
@@ -410,33 +440,34 @@
         "end_ts": "2016-11-22 02:30:00"
       },
       "rows": 118,
-      "ms": 103.2,
+      "ms": 83.6,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "prior_cases",
-      "ref": "query:prior_cases(card=C07297-K1)",
+      "ref": "query:prior_cases(card=C07297-K1, before_ts=2016-11-22 02:30:00)",
       "params": {
-        "card": "C07297-K1"
+        "card": "C07297-K1",
+        "before_ts": "2016-11-22 02:30:00"
       },
       "rows": 1,
-      "ms": 42.2,
+      "ms": 39.3,
       "via": "mcp"
     },
     {
       "agent": "transaction",
       "tool": "tigergraph__run_installed_query",
       "query": "card_window",
-      "ref": "query:card_window(card=C07297-K1, start_ts=2016-10-22 20:30:00, end_ts=2016-11-22 02:30:00)",
+      "ref": "query:card_window(card=C07297-K1, start_ts=2016-11-07 20:30:00, end_ts=2016-11-22 02:30:00)",
       "params": {
         "card": "C07297-K1",
-        "start_ts": "2016-10-22 20:30:00",
+        "start_ts": "2016-11-07 20:30:00",
         "end_ts": "2016-11-22 02:30:00"
       },
-      "rows": 52,
-      "ms": 73.4,
+      "rows": 25,
+      "ms": 49.8,
       "via": "mcp"
     },
     {
@@ -450,14 +481,34 @@
         "end_ts": "2016-11-22 02:30:00"
       },
       "rows": 118,
-      "ms": 116.1,
+      "ms": 73.2,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "similar_cases",
-      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080', 'iOS Device | iOS 11.2.1 | mobile safari 11.0 | 2208x1242'], cards=['C07297-K1'], k=8, pattern=)",
+      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080'], cards=['C07297-K1'], k=6, pattern=, before_ts=2016-11-22 02:30:00)",
+      "params": {
+        "devices": [
+          "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080"
+        ],
+        "cards": [
+          "C07297-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2016-11-22 02:30:00"
+      },
+      "rows": 14,
+      "ms": 114.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080', 'iOS Device | iOS 11.2.1 | mobile safari 11.0 | 2208x1242'], cards=['C07297-K1'], k=8, pattern=, before_ts=2016-11-22 02:30:00)",
       "params": {
         "devices": [
           "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080",
@@ -467,10 +518,11 @@
           "C07297-K1"
         ],
         "k": 8,
-        "pattern": ""
+        "pattern": "",
+        "before_ts": "2016-11-22 02:30:00"
       },
       "rows": 18,
-      "ms": 114.1,
+      "ms": 220.9,
       "via": "mcp"
     },
     {
@@ -482,14 +534,35 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 103.7,
+      "ms": 60.7,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080', 'iOS Device | iOS 11.2.1 | mobile safari 11.0 | 2208x1242'], cards=['C07297-K1'], k=8, pattern=undocumented, before_ts=2016-11-22 02:30:00)",
+      "params": {
+        "devices": [
+          "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080",
+          "iOS Device | iOS 11.2.1 | mobile safari 11.0 | 2208x1242"
+        ],
+        "cards": [
+          "C07297-K1"
+        ],
+        "k": 8,
+        "pattern": "undocumented",
+        "before_ts": "2016-11-22 02:30:00"
+      },
+      "rows": 18,
+      "ms": 103.3,
       "via": "mcp"
     },
     {
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3476602', '3476633', '3476665', '3476682'], card_ids=[], case_ids=[], customer_ids=['C07297'])",
+      "ref": "query:ids_exist(txn_ids=['3476602', '3476633', '3476665', '3476682'], card_ids=[], case_ids=['CC-3841', 'CC-3907', 'CC-4124', 'CC-3748', 'CC-4086'], customer_ids=['C07297'])",
       "params": {
         "txn_ids": [
           "3476602",
@@ -498,112 +571,115 @@
           "3476682"
         ],
         "card_ids": [],
-        "case_ids": [],
+        "case_ids": [
+          "CC-3841",
+          "CC-3907",
+          "CC-4124",
+          "CC-3748",
+          "CC-4086"
+        ],
         "customer_ids": [
           "C07297"
         ]
       },
-      "rows": 5,
-      "ms": 686.7,
+      "rows": 10,
+      "ms": 97.6,
       "via": "mcp"
     }
   ],
   "specialists": {
     "transaction": {
-      "assessment": "The customer's card was compromised and used for two high-value online purchases within a 30-minute window on a new desktop device. This activity represents a stark departure from the customer's historical baseline, which consists almost entirely of low-to-moderate value in-person transactions.",
+      "assessment": "The customer reported transaction 3476682 as unauthorized, which is part of a highly suspicious burst of four high-value online transactions totaling over $1,900 within a 30-minute window on 2016-11-21. This sudden online activity strongly deviates from the card's historical baseline of primarily in-person transactions, indicating a severe compromise.",
       "risk": "high",
       "key_points": [
-        "The flagged transaction 3476682 ($482.12) and its precursor 3476602 ($478.95) were executed within 30 minutes of each other using a new desktop device profile.",
-        "The customer's baseline is heavily dominated by in-person transactions (194 out of 199), making this sudden burst of high-value online transactions highly anomalous.",
-        "The device used, while new to this customer, has been associated with 1,220 transactions across the platform, suggesting potential use by a scaled fraud actor."
+        "Transaction 3476682 ($482.12) was flagged by the customer, but it is closely linked to three other rapid online transactions: 3476602 ($478.95), 3476633 ($456.96), and 3476665 ($488.04).",
+        "The card's baseline shows 194 out of 199 historical transactions were in-person, making this sudden burst of high-value online purchases highly anomalous.",
+        "The fraudulent burst utilized two distinct 'New' device profiles (a Windows 7 desktop and an iOS mobile device using a transparent proxy) and different email domains (gmail.com and yahoo.com) within minutes of each other."
       ],
       "open_questions": [
-        "Is transaction 3476602 also disputed by the customer, as it shares the same device, location, and timing?",
-        "Are the concurrent online transactions 3476633 and 3476665 on iOS devices related to this compromise, or do they belong to a separate fraud campaign?"
+        "Has the customer confirmed that transactions 3476602, 3476633, and 3476665 are also unauthorized?",
+        "How were the card details compromised to allow simultaneous transactions from different device profiles and email addresses?"
       ],
-      "suggested_pattern": "card_not_present_new_device"
+      "suggested_pattern": "account_takeover"
     },
     "identity": {
-      "assessment": "The customer C07297 reported an unauthorized transaction of $482.12 (ID 3476682). The account history shows a very short lifespan with only two transactions occurring within 30 minutes on 2016-11-21, both utilizing a newly registered Windows 7 desktop device profile. This pattern of rapid, high-value transactions on a newly seen device strongly indicates card-not-present fraud.",
+      "assessment": "Customer C07297 has disputed a transaction of $482.12 (ID 3476682) as unauthorized. The account history shows a prior transaction 3476602 of $478.95 on the same day, which utilized a newly seen desktop device profile. This pattern of rapid, high-value transactions on a new device strongly suggests card-not-present fraud or account takeover.",
       "risk": "high",
       "key_points": [
-        "Customer C07297 reported transaction 3476682 ($482.12) as unauthorized.",
-        "The account C07297-K1|264.0|142 has only 2 transactions in total, starting with transaction 3476602 ($478.95) at 20:00:00 and ending 30 minutes later.",
-        "Both transactions were conducted using a 'New' device profile ('Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080') which has only been seen twice on this card."
+        "Customer C07297 reported unauthorized activity on card C07297-K1, specifically referencing transaction 3476682.",
+        "A prior transaction 3476602 for $478.95 was authorized just 30 minutes earlier using a 'New' device profile ('Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080').",
+        "The transaction model score for 3476602 was low at 0.088924, and the bank's real-time risk score was 0.26, failing to prevent the subsequent disputed transaction."
       ],
       "open_questions": [
-        "Are there any other accounts associated with the device profile 'Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080'?",
-        "What was the IP address or location associated with these transactions to verify if they originated from the customer's actual location?"
+        "What are the specific transaction details, device profile, and IP routing for the disputed transaction 3476682?",
+        "Are there any other cards associated with the same device profile that have experienced similar disputes?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "network": {
-      "assessment": "The customer reported transaction 3476682 as unauthorized, indicating confirmed card-not-present fraud on card C07297. However, the shared device profile is highly generic, linking to 543 cards all-time, which represents a common browser signature rather than a coordinated fraud ring.",
-      "risk": "high",
+      "assessment": "The device profile associated with the transactions is shared by 543 cards all-time, indicating it is a generic browser signature rather than a unique device fingerprint. Consequently, the connections between these cards do not provide evidence of a coordinated fraud ring or account takeover. The individual customer report for transaction 3476682 must be evaluated independently of these neighbor transactions.",
+      "risk": "low",
       "key_points": [
-        "Customer C07297 reported unauthorized activity on transaction 3476682 for $482.12.",
-        "The device profile associated with the transaction is highly generic, shared by 543 cards all-time, and does not provide evidence of a coordinated fraud ring."
+        "The device profile is highly generic, shared by 543 cards all-time, which explains the large volume of unrelated transactions (e.g., 3454654, 3459672, and 3468251) appearing as neighbors.",
+        "Multiple distinct customers, such as C05560 (transactions 3462762, 3462792, 3462800, 3462820) and C07102 (transactions 3465154, 3465188), share this generic signature without any other indicators of connection.",
+        "There are no active or closed investigation cases associated with any of the neighboring transactions listed in the evidence."
       ],
       "open_questions": [
-        "Are there other unauthorized transactions on card C07297 that have not yet been reported?",
-        "What was the specific IP address or location used for transaction 3476682 to determine if it was out-of-region?"
+        "What are the specific transaction details, IP address, and location for the disputed transaction 3476682?",
+        "Does customer C07297 have a history of using this generic browser signature for legitimate transactions?"
       ],
-      "suggested_pattern": "card_not_present_fraud"
+      "suggested_pattern": "none"
     },
     "precedent": {
-      "assessment": "Customer C07297 has disputed transaction 3476682 for $482.12, claiming it was unauthorized. As there are no prior closed cases or similar pattern matches in the system, this currently appears to be an isolated incident of potential card abuse.",
-      "risk": "medium",
+      "assessment": "Customer C07297 has reported an unrecognized transaction of $482.12 (ID 3476682). Based on historical precedents of similar high-value unrecognized card-not-present transactions (e.g., CC-3624 and CC-1476) which were confirmed as fraud, this case is highly likely to be fraudulent.",
+      "risk": "high",
       "key_points": [
         "Customer C07297 reported transaction 3476682 ($482.12) as unauthorized.",
-        "No prior closed cases exist for customer C07297 in the database.",
-        "No similar cases or patterns were returned in the query results."
+        "Historical cases like CC-3624 ($449.89) and CC-1476 ($499.89) show similar high-value unauthorized card-not-present transactions that were confirmed as fraud.",
+        "Multiple past confirmed fraud cases (e.g., CC-3368, CC-0781, CC-1960) involved unauthorized online transactions using similar desktop browser signatures."
       ],
       "open_questions": [
-        "What are the device, IP, and merchant details associated with transaction 3476682?",
-        "Has the card associated with C07297 been secured or replaced?"
+        "What are the device details, IP address, and location associated with transaction 3476682?",
+        "Has the cardholder's account credentials or card details been compromised in other channels?"
       ],
-      "suggested_pattern": "card_not_present_fraud"
+      "suggested_pattern": "card_not_present_new_device"
     }
   },
   "lead": {
     "hypotheses": [
-      "Account Takeover (ATO) / Card-Not-Present (CNP) Fraud: An unauthorized third party obtained the card details and conducted rapid online transactions (structuring) to bypass authorization limits.",
-      "Friendly Fraud / Authorized User Activity: The customer or a family member made the purchases, supported by the fact that the device profile was previously used twice on this card.",
-      "Coordinated Fraud Ring: The device profile and structuring pattern are part of a wider cash-out campaign involving multiple compromised cards."
+      "Account Takeover (ATO) where a fraudster compromised the card and made structured online purchases just under the $500 threshold.",
+      "Friendly Fraud / Customer Denial, as the device profile used for the transaction was already used twice on this card prior to the alert.",
+      "Family Use / Unauthorized Card Sharing, where a household member used the customer's established device and card without their direct knowledge."
     ],
     "extra_calls": [
       {
         "tool": "card_window",
-        "why": "To analyze the full sequence of the 4 rapid online purchases, verify if they all occurred on this card, and inspect the behavioral shift from in-person to online.",
-        "days_back": 30
+        "why": "To retrieve the full details of the other three transactions in the suspected structuring pattern (amounts $478.95, $456.96, $488.04) and verify if they share the same device, timestamps, and location.",
+        "days_back": 14
       },
       {
         "tool": "device_neighbors",
-        "why": "To determine if this specific device profile is associated with other cards, customers, or confirmed fraud cases, which would indicate a shared fraud device rather than a customer's own device.",
+        "why": "To check if this specific desktop device profile (Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080) has been used by other unrelated cards or customers, which would point to a broader compromise or shared fraud tool.",
         "days_back": 30
-      },
-      {
-        "tool": "similar_cases_by_pattern",
-        "why": "To find closed cases with similar structuring patterns (multiple online purchases just under $500) to understand typical outcomes and MOs.",
-        "pattern": "structuring"
       }
     ],
-    "focus": "Determine whether the device used for the transaction is exclusive to this customer (supporting friendly fraud/dispute) or shared with other compromised accounts (supporting ATO/fraud ring)."
+    "focus": "Account Takeover (ATO) vs. Friendly Fraud"
   },
   "critic": {
     "agree": false,
     "issues": [
-      "The draft invents a case ID ('HHG-006'), which violates the instruction never to invent case IDs.",
-      "There is a contradiction regarding the device: the evidence claims the Trident device was used 2 times before the alert, but the flagged transaction explicitly states 'is_new': 'New'.",
-      "Incorrect rule application: The draft applies R9 (undocumented coordinated abuse) and escalates the case. However, this is a standard single-card compromise where the customer denies the transaction, which is fully covered by R2. The actions should be BLOCK_CARD, CREATE_CASE, and FILE_REPORT (since exposure > $1,000) without escalating under R9."
+      "The draft invents case IDs in the 'similar_prior_cases' field, which violates the instruction never to invent case IDs.",
+      "The evidence claims the Trident device was used 2 times on this card before the alert, but the episode shows it was only used on the flagged transaction itself.",
+      "The transaction model score is 0.083 (low risk), which contradicts the assigned fraud probability of 0.97.",
+      "R9 (undocumented coordinated abuse) is incorrectly applied. This is a standard customer dispute involving multiple transactions on a single card, which falls under R2, not a coordinated ring."
     ],
-    "what_would_change_verdict": "If the customer confirmed making these transactions, the verdict would change to false positive and the case would be closed under R3."
+    "what_would_change_verdict": "Remove the invented case IDs, correct the evidence regarding the device history, adjust the fraud probability to reflect the low model score (or explain the discrepancy), and apply R2 instead of R9 for the actions."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-006",
     "n_vertices": 10,
-    "n_edges": 18
+    "n_edges": 23
   }
 }

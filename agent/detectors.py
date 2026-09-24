@@ -9,10 +9,13 @@ Every finding says what it rests on. Thresholds were fitted on the closed cases 
 """
 from __future__ import annotations
 
+import json
 import math
+import random
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import timedelta
+from pathlib import Path
 
 from agent.evidence import EvidencePack, P
 
@@ -20,6 +23,27 @@ EPISODE_GAP_H = 48
 RARE_DEVICE_CARDS = 25          # a device profile seen on <= this many cards all-time is "rare"
 SMALL_AUTH = 5.0                # card testing: tiny authorisations
 STRUCT_LO, STRUCT_HI = 400.0, 500.0
+FRAUD_SCORED = 0.5              # a transaction the model scores at or above this is treated as fraud-like evidence
+EPISODE_SAMPLES = 4000          # Monte Carlo draws for the probabilistic 48 h episode chain
+
+
+def _model_meta() -> tuple[float, str]:
+    rep = Path(__file__).resolve().parents[1] / "eval" / "model_report.json"
+    try:
+        r = json.loads(rep.read_text(encoding="utf-8"))
+        return float(r.get("novdec_mean_p_cal") or 0.0275), f"{r['validation']['auc_october_all']:.3f}"
+    except Exception:  # noqa: BLE001
+        return 0.0275, "n/a"
+
+
+MODEL_BASE_RATE, MODEL_AUC = _model_meta()
+
+
+def _mp(x: dict) -> float:
+    try:
+        return float(x.get("model_p", -1))
+    except (TypeError, ValueError):
+        return -1.0
 
 
 @dataclass
@@ -33,6 +57,7 @@ class Finding:
     entity_ids: list = field(default_factory=list)
     pattern_hint: str = ""
     data: dict = field(default_factory=dict)
+    in_model: bool = False       # the learned model already sees this signal: explained, never counted twice
 
     @property
     def weight(self) -> float:
@@ -61,6 +86,19 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
     facts: dict = {"card_id": card, "customer_id": ep.case["customer_id"], "online": online, "amt": amt,
                    "shared_links": [], "connected_cards": set(), "connected_devices": set(), "episode": [t["id"]],
                    "pattern_signals": Counter()}
+    mp = float(t.get("model_p", -1) if t.get("model_p") is not None else -1)
+    has_model = mp >= 0
+    facts["model_p"] = mp if has_model else None
+    if has_model:
+        lr = (mp / (1 - mp)) / (MODEL_BASE_RATE / (1 - MODEL_BASE_RATE)) if 0 < mp < 1 else (0.05 if mp <= 0 else 200.0)
+        f.append(Finding("model_score",
+                         f"The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared "
+                         f"investigations, July-October; October hold-out AUC {MODEL_AUC}) scores this transaction {mp:.3f}, "
+                         f"against a {MODEL_BASE_RATE:.1%} base rate. It reads the unnamed Vesta C/D/M/V columns, the identity "
+                         f"record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all "
+                         f"as known at transaction time (it never sees the case outcome)",
+                         max(0.02, min(lr, 400.0)), "model", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
+                         data={"model_p": mp}))
 
     # ---------------------------------------------------------------- account lineage (entity resolution)
     hist = ep.account.get("history", [])
@@ -76,13 +114,14 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
                          f"{fraud_prior[-1]['ts'][:10]}; accounts with prior confirmed fraud were fraud 42% of the time in "
                          f"October vs a 2.7% base rate",
                          12.0, "account", ref=ep.refs.get("account", ""), entity_ids=cases[:6] + [fraud_prior[-1]["id"]],
-                         data={"cases": cases, "patterns": dict(pats), "last_fraud": fraud_prior[-1]["ts"]}))
+                         data={"cases": cases, "patterns": dict(pats), "last_fraud": fraud_prior[-1]["ts"]}, in_model=has_model))
         facts["account_prior_fraud"] = cases
         facts["account_prior_patterns"] = pats
     elif len(hist) >= 5 and not cleared_prior:
         f.append(Finding("account_clean_history",
                          f"The resolved account ({acct_id}) has {len(hist)} earlier transactions and none were ever part of a "
-                         f"fraud case", 0.7, "account", ref=ep.refs.get("account", ""), entity_ids=[h["id"] for h in hist[-3:]]))
+                         f"fraud case", 0.7, "account", ref=ep.refs.get("account", ""), entity_ids=[h["id"] for h in hist[-3:]],
+                         in_model=has_model))
     companions = [h for h in hist if (ts - P(h["ts"])).total_seconds() <= EPISODE_GAP_H * 3600
                   and float(h.get("risk_score") or 0) >= 0.7]
     if companions:
@@ -96,7 +135,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         cases = sorted({c for h in cleared_prior for c in h.get("closed_cases", [])})
         f.append(Finding("account_prior_cleared",
                          f"An earlier alert on this same account was investigated and cleared ({', '.join(cases[:3])})",
-                         0.6, "memory", ref=ep.refs.get("account", ""), entity_ids=cases[:3]))
+                         0.6, "memory", ref=ep.refs.get("account", ""), entity_ids=cases[:3], in_model=has_model))
 
     # ---------------------------------------------------------------- windowed behaviour on the card
     win = [w for w in ep.window if P(w["ts"]) <= ep.opened_at]
@@ -158,16 +197,17 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             f.append(Finding("new_device",
                              f"The purchase came from a device profile marked New for this account and never seen on this card "
                              f"before ({dev})", 1.4, "device", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
-                             pattern_hint="card_not_present_new_device"))
+                             pattern_hint="card_not_present_new_device", in_model=has_model))
             facts["pattern_signals"]["card_not_present_new_device"] += 1
             facts["new_device"] = True
         elif dev and seen_before >= 2:
             f.append(Finding("known_device",
                              f"The device profile ({dev}) was already used {seen_before} times on this card before the alert",
-                             1.0, "device", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                             1.0, "device", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
         if _suspicious_proxy(t.get("proxy", "")):
-            f.append(Finding("proxy", f"The session was routed through an {t['proxy'].split(':')[1].lower()} proxy",
-                             3.0, "device", ref=ep.refs.get("context", ""), entity_ids=[t["id"]]))
+            kind = t['proxy'].split(':')[1].lower()
+            f.append(Finding("proxy", f"The session was routed through {'an' if kind[:1] in 'aeiou' else 'a'} {kind} proxy",
+                             3.0, "device", ref=ep.refs.get("context", ""), entity_ids=[t["id"]], in_model=has_model))
             facts["proxy"] = t["proxy"]
         if not dev:
             facts["no_identity_record"] = True
@@ -191,9 +231,13 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         # also concentrate in late months, so concentration alone is not evidence)
         ring = len(other_custs) >= 3 and new_share >= 0.6 and anon >= 0.5 * len(others)
         near_in_time = [x for x in others if abs((P(x["ts"]) - ts).total_seconds()) <= 7 * 86400]
+        scored = [x for x in near_in_time if _mp(x) >= FRAUD_SCORED]
         shared = (not ring) and named_device and n_cards_all <= 10 and len({x["customer_id"] for x in near_in_time}) >= 2
+        if has_model and shared:
+            # R6 needs fraud on the other cards, not just a shared device: the model must score their use as fraud
+            shared = len({x["customer_id"] for x in scored}) >= 1
         if ring or shared or ((fraud_links or inv_links) and named_device and concentration >= 0.2):
-            members = sorted(other_cards)
+            members = sorted(other_cards) if (ring or not has_model) else sorted({x["card_id"] for x in scored} or other_cards)
             strength = (8.0 + 2.0 * min(len(other_custs), 10)) if ring else 4.0 + 1.5 * len(other_custs)
             if fraud_links or inv_links:
                 strength *= 2
@@ -204,7 +248,8 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
                              f"{f', {anon} behind an anonymising proxy' if anon else ''}"
                              f"{'; linked closed cases ' + ', '.join(fraud_links[:4]) if fraud_links else ''}"
                              f"{'; linked investigations ' + ', '.join(inv_links[:4]) if inv_links else ''}. "
-                             f"The profile appears on only {n_cards_all} card(s) in the whole dataset",
+                             f"The profile appears on only {n_cards_all} card(s) in the whole dataset"
+                             f"{'. The transaction model scores ' + str(len(scored)) + ' of those other-card uses as fraud (' + ', '.join(x['id'] + ' ' + format(_mp(x), '.2f') for x in scored[:4]) + ')' if has_model and scored else ''}",
                              strength, "network", ref=ep.refs.get("device", ""), entity_ids=members[:15] + fraud_links[:4],
                              pattern_hint="undocumented" if ring else "card_not_present_new_device",
                              data={"members": members, "customers": sorted(other_custs), "fraud_cases": fraud_links,
@@ -225,28 +270,34 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         if amt > mx:
             f.append(Finding("amount_above_max",
                              f"${amt:,.2f} is above every earlier purchase on this card (previous maximum ${mx:,.2f})",
-                             1.3, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                             1.3, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
             facts["amount_anomaly"] = True
         elif pct >= 0.97:
             f.append(Finding("amount_high", f"${amt:,.2f} is in the top 3% of this card's purchase amounts",
-                             1.2, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                             1.2, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
         elif 0.2 <= pct <= 0.8:
             f.append(Finding("amount_typical", f"${amt:,.2f} is a typical amount for this card (percentile {pct:.0%})",
-                             1.0, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                             1.0, "amount", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
     prods = prof.get("product_n", {})
     if prof.get("n_txn", 0) >= 10 and prods.get(t.get("product"), 0) == 0:
         f.append(Finding("new_product", f"This card has never used product code {t.get('product')} before",
-                         1.8, "behaviour", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                         1.8, "behaviour", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
         facts["new_product"] = True
     if online and prof.get("n_txn", 0) >= 20 and prof.get("n_online", 0) <= 0.05 * prof["n_txn"]:
         f.append(Finding("channel_shift",
                          f"This card is used almost only in person ({prof['n_online']} of {prof['n_txn']} earlier transactions "
-                         f"online); this purchase is online", 2.7, "behaviour", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                         f"online); this purchase is online", 2.7, "behaviour", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]],
+                         in_model=has_model))
         facts["channel_shift"] = True
 
     rec = [r for r in ep.recurring if r["id"] != t["id"]]
     six_m = [r for r in rec if (ts - P(r["ts"])).days <= 185]
     monthly_hits = [r for r in six_m if r["ts"][:7] != t["ts"][:7] and abs(P(r["ts"]).day - ts.day) <= 2]
+    if has_model:
+        # "their own recurring pattern": the earlier charge must look like the same cardholder (same purchaser e-mail
+        # domain and the same device profile / channel), not another person sharing an anonymised card bucket
+        monthly_hits = [r for r in monthly_hits if (r.get("p_email") or "") == (t.get("p_email") or "")
+                        and (r.get("device") or "") == (t.get("device") or "") and r.get("product") == t.get("product")]
     if monthly_hits and len(six_m) <= 12:
         months = sorted({r["ts"][:7] for r in six_m})
         f.append(Finding("recurring_amount",
@@ -278,7 +329,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             home_active = [w for w in win if w["addr1"] == home_reg and abs((P(w["ts"]) - ts).total_seconds()) <= 24 * 3600]
             if len(days) >= 3:
                 f.append(Finding("region_trip",
-                                 f"Card-present purchases in billing region {reg} on {len(days)} different days: a sustained stay, "
+                                 f"Card-present purchases in billing region {region_label(reg)} on {len(days)} different days: a sustained stay, "
                                  f"more consistent with a trip than a cloned card", 0.5, "region", ref=ep.refs.get("window", ""),
                                  entity_ids=[w["id"] for w in recent_new[:4]]))
                 facts["trip"] = True
@@ -286,16 +337,16 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             else:
                 lr = 1.5 if home_active else 0.6
                 f.append(Finding("region_new",
-                                 f"Card-present purchase in billing region {reg}, where this card has no earlier history"
-                                 f"{f', while activity continued in its home region {home_reg} within 24 hours' if home_active else ''}",
+                                 f"Card-present purchase in billing region {region_label(reg)}, where this card has no earlier history"
+                                 f"{f', while activity continued in its home region {region_label(home_reg)} within 24 hours' if home_active else ''}",
                                  lr, "region", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]] + [w["id"] for w in home_active[:2]],
-                                 pattern_hint="out_of_region_use"))
+                                 pattern_hint="out_of_region_use", in_model=has_model))
                 facts["pattern_signals"]["out_of_region_use"] += 2
                 facts["new_region"] = reg
         elif n_here >= 3:
             f.append(Finding("region_known",
-                             f"This card has {n_here} earlier card-present purchases in billing region {reg} (first on {str(first)[:10]})",
-                             0.65, "region", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]]))
+                             f"This card has {n_here} earlier card-present purchases in billing region {region_label(reg)} (first on {str(first)[:10]})",
+                             0.65, "region", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
 
     # ---------------------------------------------------------------- mixed channel / account takeover signals
     acct_recent = [h for h in hist if (ts - P(h["ts"])).total_seconds() <= EPISODE_GAP_H * 3600]
@@ -317,7 +368,8 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         f.append(Finding("card_prior_cleared",
                          f"This card has {len(cleared_card)} earlier alert(s) that were cleared as false alarms "
                          f"({', '.join(c['id'] for c in cleared_card[-3:])}; latest note: \"{notes[:140]}\")",
-                         0.8, "memory", ref=ep.refs.get("prior", ""), entity_ids=[c["id"] for c in cleared_card[-3:]]))
+                         0.8, "memory", ref=ep.refs.get("prior", ""), entity_ids=[c["id"] for c in cleared_card[-3:]],
+                         in_model=has_model))
     for cx in pc.get("connected_cases", []):
         if cx["outcome"] == "confirmed_fraud":
             f.append(Finding("card_connected_to_fraud",
@@ -328,7 +380,61 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
 
     # ---------------------------------------------------------------- episode (same account, 48 h chain)
     facts["episode"] = build_episode(ep, facts)
+    reg_n = Counter(prof.get("region_n", {}))
+    facts["home_region"] = reg_n.most_common(1)[0][0] if reg_n else ""
+    rows = {w["id"]: w for w in ep.window}
+    rows[t["id"]] = t
+    facts["episode_rows"] = [rows[i] for i in facts["episode"] if i in rows]
     return f, facts
+
+
+def region_label(x) -> str:
+    """Billing region codes are floats in the source data ('126.0'); people read them as codes ('126')."""
+    s = str(x or "")
+    return s[:-2] if s.endswith(".0") else s
+
+
+def episode_chain(ep: EvidencePack, samples: int = EPISODE_SAMPLES) -> list[dict]:
+    """Probabilistic fraud episode on the card: the bank's closed cases chain fraud transactions on the same card while
+    consecutive gaps stay <= 48 h (between-case gaps on a card are never shorter). Each card transaction up to
+    `opened_at` is fraud with the model's calibrated probability; we sample the chain that contains the flagged
+    transaction and keep every transaction that belongs to it in at least half of the draws."""
+    t = ep.txn
+    rows = sorted([w for w in ep.window if P(w["ts"]) <= ep.opened_at] + ([] if any(w["id"] == t["id"] for w in ep.window) else [t]),
+                  key=lambda w: (w["ts"], w["id"]))
+    ids = [w["id"] for w in rows]
+    fi = ids.index(t["id"])
+    ps = [max(0.0, _mp(w)) for w in rows]
+    secs = [P(w["ts"]).timestamp() for w in rows]
+    rng = random.Random(int(t["id"]) if str(t["id"]).isdigit() else 7)
+    hits = [0] * len(rows)
+    gap = EPISODE_GAP_H * 3600
+    for _ in range(samples):
+        lab = [i == fi or rng.random() < ps[i] for i in range(len(rows))]
+        lo = fi
+        j = fi - 1
+        while j >= 0:
+            if lab[j]:
+                if secs[lo] - secs[j] > gap:
+                    break
+                lo = j
+            j -= 1
+        hi = fi
+        j = fi + 1
+        while j < len(rows):
+            if lab[j]:
+                if secs[j] - secs[hi] > gap:
+                    break
+                hi = j
+            j += 1
+        for k in range(lo, hi + 1):
+            if lab[k]:
+                hits[k] += 1
+    out = []
+    for w, h in zip(rows, hits):
+        if h / samples >= 0.5:
+            out.append({**w, "chain_p": round(h / samples, 3)})
+    return out
 
 
 def build_episode(ep: EvidencePack, facts: dict) -> list[str]:
@@ -337,6 +443,11 @@ def build_episode(ep: EvidencePack, facts: dict) -> list[str]:
         return sorted(facts["structuring"])
     if facts.get("card_testing"):
         return sorted(facts["card_testing"])
+    if facts.get("model_p") is not None and not facts.get("ring_size"):
+        chain = episode_chain(ep)
+        facts["episode_chain"] = [{"id": w["id"], "ts": w["ts"], "amt": w["amt"], "model_p": _mp(w), "chain_p": w["chain_p"]}
+                                  for w in chain]
+        return [w["id"] for w in chain]
     ts = ep.ts
     acct = ep.account.get("history", [])
     chain = [t]
@@ -354,8 +465,7 @@ def build_episode(ep: EvidencePack, facts: dict) -> list[str]:
     # same-device online burst on the card (covers accounts split by missing D1)
     if facts.get("online") and t.get("device") and facts.get("new_device"):
         for w in ep.window:
-            if w.get("device") == t["device"] and abs((P(w["ts"]) - ts).total_seconds()) <= EPISODE_GAP_H * 3600 \
-                    and P(w["ts"]) <= ep.opened_at and w["id"] not in {c["id"] for c in chain}:
+            if w.get("device") == t["device"] and abs((P(w["ts"]) - ts).total_seconds()) <= EPISODE_GAP_H * 3600                     and P(w["ts"]) <= ep.opened_at and w["id"] not in {c["id"] for c in chain}:
                 chain.append(w)
     if facts.get("ring_size") and t.get("device"):
         for x in (ep.device or {}).get("txns", []):

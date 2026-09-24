@@ -3,9 +3,11 @@
 //   fixtures/cases/*.json        answer files written by the agent (cases/*.json)
 //   fixtures/traces/*.json       saved runs (runs/traces/*.json), replayed as SSE with realistic delays
 //   fixtures/backtest_report.json the backtest over closed-case history (eval/report.json)
+//   fixtures/model_report.json   the transaction model's October hold-out report (eval/model_report.json)
 // Run `npm run sync-fixtures` to refresh them from the repo.
 import casePack from "../fixtures/case_pack.json";
 import backtestReport from "../fixtures/backtest_report.json";
+import modelReport from "../fixtures/model_report.json";
 import type {
   Answer, Api, Approval, CaseDetail, CaseRow, GEdge, GNode, GraphPayload, Health, InvEvent, Metrics, ReproveResult, Trace,
 } from "./types";
@@ -181,6 +183,7 @@ function metricsAll(): Metrics {
       avg_tool_calls: calls / n, avg_tokens: toks / n, avg_latency_s: lat / n,
     },
     rings,
+    model: modelReport as unknown as Metrics["model"],
   };
 }
 

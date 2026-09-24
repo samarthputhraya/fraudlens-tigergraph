@@ -1,180 +1,107 @@
 {
   "row": {
     "case_id": "AUTO-005",
-    "opened_at": "2016-12-14 03:57:41",
+    "opened_at": "2016-12-31 18:52:02",
     "trigger_type": "analyst_request",
-    "trigger_text": "Autonomous monitor: 15 online authorisations under $5 within an hour on card C06744-K2. Investigate transaction 3541294 and related activity.",
-    "flagged_txn_id": "3541294",
-    "card_id": "C06744-K2",
-    "customer_id": "C06744",
+    "trigger_text": "Autonomous monitor: purchases by 6 different customers through one rare device profile, all scored as fraud by the transaction model (total $2,649.96) on card C12418-K1. Investigate transaction 3589669 and related activity.",
+    "flagged_txn_id": "3589669",
+    "card_id": "C12418-K1",
+    "customer_id": "C12418",
     "risk_score": "",
     "source": "autonomous"
   },
   "scan_hit": {
-    "kind": "card_testing",
-    "card_id": "C06744-K2",
-    "customer_id": "C06744",
-    "flagged": "3541294",
-    "ts": "2016-12-14 02:57:41",
+    "kind": "model_ring",
+    "card_id": "C12418-K1",
+    "customer_id": "C12418",
+    "flagged": "3589669",
+    "ts": "2016-12-31 17:52:02",
     "txns": [
-      "3541189",
-      "3541190",
-      "3541212",
-      "3541214",
-      "3541216",
-      "3541218",
-      "3541225",
-      "3541236",
-      "3541250",
-      "3541267",
-      "3541270",
-      "3541281",
-      "3541282",
-      "3541291",
-      "3541294"
+      "3589614",
+      "3589669",
+      "3589689"
     ],
-    "amount": 13.11
+    "device": "MacOS | Mac OS X 10_9_5 | chrome 66.0 | 1280x800",
+    "ring_size": 6,
+    "amount": 2649.96,
+    "members": [
+      "C02222-K1",
+      "C06224-K2",
+      "C07146-K1",
+      "C12418-K1",
+      "C13190-K2",
+      "C13303-K1"
+    ]
   },
   "answer": {
     "case_id": "AUTO-005",
     "case": {
-      "status": "open",
-      "verdict": "uncertain",
-      "fraud_probability": 0.53,
+      "status": "closed_fraud",
+      "verdict": "fraud",
+      "fraud_probability": 0.97,
       "pattern": "card_not_present_fraud",
       "pattern_description": "",
       "affected_txn_ids": [
-        "3535128",
-        "3535146",
-        "3536187",
-        "3540328",
-        "3540346",
-        "3540354",
-        "3540359",
-        "3540442",
-        "3540450",
-        "3540468",
-        "3540490",
-        "3540491",
-        "3540495",
-        "3540503",
-        "3540522",
-        "3540539",
-        "3540550",
-        "3540572",
-        "3540743",
-        "3540780",
-        "3540787",
-        "3540789",
-        "3540798",
-        "3540806",
-        "3540810",
-        "3540812",
-        "3540818",
-        "3540823",
-        "3540828",
-        "3540831",
-        "3541189",
-        "3541190",
-        "3541212",
-        "3541214",
-        "3541216",
-        "3541218",
-        "3541225",
-        "3541236",
-        "3541250",
-        "3541267",
-        "3541270",
-        "3541281",
-        "3541282",
-        "3541291",
-        "3541294"
+        "3589518",
+        "3589551",
+        "3589614",
+        "3589669",
+        "3589689"
       ],
-      "first_suspicious_txn_id": "3535128",
+      "first_suspicious_txn_id": "3589518",
       "connected_card_ids": [],
       "connected_device_profiles": [],
-      "exposure_usd": 62.85,
+      "exposure_usd": 1550.03,
       "evidence": [
         {
-          "claim": "Another transaction on the same resolved account 0.6 hours earlier (3541216, $0.79) was also scored 0.76 by the model",
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.832, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
           "source": "graph",
-          "ref": "query:account_history(txn=3541294, lookback_days=200)",
+          "ref": "query:txn_context(txn=3589669)",
           "entity_ids": [
-            "3541216"
+            "3589669"
           ]
         },
         {
-          "claim": "The resolved account (C06744-K2||163) has 44 earlier transactions and none were ever part of a fraud case",
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-5229 (confirmed_fraud, card_not_present_fraud); CC-5053 (confirmed_fraud, card_not_present_fraud); CC-3195 (confirmed_fraud, card_not_present_fraud); CC-5358 (confirmed_fraud, card_not_present_fraud)",
           "source": "graph",
-          "ref": "query:account_history(txn=3541294, lookback_days=200)",
+          "ref": "query:similar_cases(devices=['MacOS | Mac OS X 10_9_5 | chrome 66.0 | 1280x800'], cards=['C12418-K1'], k=8, pattern=, before_ts=2016-12-31 18:52:02)",
           "entity_ids": [
-            "3541281",
-            "3541282",
-            "3541291"
+            "CC-5229",
+            "CC-5053",
+            "CC-3195",
+            "CC-5358"
           ]
         },
         {
-          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-3416; latest note: \"Case CC-3416: model scored a $36.94 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
-          "source": "graph",
-          "ref": "query:prior_cases(card=C06744-K2)",
-          "entity_ids": [
-            "CC-3416"
-          ]
-        },
-        {
-          "claim": "The device profile (Windows |  | opera 53.0 | ) was already used 14 times on this card before the alert",
-          "source": "graph",
-          "ref": "query:card_profile(card=C06744-K2, before_ts=2016-12-14 02:57:41, recent_days=30)",
-          "entity_ids": [
-            "3541294"
-          ]
-        },
-        {
-          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3871 (confirmed_fraud, card_not_present_fraud); CC-0583 (confirmed_fraud, card_not_present_fraud); CC-2573 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud)",
-          "source": "graph",
-          "ref": "query:similar_cases(devices=['Windows |  | opera 53.0 | '], cards=['C06744-K2'], k=8, pattern=)",
-          "entity_ids": [
-            "CC-3871",
-            "CC-0583",
-            "CC-2573",
-            "CC-2655",
-            "CC-0688",
-            "CC-2570"
-          ]
-        },
-        {
-          "claim": "Fraud Policy rules applied to this case: R1, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+          "claim": "Fraud Policy rules applied to this case: R1, R2 (retrieved from the policy knowledge graph via GraphRAG)",
           "source": "document",
-          "ref": "document:Fraud Policy v1.0 section 3 R1/R4",
+          "ref": "document:Fraud Policy v1.0 section 3 R1/R2",
           "entity_ids": []
         },
         {
-          "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+          "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): Cardholder states they did not make the flagged transaction(s) and still has the card",
           "source": "customer",
           "ref": "evidence_request:1",
           "entity_ids": [
-            "3541294"
+            "3589669"
           ]
         }
       ],
       "similar_prior_cases": [
-        "CC-3871",
-        "CC-0583",
-        "CC-2573",
-        "CC-2655",
-        "CC-0688",
-        "CC-2570",
-        "CC-3416"
+        "CC-5229",
+        "CC-5053",
+        "CC-3195",
+        "CC-5358"
       ],
-      "summary": "The investigation was triggered by an autonomous monitor detecting 15 online authorizations under $5 within an hour on card C06744-K2, specifically flagging a $0.92 transaction. Graph evidence revealed that the account has 44 prior non-fraudulent transactions and the device profile was already used 14 times on this card before the alert. A step-up authentication request was sent, but no reply was received from the cardholder within 24 hours. Due to the lack of response and ambiguous evidence, the verdict is uncertain. The final actions taken are to monitor the card and decline the transaction.",
+      "summary": "This investigation was triggered by an autonomous monitor detecting purchases by six different customers through one rare device profile, totaling $2649.96, with transaction 3589669 on card C12418-K1 flagged for review. The transaction model scored the flagged online purchase at 0.832, and step-up authentication confirmed the cardholder still possessed the card but did not authorize the activity. The final verdict is fraud with a 97 percent probability, matching a card-not-present fraud pattern. The final actions taken are to block the card, create a case, and file a suspicious activity report.",
       "written_to_graph": true,
-      "graph_case_id": "CASE-2016-005"
+      "graph_case_id": "CASE-2016-AUTO-005"
     },
     "evidence_requests": [
       {
         "type": "step_up_auth",
-        "asked_after_step": 9,
-        "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+        "asked_after_step": 10,
+        "assumed_response": "Cardholder states they did not make the flagged transaction(s) and still has the card"
       }
     ],
     "next_best_actions": {
@@ -185,41 +112,47 @@
           "reason": "Section 3a: evidence is being requested and probability >= 0.30"
         },
         {
-          "action": "DECLINE_TRANSACTION",
-          "route": "L1",
-          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.53)"
-        },
-        {
           "action": "STEP_UP_AUTH",
           "route": "auto",
-          "reason": "R1: single signal (probability 0.53 < 0.70); verify before any block"
+          "reason": "R1: single signal (probability 0.97 < 0.70); verify before any block"
         }
       ],
       "final": [
         {
-          "action": "MONITOR_CARD",
-          "route": "auto",
-          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the cardholder denied the transaction; exposure $1,550.03 is under $2,500"
         },
         {
-          "action": "DECLINE_TRANSACTION",
-          "route": "L1",
-          "reason": "R4: decline the pending authorisation"
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R2 / section 3a: exposure $1,550.03 exceeds $1,000"
         }
       ],
-      "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.53; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
+      "what_changed": "The assumed denial raised the probability from 0.97 to 0.97; under R2 the recommendation moved from verification to BLOCK_CARD, CREATE_CASE, FILE_REPORT, including a suspicious activity report because exposure $1,550.03 exceeds $1,000."
     },
     "sar": {
-      "file": false,
-      "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
-      "narrative": "",
-      "subjects": [],
-      "total_amount_usd": 0,
-      "activity_dates": []
+      "file": true,
+      "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $1,550.03 exceeds $1,000.",
+      "narrative": "This Suspicious Activity Report details confirmed card-not-present fraud involving customer C12418 and their card C12418-K1. On December 31, 2016, between 17:12:36 and 17:57:49, a burst of five unauthorized online transactions occurred in billing region 536. The activity began with two purchases of $325.06 and $324.91 using an iOS device. It continued with a $299.94 transaction, a $300.07 transaction from a MacOS device, and a final $300.05 transaction. The bank's real-time risk score flagged the $300.07 transaction at 0.71, while the transaction model scored it at 0.832. The alert was initially triggered because the MacOS device profile was linked to purchases by six different customers. Upon contact, the customer confirmed they still had their physical card and denied making any of these online transactions. The total exposure for this fraudulent episode is $1550.03. The bank has closed the case as fraud, blocked the card, and is filing this report.",
+      "subjects": [
+        "C12418",
+        "C12418-K1"
+      ],
+      "total_amount_usd": 1550.03,
+      "activity_dates": [
+        "2016-12-31",
+        "2016-12-31"
+      ]
     },
-    "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
-    "tool_calls": 12,
-    "tokens": 13915,
-    "latency_s": 299.3
+    "stop_reason": "Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a defensible fraud decision; further queries would not change the actions.",
+    "tool_calls": 13,
+    "tokens": 10486,
+    "latency_s": 44.0
   }
 }

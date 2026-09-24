@@ -1,0 +1,155 @@
+{
+  "row": {
+    "case_id": "AUTO-016",
+    "opened_at": "2016-12-15 08:20:48",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: 7 online authorisations under $5 within an hour on card C04597-K2. Investigate transaction 3544752 and related activity.",
+    "flagged_txn_id": "3544752",
+    "card_id": "C04597-K2",
+    "customer_id": "C04597",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "card_testing",
+    "card_id": "C04597-K2",
+    "customer_id": "C04597",
+    "flagged": "3544752",
+    "ts": "2016-12-15 07:20:48",
+    "txns": [
+      "3544739",
+      "3544740",
+      "3544741",
+      "3544742",
+      "3544747",
+      "3544751",
+      "3544752"
+    ],
+    "amount": 6.26
+  },
+  "answer": {
+    "case_id": "AUTO-016",
+    "case": {
+      "status": "closed_fraud",
+      "verdict": "fraud",
+      "fraud_probability": 0.94,
+      "pattern": "card_not_present_fraud",
+      "pattern_description": "",
+      "affected_txn_ids": [
+        "3544752"
+      ],
+      "first_suspicious_txn_id": "3544752",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 0.97,
+      "evidence": [
+        {
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.135, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+          "source": "graph",
+          "ref": "query:txn_context(txn=3544752)",
+          "entity_ids": [
+            "3544752"
+          ]
+        },
+        {
+          "claim": "Another transaction on the same resolved account 12.5 hours earlier (3542994, $15.90) was also scored 0.91 by the model",
+          "source": "graph",
+          "ref": "query:account_history(txn=3544752, lookback_days=200)",
+          "entity_ids": [
+            "3542994"
+          ]
+        },
+        {
+          "claim": "The resolved account (C04597-K2||165) has 19 earlier transactions and none were ever part of a fraud case",
+          "source": "graph",
+          "ref": "query:account_history(txn=3544752, lookback_days=200)",
+          "entity_ids": [
+            "3544742",
+            "3544747",
+            "3544751"
+          ]
+        },
+        {
+          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0015; latest note: \"Case CC-0015: model scored a $93.80 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert \")",
+          "source": "graph",
+          "ref": "query:prior_cases(card=C04597-K2, before_ts=2016-12-15 08:20:48)",
+          "entity_ids": [
+            "CC-0015"
+          ]
+        },
+        {
+          "claim": "The device profile (Windows |  | opera 53.0 | ) was already used 11 times on this card before the alert",
+          "source": "graph",
+          "ref": "query:card_profile(card=C04597-K2, before_ts=2016-12-15 07:20:48, recent_days=30)",
+          "entity_ids": [
+            "3544752"
+          ]
+        },
+        {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2480 (confirmed_fraud, card_not_present_fraud); CC-0583 (confirmed_fraud, card_not_present_fraud); CC-0688 (confirmed_fraud, card_not_present_fraud); CC-2655 (confirmed_fraud, card_not_present_fraud)",
+          "source": "graph",
+          "ref": "query:similar_cases(devices=['Windows |  | opera 53.0 | '], cards=['C04597-K2'], k=8, pattern=, before_ts=2016-12-15 08:20:48)",
+          "entity_ids": [
+            "CC-2480",
+            "CC-0583",
+            "CC-0688",
+            "CC-2655",
+            "CC-2573",
+            "CC-0015"
+          ]
+        }
+      ],
+      "similar_prior_cases": [
+        "CC-2480",
+        "CC-0583",
+        "CC-0688",
+        "CC-2655",
+        "CC-2573",
+        "CC-0015"
+      ],
+      "summary": "The alert was triggered by an autonomous monitor detecting seven online authorizations under $5 within an hour on card C04597-K2, specifically flagging transaction 3544752 for $0.97. Graph evidence showed that while the device profile had been used 11 times previously on this card, the transaction model scored an earlier transaction for $15.90 at 0.91. The policy engine reached a final verdict of fraud with a 94% probability, identifying a card-not-present fraud pattern. The final actions taken were to block the card and create a case.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-AUTO-016"
+    },
+    "evidence_requests": [],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $0.97 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $0.97 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "what_changed": "nothing"
+    },
+    "sar": {
+      "file": false,
+      "reason": "Section 3a: no report required - exposure $0.97 is under $1,000 with no shared device, region cluster or coordinated pattern.",
+      "narrative": "",
+      "subjects": [],
+      "total_amount_usd": 0,
+      "activity_dates": []
+    },
+    "stop_reason": "Section 6: fraud probability 0.94 >= 0.85 on independent evidence (account, model); further queries would not change the actions.",
+    "tool_calls": 12,
+    "tokens": 9240,
+    "latency_s": 219.3
+  }
+}

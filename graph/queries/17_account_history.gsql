@@ -13,9 +13,10 @@ CREATE OR REPLACE QUERY account_history(VERTEX<Transaction> txn, INT lookback_da
   H = SELECT t FROM A:a -(rev_ON_ACCOUNT:e)-> Transaction:t WHERE t.ts < @@t0 AND t.ts >= since;
   X = SELECT t FROM H:t -(rev_INVOLVES:e)-> ClosedCase:cc
       ACCUM t.@closed_cases += cc.id, t.@outcomes += cc.outcome, t.@patterns += cc.pattern;
-  Y = SELECT t FROM H:t -(rev_CASE_TXN:e)-> InvestigationCase:ic ACCUM t.@inv_cases += ic.case_ref;
+  Y = SELECT t FROM H:t -(rev_CASE_TXN:e)-> InvestigationCase:ic WHERE ic.opened_at < @@t0   // as-of: no later case memory
+      ACCUM t.@inv_cases += ic.case_ref;
   Z = SELECT t FROM H:t -(FROM_DEVICE:e)-> DeviceProfile:d ACCUM t.@device = d.id, t.@new_flag = e.dev_new;
   PRINT A[A.id, A.card_id, A.addr1, A.open_day, A.n_txn, A.first_ts, A.last_ts] AS account;
   PRINT H[H.id, H.ts, H.amt, H.product, H.channel, H.addr1, H.risk_score, H.@device, H.@new_flag,
-          H.@closed_cases, H.@outcomes, H.@patterns, H.@inv_cases] AS history;
+          H.@closed_cases, H.@outcomes, H.@patterns, H.@inv_cases, H.model_p] AS history;
 }

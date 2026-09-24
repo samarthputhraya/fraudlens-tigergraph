@@ -1,8 +1,9 @@
 CREATE OR REPLACE QUERY similar_cases(LIST<FLOAT> qv, SET<VERTEX<DeviceProfile>> devices, SET<VERTEX<Card>> cards,
-                                      INT k = 8, STRING pattern = "") FOR GRAPH Fraud {
+                                      DATETIME before_ts, INT k = 8, STRING pattern = "") FOR GRAPH Fraud {
   /* Hybrid GraphRAG over case memory. (1) vector search over closed-case narratives, optionally restricted to a
      pattern; (2) graph-filtered vector search restricted to closed cases reachable from the given devices or
-     cards; (3) vector search over earlier investigation cases written by the agent. */
+     cards; (3) vector search over investigation cases written by the agent that were opened before before_ts
+     (case memory is as-of the investigation's open time: no case ever recalls itself or a later one). */
   MapAccum<VERTEX, FLOAT> @@d_global, @@d_graph, @@d_inv;
   All = {ClosedCase.*};
   Cand = SELECT c FROM All:c WHERE pattern == "" OR c.pattern == pattern;
@@ -19,7 +20,12 @@ CREATE OR REPLACE QUERY similar_cases(LIST<FLOAT> qv, SET<VERTEX<DeviceProfile>>
     GC = G;   // nothing reachable through the graph: fall back to the global hits
   END;
   H = vectorSearch({ClosedCase.emb}, qv, k, {candidate_set: GC, distance_map: @@d_graph});
-  I = vectorSearch({InvestigationCase.emb}, qv, 5, {distance_map: @@d_inv});
+  AllIC = {InvestigationCase.*};
+  ICand = SELECT ic FROM AllIC:ic WHERE ic.opened_at < before_ts;
+  I = SELECT ic FROM ICand:ic WHERE FALSE;
+  IF ICand.size() > 0 THEN
+    I = vectorSearch({InvestigationCase.emb}, qv, 5, {candidate_set: ICand, distance_map: @@d_inv});
+  END;
   PRINT G[G.id, G.card_id, G.opened_at, G.outcome, G.pattern, G.exposure_usd, G.report_filed, G.actions_taken, G.analyst_notes] AS vector_hits;
   PRINT H[H.id, H.card_id, H.opened_at, H.outcome, H.pattern, H.exposure_usd, H.report_filed, H.actions_taken, H.analyst_notes] AS graph_hits;
   PRINT I[I.id, I.case_ref, I.verdict, I.pattern, I.summary, I.final_actions] AS investigation_hits;

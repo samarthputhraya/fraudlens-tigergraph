@@ -30,7 +30,7 @@ export interface LGraph {
 
 function labelFor(type: string, raw: string) {
   if (type === "DeviceProfile") return deviceLabel(raw);
-  if (type === "BillingRegion") return `region ${raw}`;
+  if (type === "BillingRegion") return `region ${raw.replace(/\.0$/, "")}`;
   return raw;
 }
 

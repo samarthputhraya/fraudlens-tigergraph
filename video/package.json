@@ -1,0 +1,29 @@
+{
+  "name": "fraudlens-demo-video",
+  "private": true,
+  "description": "The FraudLens demo film, built as code: Playwright captures the real Command Center, Remotion directs the camera from the recorded element positions, Gemini TTS narrates.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render FraudLensDemo out/fraudlens-demo.mp4 --crf=16 && node finish.mjs out/fraudlens-demo.mp4",
+    "capture": "node capture/record.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.527",
+    "@remotion/fonts": "^4.0.527",
+    "@remotion/media": "^4.0.527",
+    "@remotion/media-utils": "^4.0.527",
+    "@remotion/noise": "^4.0.527",
+    "@remotion/paths": "^4.0.527",
+    "@remotion/shapes": "^4.0.527",
+    "@remotion/transitions": "^4.0.527",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.527",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2"
+  }
+}

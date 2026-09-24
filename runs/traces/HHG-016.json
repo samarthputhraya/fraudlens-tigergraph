@@ -2,7 +2,7 @@
   "case_id": "HHG-016",
   "events": [
     {
-      "t": 1790184302.82,
+      "t": 1790261667.27,
       "kind": "trigger",
       "case_id": "HHG-016",
       "trigger_type": "customer_report",
@@ -10,91 +10,105 @@
       "opened_at": "2016-12-12 01:39:08"
     },
     {
-      "t": 1790184302.82,
+      "t": 1790261667.27,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1790184310.19,
+      "t": 1790261671.85,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
-        "Account Takeover (ATO) or unauthorized card use by a third party using a new device profile.",
-        "Legitimate recurring transaction or subscription that the customer has forgotten or failed to recognize.",
-        "Card compromise and online fraud, where the card details were stolen and used on a generic Windows/Edge browser."
+        "The transaction is unauthorized Card-Not-Present (CNP) fraud by an external actor who obtained the card details.",
+        "The transaction is a legitimate recurring charge or subscription that the customer forgot or did not recognize.",
+        "The card has been compromised and is experiencing other undetected fraudulent transactions or card-testing activity."
       ],
       "calls": [
         {
           "tool": "card_window",
-          "why": "To examine the card's transaction history before and after the flagged transaction to identify other suspicious activity or establish a normal spending pattern.",
+          "why": "To examine the full transaction history of this card around the flagged event to check for other suspicious activity or pattern changes.",
           "days_back": 30
         },
         {
           "tool": "recurring_match",
-          "why": "To check if there are previous transactions of approximately $59.67 on this card, which would support the hypothesis of a forgotten recurring subscription.",
+          "why": "To check if there are prior transactions of a similar amount on this card, which would support the hypothesis of a forgotten recurring subscription.",
           "tol_pct": 1.0
         }
       ]
     },
     {
-      "t": 1790184310.28,
+      "t": 1790261673.78,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
-      "assessment": "The customer C09988 has explicitly disputed transaction 3534820 ($59.67) as unauthorized. This transaction was processed using a 'New' generic Windows desktop device profile, which differs from the Samsung mobile device profile used in the previous transaction 3474173. Although the transaction amount is within the customer's historical baseline, the direct dispute and change in device profile indicate highly probable unauthorized activity.",
+      "assessment": "The customer C09988 has explicitly disputed transaction 3534820 as unauthorized. This transaction was conducted via a 'New' generic Windows desktop device, which deviates from the Samsung mobile device used in the prior transaction 3474173. The transaction model score of 0.557252 for the disputed transaction is significantly elevated compared to the baseline, supporting the likelihood of fraud.",
       "key_points": [
-        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized.",
-        "Transaction 3534820 was conducted on a 'New' generic Windows desktop device, whereas the previous transaction 3474173 used a Samsung mobile device.",
-        "The transaction amount of $59.67 is consistent with the customer's baseline of 48 online transactions with a maximum amount of $94.70."
+        "Customer C09988 reported transaction 3534820 ($59.67) on card C09988-K1 as unauthorized.",
+        "The disputed transaction 3534820 was performed on a 'New' generic Windows desktop device, whereas the previous transaction 3474173 was completed on a Samsung mobile device.",
+        "The transaction model score (model_p) increased from 0.028226 for transaction 3474173 to 0.557252 for the disputed transaction 3534820."
       ]
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
-      "assessment": "The customer C09988 has explicitly reported transaction 3534820 as unauthorized. The transaction was conducted on card C09988-K1 using a device flagged as 'New' with a generic browser signature, and there is no other transaction history on this card, confirming unauthorized card-not-present activity.",
+      "assessment": "Customer C09988 reported an unauthorized transaction of $59.67 (ID 3534820) on card C09988-K1. The transaction was executed using a generic Windows Edge 16.0 browser profile flagged as a New device, with no prior history on this card. Given the customer's explicit dispute and the lack of established history, this is confirmed card-not-present fraud.",
       "key_points": [
-        "Customer C09988 reported unauthorized use of card C09988-K1 for transaction 3534820 ($59.67).",
-        "The transaction was executed using a 'New' device profile ('Windows |  | edge 16.0 | ') which has not been seen on this card before.",
-        "The card account has only one recorded transaction in its history, which is the disputed transaction."
+        "Customer C09988 reported transaction 3534820 as unauthorized.",
+        "The transaction was performed on a New device profile (\"Windows |  | edge 16.0 | \") which has not been seen on card C09988-K1 before.",
+        "Card account C09988-K1 has only 1 recorded transaction in its history, which is the disputed transaction."
       ]
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "specialist",
       "agent": "network",
-      "risk": "medium",
-      "assessment": "The transaction 3534820 was reported as unauthorized by customer C09988. Although it shares a device profile with 160 other cards, this profile represents a generic browser signature and does not provide evidence of a coordinated fraud ring or account takeover.",
+      "risk": "high",
+      "assessment": "Customer C09988 has explicitly reported transaction 3534820 ($59.67) as unauthorized, confirming card-not-present fraud on their account. Although the transaction is linked to a device profile shared with 160 other cards all-time, this represents a generic browser signature rather than a coordinated fraud ring or account takeover.",
       "key_points": [
-        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized.",
-        "The device profile associated with the transaction is highly generic, shared by 160 cards all-time, including cards C08962-K2, C07562-K2, and C07508-K2.",
-        "Because the device profile is generic, the connection to other cards does not indicate a shared fraud ring."
+        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized, indicating confirmed fraud on this card.",
+        "The device profile associated with the transaction is highly generic, shared by 160 cards all-time, and does not provide evidence of a shared fraud ring.",
+        "Other cards in the neighbor list, such as C08962-K2 and C07562-K2, are linked only by this generic browser signature and should be evaluated independently."
       ]
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "specialist",
       "agent": "precedent",
-      "risk": "medium",
-      "assessment": "Customer C09988 has reported an unauthorized transaction of $59.67 (ID 3534820). Because there are no prior closed cases for this customer and no similar patterns detected in the database, this is currently treated as an isolated dispute. Further transaction details are required to determine if this is a case of card-not-present fraud.",
+      "risk": "high",
+      "assessment": "Customer C09988 has reported an unauthorized transaction of $59.67 on transaction 3534820. This report strongly aligns with multiple historical precedents of confirmed card-not-present fraud involving unrecognized devices, suggesting the card has been compromised.",
       "key_points": [
-        "Customer C09988 disputed transaction 3534820 for $59.67, claiming they did not make the purchase.",
-        "There are no prior closed cases on file for customer C09988.",
-        "No similar transactions or accounts matching this pattern were found in the database."
+        "Customer C09988 explicitly disputed transaction 3534820, stating they did not make the purchase.",
+        "Historical cases such as CC-2675, CC-2732, CC-2540, CC-3580, CC-5217, and CC-1777 demonstrate a recurring pattern of confirmed fraud classified as card_not_present_new_device.",
+        "Many of these past cases (e.g., CC-2675, CC-2765, CC-2732) involved unauthorized online purchases executed via a 'Windows on edge 16.0' browser signature."
       ]
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.557, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+      "lr": 58.9624868313741,
+      "family": "model",
+      "ref": "query:txn_context(txn=3534820)",
+      "entity_ids": [
+        "3534820"
+      ],
+      "in_model": false,
+      "model_p": 0.557252
+    },
+    {
+      "t": 1790261680.68,
       "kind": "finding",
       "key": "new_device",
       "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Windows |  | edge 16.0 | )",
@@ -103,10 +117,11 @@
       "ref": "query:txn_context(txn=3534820)",
       "entity_ids": [
         "3534820"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "finding",
       "key": "amount_typical",
       "claim": "$59.67 is a typical amount for this card (percentile 75%)",
@@ -115,27 +130,37 @@
       "ref": "query:card_profile(card=C09988-K1, before_ts=2016-12-11 22:39:08, recent_days=30)",
       "entity_ids": [
         "3534820"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "assessment",
-      "p": 0.68,
-      "prior": 0.6,
-      "verdict": "uncertain",
+      "p": 0.97,
+      "prior": 0.997246681885012,
+      "verdict": "fraud",
       "pattern": "card_not_present_new_device",
       "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 58.96,
+          "delta_logodds": 0.0,
+          "note": "starting point"
+        },
         {
           "key": "new_device",
           "family": "device",
           "lr": 1.4,
-          "delta_logodds": 0.336
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "amount_typical",
           "family": "amount",
           "lr": 1.0,
-          "delta_logodds": 0.0
+          "delta_logodds": 0.0,
+          "note": "in model score"
         }
       ],
       "exposure": 59.67,
@@ -191,10 +216,10 @@
       }
     },
     {
-      "t": 1790184322.01,
+      "t": 1790261680.68,
       "kind": "decision",
       "verdict": "fraud",
-      "p": 0.68,
+      "p": 0.97,
       "pattern": "card_not_present_new_device",
       "final": [
         {
@@ -215,38 +240,38 @@
       ]
     },
     {
-      "t": 1790184322.27,
+      "t": 1790261680.92,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-2675",
-        "CC-2694",
+        "CC-3491",
         "CC-5057",
         "CC-5217",
         "CC-0502",
-        "CC-5263",
-        "CC-2879",
+        "CC-1780",
+        "CC-2540",
         "CC-2578"
       ],
       "knowledge": [
         "Card-not-present fraud from a new device",
         "The five known fraud patterns",
-        "Out-of-region use",
+        "Account takeover",
         "The five known fraud patterns",
         "Card-not-present fraud",
-        "Account takeover"
+        "Out-of-region use"
       ]
     },
     {
-      "t": 1790184330.59,
+      "t": 1790261688.05,
       "kind": "review",
       "agent": "compliance",
       "agree": true,
       "issues": [],
-      "what_would_change_verdict": "Nothing. The customer's explicit denial of the transaction settles the investigation and dictates the actions under R2."
+      "what_would_change_verdict": "Nothing; the customer explicitly denied the transaction, which confirms fraud and dictates the R2 response."
     },
     {
-      "t": 1790184339.61,
+      "t": 1790261716.88,
       "kind": "final",
       "problems": [],
       "written": {
@@ -267,7 +292,7 @@
         "txn": "3534820"
       },
       "rows": 2,
-      "ms": 55.2,
+      "ms": 43.0,
       "via": "mcp"
     },
     {
@@ -281,7 +306,7 @@
         "end_ts": "2016-12-12 01:39:08"
       },
       "rows": 1,
-      "ms": 45.9,
+      "ms": 40.2,
       "via": "mcp"
     },
     {
@@ -295,7 +320,7 @@
         "recent_days": 30
       },
       "rows": 48,
-      "ms": 40.8,
+      "ms": 43.8,
       "via": "mcp"
     },
     {
@@ -310,7 +335,7 @@
         "before_ts": "2016-12-11 22:39:08"
       },
       "rows": 0,
-      "ms": 39.0,
+      "ms": 38.7,
       "via": "mcp"
     },
     {
@@ -323,7 +348,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 47.4,
+      "ms": 40.1,
       "via": "mcp"
     },
     {
@@ -337,19 +362,20 @@
         "end_ts": "2016-12-12 01:39:08"
       },
       "rows": 106,
-      "ms": 94.5,
+      "ms": 352.3,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "prior_cases",
-      "ref": "query:prior_cases(card=C09988-K1)",
+      "ref": "query:prior_cases(card=C09988-K1, before_ts=2016-12-12 01:39:08)",
       "params": {
-        "card": "C09988-K1"
+        "card": "C09988-K1",
+        "before_ts": "2016-12-12 01:39:08"
       },
       "rows": 1,
-      "ms": 41.3,
+      "ms": 44.0,
       "via": "mcp"
     },
     {
@@ -363,7 +389,7 @@
         "end_ts": "2016-12-12 01:39:08"
       },
       "rows": 2,
-      "ms": 45.0,
+      "ms": 41.1,
       "via": "mcp"
     },
     {
@@ -378,14 +404,34 @@
         "before_ts": "2016-12-11 22:39:08"
       },
       "rows": 0,
-      "ms": 46.4,
+      "ms": 39.4,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "similar_cases",
-      "ref": "query:similar_cases(devices=['Windows |  | edge 16.0 | '], cards=['C09988-K1'], k=8, pattern=)",
+      "ref": "query:similar_cases(devices=['Windows |  | edge 16.0 | '], cards=['C09988-K1'], k=6, pattern=, before_ts=2016-12-12 01:39:08)",
+      "params": {
+        "devices": [
+          "Windows |  | edge 16.0 | "
+        ],
+        "cards": [
+          "C09988-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2016-12-12 01:39:08"
+      },
+      "rows": 17,
+      "ms": 102.2,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Windows |  | edge 16.0 | '], cards=['C09988-K1'], k=8, pattern=, before_ts=2016-12-12 01:39:08)",
       "params": {
         "devices": [
           "Windows |  | edge 16.0 | "
@@ -394,10 +440,11 @@
           "C09988-K1"
         ],
         "k": 8,
-        "pattern": ""
+        "pattern": "",
+        "before_ts": "2016-12-12 01:39:08"
       },
       "rows": 21,
-      "ms": 120.1,
+      "ms": 113.8,
       "via": "mcp"
     },
     {
@@ -409,14 +456,14 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 117.0,
+      "ms": 112.9,
       "via": "mcp"
     },
     {
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3534820'], card_ids=[], case_ids=['CC-2675', 'CC-2694', 'CC-5057', 'CC-5217', 'CC-0502', 'CC-5263', 'CC-2879', 'CC-2578'], customer_ids=['C09988'])",
+      "ref": "query:ids_exist(txn_ids=['3534820'], card_ids=[], case_ids=['CC-2675', 'CC-3491', 'CC-5057', 'CC-5217', 'CC-0502', 'CC-1780', 'CC-2540', 'CC-2578'], customer_ids=['C09988'])",
       "params": {
         "txn_ids": [
           "3534820"
@@ -424,12 +471,12 @@
         "card_ids": [],
         "case_ids": [
           "CC-2675",
-          "CC-2694",
+          "CC-3491",
           "CC-5057",
           "CC-5217",
           "CC-0502",
-          "CC-5263",
-          "CC-2879",
+          "CC-1780",
+          "CC-2540",
           "CC-2578"
         ],
         "customer_ids": [
@@ -437,92 +484,92 @@
         ]
       },
       "rows": 10,
-      "ms": 112.2,
+      "ms": 106.6,
       "via": "mcp"
     }
   ],
   "specialists": {
     "transaction": {
-      "assessment": "The customer C09988 has explicitly disputed transaction 3534820 ($59.67) as unauthorized. This transaction was processed using a 'New' generic Windows desktop device profile, which differs from the Samsung mobile device profile used in the previous transaction 3474173. Although the transaction amount is within the customer's historical baseline, the direct dispute and change in device profile indicate highly probable unauthorized activity.",
+      "assessment": "The customer C09988 has explicitly disputed transaction 3534820 as unauthorized. This transaction was conducted via a 'New' generic Windows desktop device, which deviates from the Samsung mobile device used in the prior transaction 3474173. The transaction model score of 0.557252 for the disputed transaction is significantly elevated compared to the baseline, supporting the likelihood of fraud.",
       "risk": "high",
       "key_points": [
-        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized.",
-        "Transaction 3534820 was conducted on a 'New' generic Windows desktop device, whereas the previous transaction 3474173 used a Samsung mobile device.",
-        "The transaction amount of $59.67 is consistent with the customer's baseline of 48 online transactions with a maximum amount of $94.70."
+        "Customer C09988 reported transaction 3534820 ($59.67) on card C09988-K1 as unauthorized.",
+        "The disputed transaction 3534820 was performed on a 'New' generic Windows desktop device, whereas the previous transaction 3474173 was completed on a Samsung mobile device.",
+        "The transaction model score (model_p) increased from 0.028226 for transaction 3474173 to 0.557252 for the disputed transaction 3534820."
       ],
       "open_questions": [
-        "Are there other pending or settled transactions on card C09988-K1 that the customer has not yet reviewed?",
-        "Were there any recent profile or credential changes associated with customer C09988 prior to transaction 3534820?"
+        "What are the actual IP addresses or physical locations associated with transactions 3534820 and 3474173, given that address fields are blank?",
+        "Are there any other pending or settled transactions on card C09988-K1 that occurred between November 20 and December 11?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "identity": {
-      "assessment": "The customer C09988 has explicitly reported transaction 3534820 as unauthorized. The transaction was conducted on card C09988-K1 using a device flagged as 'New' with a generic browser signature, and there is no other transaction history on this card, confirming unauthorized card-not-present activity.",
+      "assessment": "Customer C09988 reported an unauthorized transaction of $59.67 (ID 3534820) on card C09988-K1. The transaction was executed using a generic Windows Edge 16.0 browser profile flagged as a New device, with no prior history on this card. Given the customer's explicit dispute and the lack of established history, this is confirmed card-not-present fraud.",
       "risk": "high",
       "key_points": [
-        "Customer C09988 reported unauthorized use of card C09988-K1 for transaction 3534820 ($59.67).",
-        "The transaction was executed using a 'New' device profile ('Windows |  | edge 16.0 | ') which has not been seen on this card before.",
-        "The card account has only one recorded transaction in its history, which is the disputed transaction."
+        "Customer C09988 reported transaction 3534820 as unauthorized.",
+        "The transaction was performed on a New device profile (\"Windows |  | edge 16.0 | \") which has not been seen on card C09988-K1 before.",
+        "Card account C09988-K1 has only 1 recorded transaction in its history, which is the disputed transaction."
       ],
       "open_questions": [
-        "How was the cardholder's credential compromised?",
-        "Are there other associated transactions or accounts targeted by the same actor that cannot be linked due to the generic device profile?"
+        "How were the cardholder's credentials compromised?",
+        "Are there other associated transactions or accounts linked to the same merchant or IP address?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "network": {
-      "assessment": "The transaction 3534820 was reported as unauthorized by customer C09988. Although it shares a device profile with 160 other cards, this profile represents a generic browser signature and does not provide evidence of a coordinated fraud ring or account takeover.",
-      "risk": "medium",
+      "assessment": "Customer C09988 has explicitly reported transaction 3534820 ($59.67) as unauthorized, confirming card-not-present fraud on their account. Although the transaction is linked to a device profile shared with 160 other cards all-time, this represents a generic browser signature rather than a coordinated fraud ring or account takeover.",
+      "risk": "high",
       "key_points": [
-        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized.",
-        "The device profile associated with the transaction is highly generic, shared by 160 cards all-time, including cards C08962-K2, C07562-K2, and C07508-K2.",
-        "Because the device profile is generic, the connection to other cards does not indicate a shared fraud ring."
+        "Customer C09988 reported transaction 3534820 ($59.67) as unauthorized, indicating confirmed fraud on this card.",
+        "The device profile associated with the transaction is highly generic, shared by 160 cards all-time, and does not provide evidence of a shared fraud ring.",
+        "Other cards in the neighbor list, such as C08962-K2 and C07562-K2, are linked only by this generic browser signature and should be evaluated independently."
       ],
       "open_questions": [
-        "Are there other shared attributes, such as IP addresses or billing locations, linking customer C09988 to any of the other cards?",
-        "What is the true origin of transaction 3534820?"
+        "Are there other recent transactions on customer C09988's card that have not yet been reported?",
+        "What are the specific missing model, OS, or screen fields that make this device profile generic?"
       ],
       "suggested_pattern": "card_not_present_fraud"
     },
     "precedent": {
-      "assessment": "Customer C09988 has reported an unauthorized transaction of $59.67 (ID 3534820). Because there are no prior closed cases for this customer and no similar patterns detected in the database, this is currently treated as an isolated dispute. Further transaction details are required to determine if this is a case of card-not-present fraud.",
-      "risk": "medium",
+      "assessment": "Customer C09988 has reported an unauthorized transaction of $59.67 on transaction 3534820. This report strongly aligns with multiple historical precedents of confirmed card-not-present fraud involving unrecognized devices, suggesting the card has been compromised.",
+      "risk": "high",
       "key_points": [
-        "Customer C09988 disputed transaction 3534820 for $59.67, claiming they did not make the purchase.",
-        "There are no prior closed cases on file for customer C09988.",
-        "No similar transactions or accounts matching this pattern were found in the database."
+        "Customer C09988 explicitly disputed transaction 3534820, stating they did not make the purchase.",
+        "Historical cases such as CC-2675, CC-2732, CC-2540, CC-3580, CC-5217, and CC-1777 demonstrate a recurring pattern of confirmed fraud classified as card_not_present_new_device.",
+        "Many of these past cases (e.g., CC-2675, CC-2765, CC-2732) involved unauthorized online purchases executed via a 'Windows on edge 16.0' browser signature."
       ],
       "open_questions": [
-        "What are the device profile, IP address, and location details associated with transaction 3534820?",
-        "Does the merchant or transaction category align with the historical spending behavior of customer C09988?"
+        "What are the specific device profile details, such as OS and browser, associated with transaction 3534820?",
+        "Which card ID was used for transaction 3534820, and are there other pending or unauthorized charges on it?"
       ],
-      "suggested_pattern": "card_not_present_fraud"
+      "suggested_pattern": "card_not_present_new_device"
     }
   },
   "lead": {
     "hypotheses": [
-      "Account Takeover (ATO) or unauthorized card use by a third party using a new device profile.",
-      "Legitimate recurring transaction or subscription that the customer has forgotten or failed to recognize.",
-      "Card compromise and online fraud, where the card details were stolen and used on a generic Windows/Edge browser."
+      "The transaction is unauthorized Card-Not-Present (CNP) fraud by an external actor who obtained the card details.",
+      "The transaction is a legitimate recurring charge or subscription that the customer forgot or did not recognize.",
+      "The card has been compromised and is experiencing other undetected fraudulent transactions or card-testing activity."
     ],
     "extra_calls": [
       {
         "tool": "card_window",
-        "why": "To examine the card's transaction history before and after the flagged transaction to identify other suspicious activity or establish a normal spending pattern.",
+        "why": "To examine the full transaction history of this card around the flagged event to check for other suspicious activity or pattern changes.",
         "days_back": 30
       },
       {
         "tool": "recurring_match",
-        "why": "To check if there are previous transactions of approximately $59.67 on this card, which would support the hypothesis of a forgotten recurring subscription.",
+        "why": "To check if there are prior transactions of a similar amount on this card, which would support the hypothesis of a forgotten recurring subscription.",
         "tol_pct": 1.0
       }
     ],
-    "focus": "Determine if the transaction is an isolated unauthorized event (ATO/fraud) or part of an established recurring billing pattern that the customer did not recognize."
+    "focus": "We focus on determining whether this transaction is an isolated unrecognized charge (potentially a recurring subscription) or part of a broader card compromise by analyzing the card's history and recurring patterns."
   },
   "critic": {
     "agree": true,
     "issues": [],
-    "what_would_change_verdict": "Nothing. The customer's explicit denial of the transaction settles the investigation and dictates the actions under R2."
+    "what_would_change_verdict": "Nothing; the customer explicitly denied the transaction, which confirms fraud and dictates the R2 response."
   },
   "problems": [],
   "written": {

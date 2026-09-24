@@ -4,6 +4,8 @@ Scans (installed GSQL queries on TigerGraph; the offline mirror implements the s
   - structuring_scan: >= 3 online purchases just under $500 within an hour on one card
   - card_testing_scan: >= 3 tiny online authorisations within an hour, then a larger purchase
   - build_ring_links + GDBMS_ALGO WCC (ring_components): rare device profiles used as a NEW device by several cards
+  - model_ring_scan: rare device profiles through which several different customers' purchases score as fraud in the
+    transaction model (Transaction.model_p) - shared-origin rings (R6) that no alert, complaint or analyst raised
 Each hit that is not already one of the 20 benchmark cases becomes an autonomous case in cases_autonomous/.
 """
 from __future__ import annotations
@@ -61,7 +63,7 @@ def scan(g) -> list[dict]:
                              "amount": round(sum(x[2] for x in grp), 2)})
     # device rings: rare profiles used as New device by >= 4 customers within 14 days
     if hasattr(g, "_rows"):
-        rings = g._rows("""WITH d AS (SELECT i.device_profile dev, t.card_id, t.customer_id, t.TransactionID tid, t.ts_dt, i.id_15
+        rings = g._rows("""WITH d AS (SELECT i.device_profile dev, t.card_id, t.customer_id, t.TransactionID tid, t.ts_dt, i.id_15, i.id_23 proxy
                   FROM ident i JOIN txn t ON t.TransactionID = i.TransactionID WHERE t.ts_dt BETWEEN ? AND ?),
               alltime AS (SELECT i.device_profile dev, count(DISTINCT t.card_id) n_all FROM ident i JOIN txn t ON t.TransactionID=i.TransactionID GROUP BY 1)
             SELECT d.dev, any_value(n_all) n_all, count(DISTINCT d.customer_id) n_cust,
@@ -86,7 +88,23 @@ def scan(g) -> list[dict]:
             rings.append({"dev": devs[0], "n_cust": len({m.split('-')[0] for m in members}), "n_all": nb.get("n_cards_all_time"),
                           "new_share": new_share, "uses": uses, "members": sorted(members), "wcc_id": cid,
                           "fraud_cases": (comps.get("fraud_cases") or {}).get(cid, [])})
+    # model-scored rings: several customers' fraud-scored purchases through one rare device profile (R6)
+    model_rings = []
+    if hasattr(g, "model_ring_scan"):
+        try:
+            model_rings = g.model_ring_scan(START, END, 0.6, 3, 12, agent="monitor")
+        except Exception as e:  # noqa: BLE001 - older graphs without Transaction.model_p
+            print("model_ring_scan unavailable:", str(e)[:120])
     ring_summ = []
+    for r in model_rings:
+        uses = sorted((tuple(h.split("|")) for h in r["hits"]), key=lambda x: x[2])  # card, txn, ts, amt, p, New/Found
+        best = max(uses, key=lambda x: float(x[4]))
+        members = sorted({u[0] for u in uses})
+        ring_summ.append({"device": r["id"], "customers": int(r["n_customers"]), "all_time_cards": int(r["n_all"]), "kind": "model",
+                          "members": members, "model_scored_txns": len(uses)})
+        hits.append({"kind": "model_ring", "card_id": best[0], "customer_id": best[0].split("-")[0], "flagged": best[1], "ts": best[2],
+                     "txns": [u[1] for u in uses if u[0] == best[0]], "device": r["id"], "ring_size": int(r["n_customers"]),
+                     "amount": round(sum(float(u[3]) for u in uses), 2), "members": members})
     for r in rings:
         uses = sorted((tuple(u.split("|")) for u in r.get("uses", [])), key=lambda x: x[2])
         ring_summ.append({"device": r["dev"], "customers": r["n_cust"], "all_time_cards": r["n_all"], "new_share": round(r["new_share"], 2),
@@ -99,7 +117,10 @@ def scan(g) -> list[dict]:
     return hits
 
 
-def main(limit: int = 8) -> None:
+def main(limit: int = 16) -> None:
+    global OUT
+    if "--out" in sys.argv:
+        OUT = ROOT / sys.argv[sys.argv.index("--out") + 1]
     use_mirror = "--mirror" in sys.argv or not os.getenv("TG_HOST")
     if use_mirror:
         from agent.mirror import MirrorGraph
@@ -115,9 +136,11 @@ def main(limit: int = 8) -> None:
         by_kind[h["kind"]].append(h)
     print({k: len(v) for k, v in by_kind.items()})
     chosen, seen_cards = [], set()
-    for kind in ("structuring", "device_ring", "card_testing"):
-        for h in sorted(by_kind[kind], key=lambda h: -len(h["txns"])):
-            if h["card_id"] in seen_cards or sum(1 for c in chosen if c["kind"] == kind) >= max(2, limit // 3):
+    quota = {"structuring": 2, "device_ring": 2, "model_ring": 10, "card_testing": 2}
+    for kind in ("structuring", "device_ring", "model_ring", "card_testing"):
+        order = (lambda h: -h.get("ring_size", 0)) if kind == "model_ring" else (lambda h: -len(h["txns"]))
+        for h in sorted(by_kind[kind], key=order):
+            if h["card_id"] in seen_cards or sum(1 for c in chosen if c["kind"] == kind) >= quota[kind]:
                 continue
             seen_cards.add(h["card_id"])
             chosen.append(h)
@@ -129,7 +152,9 @@ def main(limit: int = 8) -> None:
         cid = f"AUTO-{i:03d}"
         what = {"structuring": f"{len(h['txns'])} online purchases just under $500 within an hour (total ${h.get('amount', 0):,.2f})",
                 "card_testing": f"{len(h['txns'])} online authorisations under $5 within an hour",
-                "device_ring": f"device profile shared as a New device by {h.get('ring_size')} customers"}[h["kind"]]
+                "device_ring": f"device profile shared as a New device by {h.get('ring_size')} customers",
+                "model_ring": f"purchases by {h.get('ring_size')} different customers through one rare device profile, all scored as "
+                              f"fraud by the transaction model (total ${h.get('amount', 0):,.2f})"}[h["kind"]]
         row = {"case_id": cid, "opened_at": (P(h["ts"]) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S"),
                "trigger_type": "analyst_request",
                "trigger_text": f"Autonomous monitor: {what} on card {h['card_id']}. Investigate transaction {h['flagged']} and related activity.",

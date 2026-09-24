@@ -7,13 +7,22 @@
     "pattern": "account_takeover",
     "pattern_description": "",
     "affected_txn_ids": [
+      "3514573",
       "3514948"
     ],
-    "first_suspicious_txn_id": "3514948",
+    "first_suspicious_txn_id": "3514573",
     "connected_card_ids": [],
     "connected_device_profiles": [],
-    "exposure_usd": 111.92,
+    "exposure_usd": 148.89,
     "evidence": [
+      {
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.703, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3514948)",
+        "entity_ids": [
+          "3514948"
+        ]
+      },
       {
         "claim": "The resolved cardholder account behind this card (C09933-K2|264.0|50) already had 5 transaction(s) confirmed as fraud in closed case(s) CC-2565, CC-2834, CC-5521, most recently 2016-10-29; accounts with prior confirmed fraud were fraud 42% of the time in October vs a 2.7% base rate",
         "source": "graph",
@@ -26,7 +35,7 @@
         ]
       },
       {
-        "claim": "This card has 2220 earlier card-present purchases in billing region 264.0 (first on 2016-07-03)",
+        "claim": "This card has 2220 earlier card-present purchases in billing region 264 (first on 2016-07-03)",
         "source": "graph",
         "ref": "query:card_profile(card=C09933-K2, before_ts=2016-12-05 00:46:14, recent_days=30)",
         "entity_ids": [
@@ -34,38 +43,28 @@
         ]
       },
       {
-        "claim": "The same amount (+/-1%) recurs on this card on the same day of the month: 2016-07-06 $110.90, 2016-11-03 $112.92 (5 matching charge(s) in the last six months), consistent with a recurring charge",
-        "source": "graph",
-        "ref": "query:recurring_match(card=C09933-K2, amt=111.92, tol=1.12, before_ts=2016-12-05 00:46:14)",
-        "entity_ids": [
-          "3013010",
-          "3424567"
-        ]
-      },
-      {
         "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0657; latest note: \"Case CC-0657: model scored a $1,769.94 transaction at 0.90. Cardholder confirmed the purchase. Amount unusual for this customer but consiste\")",
         "source": "graph",
-        "ref": "query:prior_cases(card=C09933-K2)",
+        "ref": "query:prior_cases(card=C09933-K2, before_ts=2016-12-05 03:46:14)",
         "entity_ids": [
           "CC-0657"
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2565; CC-2834; CC-5521; CC-3136 (confirmed_fraud, account_takeover)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2565; CC-2834; CC-5521; CC-0657 (cleared, none)",
         "source": "graph",
-        "ref": "query:similar_cases(devices=[], cards=['C09933-K2'], k=8, pattern=)",
+        "ref": "query:similar_cases(devices=[], cards=['C09933-K2'], k=8, pattern=, before_ts=2016-12-05 03:46:14)",
         "entity_ids": [
           "CC-2565",
           "CC-2834",
           "CC-5521",
-          "CC-3136",
           "CC-0657"
         ]
       },
       {
-        "claim": "Fraud Policy rules applied to this case: R1, R2, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+        "claim": "Fraud Policy rules applied to this case: R1, R2 (retrieved from the policy knowledge graph via GraphRAG)",
         "source": "document",
-        "ref": "document:Fraud Policy v1.0 section 3 R1/R2/R4",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R2",
         "entity_ids": []
       },
       {
@@ -81,10 +80,9 @@
       "CC-2565",
       "CC-2834",
       "CC-5521",
-      "CC-3136",
       "CC-0657"
     ],
-    "summary": "The alert was triggered when the real-time model scored an in-person transaction of $111.92 (ID 3514948) at 0.87. Graph evidence showed the account has a history of five prior confirmed fraud cases, even though the flagged amount matches a recurring charge pattern and the card has extensive history in the billing region. Upon verification, the cardholder stated they did not make the transaction and still had the card in their possession. The final verdict is fraud with a 97% probability, categorized as account takeover. The final actions taken were to block the card and create a case.",
+    "summary": "Risk score on 2016-12-05: $111.92 in-person transaction 3514948 on card C09933-K2. Verdict: fraud (probability 0.97), pattern account_takeover. The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.703, against a 2.1% base rate. The resolved cardholder account behind this card (C09933-K2|264.0|50) already had 5 transaction(s) confirmed as fraud in closed case(s) CC-2565, CC-2834, CC-5521, most recently 2016-10-29. Recommended: BLOCK_CARD, CREATE_CASE.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-007"
   },
@@ -103,21 +101,16 @@
         "reason": "Section 3a: evidence is being requested and probability >= 0.30"
       },
       {
-        "action": "DECLINE_TRANSACTION",
-        "route": "L1",
-        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.79)"
-      },
-      {
         "action": "VERIFY_WITH_CUSTOMER",
         "route": "auto",
-        "reason": "R1: evidence not yet conclusive (probability 0.79 < 0.70); verify before any block"
+        "reason": "R1: single signal (probability 0.70 < 0.70); verify before any block"
       }
     ],
     "final": [
       {
         "action": "BLOCK_CARD",
         "route": "L1",
-        "reason": "R2: the cardholder denied the transaction; exposure $111.92 is under $2,500"
+        "reason": "R2: the cardholder denied the transaction; exposure $148.89 is under $2,500"
       },
       {
         "action": "CREATE_CASE",
@@ -125,11 +118,11 @@
         "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
       }
     ],
-    "what_changed": "The assumed denial raised the probability from 0.79 to 0.97; under R2 the recommendation moved from verification to BLOCK_CARD, CREATE_CASE."
+    "what_changed": "The assumed denial raised the probability from 0.70 to 0.97; under R2 the recommendation moved from verification to BLOCK_CARD, CREATE_CASE."
   },
   "sar": {
     "file": false,
-    "reason": "Section 3a: no report required - exposure $111.92 is under $1,000 with no shared device, region cluster or coordinated pattern.",
+    "reason": "Section 3a: no report required - exposure $148.89 is under $1,000 with no shared device, region cluster or coordinated pattern.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
@@ -137,6 +130,6 @@
   },
   "stop_reason": "Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a defensible fraud decision; further queries would not change the actions.",
   "tool_calls": 12,
-  "tokens": 9601,
-  "latency_s": 100.0
+  "tokens": 9167,
+  "latency_s": 233.3
 }

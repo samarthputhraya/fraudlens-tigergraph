@@ -1,0 +1,153 @@
+{
+  "row": {
+    "case_id": "AUTO-014",
+    "opened_at": "2016-12-09 22:13:16",
+    "trigger_type": "analyst_request",
+    "trigger_text": "Autonomous monitor: purchases by 3 different customers through one rare device profile, all scored as fraud by the transaction model (total $900.01) on card C00750-K2. Investigate transaction 3528683 and related activity.",
+    "flagged_txn_id": "3528683",
+    "card_id": "C00750-K2",
+    "customer_id": "C00750",
+    "risk_score": "",
+    "source": "autonomous"
+  },
+  "scan_hit": {
+    "kind": "model_ring",
+    "card_id": "C00750-K2",
+    "customer_id": "C00750",
+    "flagged": "3528683",
+    "ts": "2016-12-09 21:13:16",
+    "txns": [
+      "3528683"
+    ],
+    "device": "Alcatel_5044R Build/NRD90M | Android 7.0 | chrome 66.0 for android | 855x480",
+    "ring_size": 3,
+    "amount": 900.01,
+    "members": [
+      "C00750-K2",
+      "C04108-K2",
+      "C05128-K1"
+    ]
+  },
+  "answer": {
+    "case_id": "AUTO-014",
+    "case": {
+      "status": "closed_fraud",
+      "verdict": "fraud",
+      "fraud_probability": 0.97,
+      "pattern": "account_takeover",
+      "pattern_description": "",
+      "affected_txn_ids": [
+        "3524563",
+        "3528683",
+        "3528694"
+      ],
+      "first_suspicious_txn_id": "3524563",
+      "connected_card_ids": [],
+      "connected_device_profiles": [],
+      "exposure_usd": 506.97,
+      "evidence": [
+        {
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.832, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+          "source": "graph",
+          "ref": "query:txn_context(txn=3528683)",
+          "entity_ids": [
+            "3528683"
+          ]
+        },
+        {
+          "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0591; latest note: \"Case CC-0591: model scored a $149.98 transaction at 0.96. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+          "source": "graph",
+          "ref": "query:prior_cases(card=C00750-K2, before_ts=2016-12-09 22:13:16)",
+          "entity_ids": [
+            "CC-0591"
+          ]
+        },
+        {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3150 (confirmed_fraud, account_takeover); CC-3470 (confirmed_fraud, account_takeover); CC-5431 (confirmed_fraud, account_takeover); CC-4964 (confirmed_fraud, account_takeover)",
+          "source": "graph",
+          "ref": "query:similar_cases(devices=['Alcatel_5044R Build/NRD90M | Android 7.0 | chrome 66.0 for android | 855x480'], cards=['C00750-K2'], k=8, pattern=, before_ts=2016-12-09 22:13:16)",
+          "entity_ids": [
+            "CC-3150",
+            "CC-3470",
+            "CC-5431",
+            "CC-4964",
+            "CC-4826",
+            "CC-1727"
+          ]
+        },
+        {
+          "claim": "Fraud Policy rules applied to this case: R1, R2 (retrieved from the policy knowledge graph via GraphRAG)",
+          "source": "document",
+          "ref": "document:Fraud Policy v1.0 section 3 R1/R2",
+          "entity_ids": []
+        },
+        {
+          "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): Cardholder states they did not make the flagged transaction(s) and still has the card",
+          "source": "customer",
+          "ref": "evidence_request:1",
+          "entity_ids": [
+            "3528683"
+          ]
+        }
+      ],
+      "similar_prior_cases": [
+        "CC-3150",
+        "CC-3470",
+        "CC-5431",
+        "CC-4964",
+        "CC-4826",
+        "CC-1727",
+        "CC-0591"
+      ],
+      "summary": "The alert was triggered by an autonomous monitor detecting purchases by three different customers through one rare device profile, including a $300.00 online transaction on card C00750-K2. The transaction model scored the flagged transaction at 0.832, and the episode shows mixed-channel activity across different devices and in-person channels. The cardholder was contacted via step-up authentication and denied making the flagged transactions while confirming they still possess the card. The final verdict is fraud with a pattern of account takeover, resulting in the final actions to BLOCK_CARD and CREATE_CASE.",
+      "written_to_graph": true,
+      "graph_case_id": "CASE-2016-AUTO-014"
+    },
+    "evidence_requests": [
+      {
+        "type": "step_up_auth",
+        "asked_after_step": 10,
+        "assumed_response": "Cardholder states they did not make the flagged transaction(s) and still has the card"
+      }
+    ],
+    "next_best_actions": {
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        },
+        {
+          "action": "STEP_UP_AUTH",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.97 < 0.70); verify before any block"
+        }
+      ],
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R2: the cardholder denied the transaction; exposure $506.97 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "what_changed": "The assumed denial raised the probability from 0.97 to 0.97; under R2 the recommendation moved from verification to BLOCK_CARD, CREATE_CASE."
+    },
+    "sar": {
+      "file": false,
+      "reason": "Section 3a: no report required - exposure $506.97 is under $1,000 with no shared device, region cluster or coordinated pattern.",
+      "narrative": "",
+      "subjects": [],
+      "total_amount_usd": 0,
+      "activity_dates": []
+    },
+    "stop_reason": "Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a defensible fraud decision; further queries would not change the actions.",
+    "tool_calls": 13,
+    "tokens": 8946,
+    "latency_s": 80.5
+  }
+}

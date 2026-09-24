@@ -14,3 +14,14 @@ runs/*
 !runs/traces/
 !runs/rings.json
 !runs/last_run.txt
+
+# demo film: dependencies, renders, captures and generated audio stay local (the film is rebuilt from code)
+video/node_modules/
+video/out/
+video/public/capture/
+video/public/music/
+video/public/voice/*.wav
+video/voice/cache/
+video/music/clips/*.wav
+.claude/
+skills-lock.json

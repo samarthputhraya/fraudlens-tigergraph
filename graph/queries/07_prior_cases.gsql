@@ -1,12 +1,13 @@
-CREATE OR REPLACE QUERY prior_cases(VERTEX<Card> card) FOR GRAPH Fraud {
+CREATE OR REPLACE QUERY prior_cases(VERTEX<Card> card, DATETIME before_ts) FOR GRAPH Fraud {
   /* Case memory reachable from a card: closed cases on this card or the customer's other cards, closed cases
-     that list this card as connected, and earlier investigation cases touching these cards. */
+     that list this card as connected, and investigation cases touching these cards that were opened before
+     before_ts (case memory is as-of the investigation's open time, never later). */
   Start = {card};
   Cust = SELECT cu FROM Start:c -(rev_OWNS:e)-> Customer:cu;
   Cards = SELECT c FROM Cust:cu -(OWNS:e)-> Card:c;
   CC = SELECT cc FROM Cards:c -(rev_ON_CARD:e)-> ClosedCase:cc;
   CX = SELECT cc FROM Start:c -(rev_CONNECTED_TO:e)-> ClosedCase:cc;
-  IC = SELECT ic FROM Cards:c -(rev_CASE_CARD:e)-> InvestigationCase:ic;
+  IC = SELECT ic FROM Cards:c -(rev_CASE_CARD:e)-> InvestigationCase:ic WHERE ic.opened_at < before_ts;
   PRINT Cards[Cards.id, Cards.network, Cards.card_type, Cards.n_txn, Cards.first_ts, Cards.last_ts] AS customer_cards;
   PRINT CC[CC.id, CC.card_id, CC.opened_at, CC.outcome, CC.pattern, CC.exposure_usd, CC.n_txns,
            CC.actions_taken, CC.report_filed, CC.analyst_notes] AS closed_cases;

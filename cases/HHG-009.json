@@ -3,7 +3,7 @@
   "case": {
     "status": "closed_fraud",
     "verdict": "fraud",
-    "fraud_probability": 0.6,
+    "fraud_probability": 0.97,
     "pattern": "card_not_present_fraud",
     "pattern_description": "",
     "affected_txn_ids": [
@@ -14,6 +14,14 @@
     "connected_device_profiles": [],
     "exposure_usd": 30.02,
     "evidence": [
+      {
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.799, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3581141)",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
       {
         "claim": "The device profile ( |  |  | ) was already used 5 times on this card before the alert",
         "source": "graph",
@@ -38,7 +46,7 @@
       }
     ],
     "similar_prior_cases": [],
-    "summary": "Customer report on 2016-12-28: $30.02 online transaction 3581141 on card C08299-K1. Verdict: fraud (probability 0.60), pattern card_not_present_fraud. The device profile ( |  |  | ) was already used 5 times on this card before the alert. $30.02 is a typical amount for this card (percentile 30%). Recommended: BLOCK_CARD, CREATE_CASE.",
+    "summary": "This investigation was triggered by customer C08299 reporting an unrecognized $30.02 online purchase for transaction 3581141. Although the amount was typical for the card and the generic device profile had been seen before, the transaction model scored the event at 0.799. Based on the customer's direct denial, the verdict is fraud, matching a card-not-present fraud pattern. The final actions taken are to block the card and create a case.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-009"
   },
@@ -78,8 +86,8 @@
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (the pattern detector) support a defensible decision at probability 0.60; further queries would not change the actions.",
-  "tool_calls": 12,
-  "tokens": 6902,
-  "latency_s": 87.8
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (model) support a defensible decision at probability 0.97; further queries would not change the actions.",
+  "tool_calls": 13,
+  "tokens": 7584,
+  "latency_s": 111.1
 }

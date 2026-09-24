@@ -190,6 +190,12 @@ export interface Metrics {
     cleared_specificity?: number;
     evidence_auc_all?: number | null;
     evidence_auc_score_ge_0_5?: number | null;
+    // v2: AUC of the final probability (and of the transaction model alone) on the backtest's closed cases
+    auc_final_probability?: number | null;
+    auc_final_probability_score_ge_0_5?: number | null;
+    auc_model_only?: number | null;
+    n_score_ge_0_5?: number;
+    headline?: { card_id_rule_match?: number; graph_vs_mirror_parity?: number };
     pattern_confusion?: [string, number][];
     note?: string;
   } | null;
@@ -203,6 +209,26 @@ export interface Metrics {
     avg_latency_s: number;
   } | null;
   rings: { component: string | number; members: string[]; devices: string[]; fraud_cases: string[] }[];
+  model?: ModelReport | null;
+}
+
+// The v2 transaction model's hold-out report (eval/model_report.json), as far as the UI reads it.
+export interface ModelAuc {
+  auc_october_all: number;
+  auc_october_alerts_score_ge_0_5: number;
+}
+
+export interface ModelReport {
+  n_features?: number;
+  validation: ModelAuc & {
+    n_train: number;
+    n_valid: number;
+    fraud_rate_valid: number;
+    n_alerts_score_ge_0_5: number;
+  };
+  validation_without_risk_score?: ModelAuc | null;
+  bank_score: ModelAuc;
+  reliability_october_raw: { bin: string; n: number; predicted: number; observed: number }[];
 }
 
 export interface Api {

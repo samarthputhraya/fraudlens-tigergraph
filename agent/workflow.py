@@ -19,7 +19,7 @@ from agent import roles
 from agent.answer import build_answer, similar_prior_cases, validate
 from agent.assess import ledger, pattern_of, verdict_of
 from agent.core import REPLY_TEXT, amount_of, choose_reply, situation
-from agent.detectors import run_detectors
+from agent.detectors import region_label, run_detectors
 from agent.evidence import P, gather, recall
 from agent.llm import Usage
 from agent.policy import plan, status_of
@@ -33,6 +33,14 @@ PATTERN_QUERY = {
     "out_of_region_use": "card-present use in a billing region the cardholder had no history in",
     "account_takeover": "mixed-channel activity inconsistent with the cardholder; credentials and card data both used",
     "none": "model scored transaction; cardholder confirmed the purchase; alert cleared",
+}
+
+
+SIGNATURE_QUERY = {
+    "structuring": "cardholder reported four online purchases within forty minutes, each just under $500, amounts chosen "
+                   "to stay under a $500 authorization threshold; pattern not matched to a documented typology",
+    "device_ring": "online purchases from a device never seen on this account behind an anonymous proxy; other "
+                   "cardholders reported the same device profile this month; pattern not matched to a documented typology",
 }
 
 
@@ -50,6 +58,18 @@ class State(TypedDict, total=False):
     written: dict
     t0: float
     calls0: int
+
+
+def _lead_clause(text: str) -> str:
+    """A claim's first clause as a sentence: up to its first ';' or '. ' outside brackets (a bracketed list of
+    amounts or a '(..., July-October; October hold-out ...)' aside is never cut in half)."""
+    depth = 0
+    for i, ch in enumerate(text):
+        depth += (ch in "([") - (ch in ")]")
+        if depth == 0 and (ch == ";" or (ch == "." and text[i + 1:i + 2] == " ")):
+            text = text[:i]
+            break
+    return text.rstrip(" .") + "."
 
 
 class Investigator:
@@ -85,6 +105,7 @@ class Investigator:
             return {"lead": {"hypotheses": [], "extra_calls": [], "focus": ""}}
         ep = s["ep"]
         t = {k: ep.txn.get(k) for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email", "r_email")}
+        t["addr1"] = region_label(t["addr1"])
         if not hasattr(self, "_catalog"):
             try:
                 self._catalog = self.g.describe_queries(agent="lead")
@@ -112,7 +133,8 @@ class Investigator:
                     pat = call.get("pattern") or "none"
                     if pat in PATTERN_QUERY:
                         from agent.llm import embed_query
-                        ep.extra[f"similar_{pat}"] = self.g.similar_cases(embed_query(PATTERN_QUERY[pat]), [], [ep.case["card_id"]], 5, pat, agent="precedent")
+                        ep.extra[f"similar_{pat}"] = self.g.similar_cases(embed_query(PATTERN_QUERY[pat]), [], [ep.case["card_id"]], 5, pat,
+                                                                                before=ep.opened_at, agent="precedent")
                 elif tool == "recurring_match":
                     tol = max(0.5, min(5.0, float(call.get("tol_pct") or 2))) / 100 * float(ep.txn["amt"])
                     ep.extra["recurring_wide"] = self.g.recurring_match(ep.case["card_id"], float(ep.txn["amt"]), round(tol, 2), ts, agent="transaction")
@@ -155,7 +177,8 @@ class Investigator:
         findings, facts = run_detectors(ep)
         for f in findings:
             self.emit("finding", {"key": f.key, "claim": f.claim, "lr": f.lr, "family": f.family, "ref": f.ref,
-                                  "entity_ids": f.entity_ids[:8]})
+                                  "entity_ids": f.entity_ids[:8], "in_model": f.in_model,
+                                  **({"model_p": f.data.get("model_p")} if f.key == "model_score" else {})})
         led = ledger(case["trigger_type"], findings, float(ep.txn.get("risk_score") or 0.5))
         verdict0 = verdict_of(led["p"], led, case["trigger_type"])
         pattern0, desc0 = pattern_of(verdict0 if verdict0 != "uncertain" else "fraud", facts, ep.txn)
@@ -212,6 +235,13 @@ class Investigator:
         devices = sorted(r["facts"].get("connected_devices") or ([] if not ep.txn.get("device") else [ep.txn["device"]]))
         recall(ep, self.g, hyp, devices[:3], [ep.case["card_id"]] + sorted(r["facts"].get("connected_cards") or [])[:10], "",
                agent="precedent")
+        if r["pattern"] == "undocumented":
+            # an undocumented pattern is only "matched" by earlier cases with the same signature: search the case memory
+            # restricted to undocumented cases, with the signature itself as the query
+            from agent.llm import embed_query
+            sig = SIGNATURE_QUERY["structuring" if r["facts"].get("structuring") else "device_ring"]
+            ep.extra["similar_undocumented"] = self.g.similar_cases(embed_query(sig), devices[:3], [ep.case["card_id"]], 8,
+                                                                     "undocumented", before=ep.opened_at, agent="precedent")
         self.emit("memory", {"agent": "precedent", "similar": similar_prior_cases(r),
                              "knowledge": [c.get("section") for c in (ep.knowledge or {}).get("chunks", [])]})
         return {}
@@ -321,7 +351,8 @@ class Investigator:
             from agent.llm import embed_query
             focus = (s.get("lead") or {}).get("focus") or ""
             devs = [ep.txn["device"]] if ep.txn.get("device") else []
-            out = self.g.similar_cases(embed_query(memory_query_text(ep, focus)), devs, [ep.case["card_id"]], 6, "", agent="precedent")
+            out = self.g.similar_cases(embed_query(memory_query_text(ep, focus)), devs, [ep.case["card_id"]], 6, "",
+                                       before=ep.opened_at, agent="precedent")
             slim = lambda hs: [{k: h.get(k) for k in ("id", "outcome", "pattern", "exposure_usd", "report_filed", "analyst_notes")} for h in (hs or [])]  # noqa: E731
             return {"graph_filtered": slim(out.get("graph_hits")), "vector": slim(out.get("vector_hits"))[:4],
                     "earlier_investigations": out.get("investigation_hits", [])[:3]}
@@ -334,9 +365,11 @@ class Investigator:
         return {
             "case_id": s["case"]["case_id"], "trigger": s["case"]["trigger_text"], "opened_at": s["case"]["opened_at"],
             "customer_id": s["case"]["customer_id"], "card_id": s["case"]["card_id"],
-            "flagged": {k: ep.txn.get(k) for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email")},
+            "flagged": {k: (region_label(ep.txn.get(k)) if k == "addr1" else ep.txn.get(k))
+                        for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email")},
             "verdict": r["verdict"], "fraud_probability": r["p_final"], "initial_probability": r["ledger"]["p"],
-            "pattern": r["pattern"], "episode": [{k: rows[i].get(k) for k in ("id", "ts", "amt", "channel", "addr1", "device")} for i in r["episode"] if i in rows],
+            "pattern": r["pattern"], "episode": [{k: (region_label(rows[i].get(k)) if k == "addr1" else rows[i].get(k))
+                                                  for k in ("id", "ts", "amt", "channel", "addr1", "device")} for i in r["episode"] if i in rows],
             "exposure_usd": r["exposure"], "connected_cards": sorted(r["facts"].get("connected_cards") or [])[:25],
             "connected_devices": sorted(r["facts"].get("connected_devices") or []),
             "evidence": [{"claim": f.claim, "ref": f.ref} for f in r["findings"]],
@@ -378,7 +411,7 @@ class Investigator:
         summary = (f"{case['trigger_type'].replace('_', ' ').capitalize()} on {t['ts'][:10]}: ${float(t['amt']):,.2f} "
                    f"{t['channel'].replace('_', '-')} transaction {t['id']} on card {case['card_id']}. "
                    f"Verdict: {r['verdict']} (probability {r['p_final']:.2f}), pattern {r['pattern']}. "
-                   + (" ".join(f.claim.split(';')[0] + '.' for f in top) + " " if top else "")
+                   + (" ".join(_lead_clause(f.claim) for f in top) + " " if top else "")
                    + f"Recommended: {acts}.")
         led, reply, p0 = r["ledger"], r.get("reply"), r["ledger"]["p"]
         fams = ", ".join(led["fraud_families"]) or "the pattern detector"

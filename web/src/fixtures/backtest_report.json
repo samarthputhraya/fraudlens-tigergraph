@@ -1,130 +1,133 @@
 {
- "n_cases": 298,
- "n_confirmed": 154,
+ "auc_final_probability": 0.881,
+ "auc_final_probability_score_ge_0_5": 0.957,
+ "auc_model_only": 0.874,
+ "n_cases": 498,
+ "n_confirmed": 354,
  "n_cleared": 144,
- "verdict_accuracy": 0.265,
- "uncertain_share": 0.493,
- "fraud_recall": 0.143,
- "cleared_specificity": 0.125,
- "brier_balanced": 0.425,
- "pattern_accuracy": 0.643,
+ "verdict_accuracy": 0.699,
+ "uncertain_share": 0.365,
+ "fraud_recall": 0.251,
+ "cleared_specificity": 0.917,
+ "brier_balanced": 0.15,
+ "pattern_accuracy": 0.912,
  "pattern_confusion": [
   [
+   "card_not_present_fraud->card_not_present_fraud",
+   96
+  ],
+  [
    "account_takeover->account_takeover",
-   35
+   82
   ],
   [
    "out_of_region_use->out_of_region_use",
-   26
-  ],
-  [
-   "card_not_present_fraud->card_not_present_fraud",
-   24
-  ],
-  [
-   "card_not_present_new_device->card_not_present_fraud",
-   16
+   76
   ],
   [
    "card_not_present_new_device->card_not_present_new_device",
-   14
+   69
   ],
   [
-   "out_of_region_use->account_takeover",
-   11
-  ],
-  [
-   "card_not_present_fraud->card_not_present_new_device",
-   10
+   "card_not_present_new_device->card_not_present_fraud",
+   8
   ],
   [
    "account_takeover->out_of_region_use",
-   4
+   6
   ],
   [
-   "card_not_present_fraud->undocumented",
-   3
-  ],
-  [
-   "card_not_present_new_device->undocumented",
-   2
-  ],
-  [
-   "account_takeover->undocumented",
-   2
+   "out_of_region_use->account_takeover",
+   5
   ],
   [
    "account_takeover->card_not_present_fraud",
+   4
+  ],
+  [
+   "card_testing->card_not_present_fraud",
+   3
+  ],
+  [
+   "card_not_present_fraud->card_not_present_new_device",
    2
+  ],
+  [
+   "account_takeover->card_not_present_new_device",
+   2
+  ],
+  [
+   "card_testing->card_not_present_new_device",
+   1
   ]
  ],
- "episode_jaccard": 0.821,
- "exposure_mae": 144.08,
- "sar_agreement": 0.792,
+ "episode_jaccard": 0.82,
+ "exposure_mae": 165.83,
+ "sar_agreement": 0.814,
  "reliability": [
   {
    "bin": "0.0-0.1",
-   "predicted": 0.045,
-   "observed": 1.0,
-   "n": 46
+   "predicted": 0.043,
+   "observed": 0.343,
+   "n": 172
   },
   {
    "bin": "0.1-0.2",
-   "predicted": 0.154,
-   "observed": 0.912,
-   "n": 34
+   "predicted": 0.131,
+   "observed": 0.696,
+   "n": 23
   },
   {
    "bin": "0.2-0.3",
-   "predicted": 0.237,
-   "observed": 0.531,
+   "predicted": 0.226,
+   "observed": 0.625,
    "n": 32
   },
   {
    "bin": "0.3-0.4",
-   "predicted": 0.33,
-   "observed": 0.314,
-   "n": 35
+   "predicted": 0.341,
+   "observed": 0.667,
+   "n": 9
   },
   {
    "bin": "0.4-0.5",
-   "predicted": 0.444,
-   "observed": 0.245,
-   "n": 53
+   "predicted": 0.474,
+   "observed": 0.75,
+   "n": 16
   },
   {
    "bin": "0.5-0.6",
-   "predicted": 0.545,
-   "observed": 0.098,
-   "n": 41
+   "predicted": 0.549,
+   "observed": 0.833,
+   "n": 12
   },
   {
    "bin": "0.6-0.7",
-   "predicted": 0.652,
-   "observed": 0.647,
-   "n": 17
+   "predicted": 0.638,
+   "observed": 0.917,
+   "n": 24
   },
   {
    "bin": "0.7-0.8",
-   "predicted": 0.745,
-   "observed": 0.625,
-   "n": 8
+   "predicted": 0.727,
+   "observed": 0.979,
+   "n": 47
   },
   {
    "bin": "0.8-0.9",
-   "predicted": 0.851,
-   "observed": 0.9,
-   "n": 10
+   "predicted": 0.82,
+   "observed": 1.0,
+   "n": 99
   },
   {
    "bin": "0.9-1.0",
-   "predicted": 0.953,
-   "observed": 0.333,
-   "n": 24
+   "predicted": 0.952,
+   "observed": 1.0,
+   "n": 64
   }
  ],
- "evidence_auc_all": 0.552,
- "evidence_auc_score_ge_0_5": 0.549,
- "n_score_ge_0_5": 214,
+ "evidence_auc_all": 0.619,
+ "evidence_auc_score_ge_0_5": 0.626,
+ "n_score_ge_0_5": 309,
  "note": "Closed history is selection-biased: every cleared case is a high-score model alert and most confirmed cases came from low-score customer reports, so raw verdict accuracy/Brier here are not meaningful. evidence_auc_* measures how well graph evidence alone (excluding the score prior) separates fraud from false alarms."
 }

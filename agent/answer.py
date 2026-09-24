@@ -18,6 +18,13 @@ def similar_prior_cases(r: dict) -> list[str]:
     """Closed-case IDs actually retrieved and used as memory, strongest first."""
     out: list[str] = []
     f = r["facts"]
+    if r["pattern"] == "undocumented":
+        # same-signature undocumented cases first (structuring: "just under $500"; device ring: the same device profile)
+        und = (r["ep"].extra or {}).get("similar_undocumented") or {}
+        key = "under $500" if f.get("structuring") else "same device profile"
+        for hit in (und.get("graph_hits") or []) + (und.get("vector_hits") or []):
+            if key in (hit.get("analyst_notes") or ""):
+                out.append(hit["id"])
     for c in f.get("account_prior_fraud", []) or []:
         out.append(c)
     for c in f.get("ring_fraud_cases", []) or []:

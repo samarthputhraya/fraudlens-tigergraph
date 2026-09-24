@@ -5,6 +5,7 @@ Usage:
   python graph/setup.py load          # load all CSVs from data/prep/load (chunked, resumable)
   python graph/setup.py queries       # create + install all queries in graph/queries/
   python graph/setup.py stats         # vertex/edge counts
+  python graph/setup.py reset_memory --yes   # delete agent-written case memory before an official run
 """
 from __future__ import annotations
 
@@ -152,6 +153,42 @@ def cmd_describe() -> None:
             print(f"  description for {name} not set: {e}")
 
 
+def cmd_scores() -> None:
+    """v2: put the transaction model's calibrated fraud probability on every scored Transaction vertex
+    (adds the `model_p` attribute once, then upserts October-December scores from ml/train.py)."""
+    import pandas as pd
+    c = conn()
+    attrs = [a["AttributeName"] for a in retry(lambda: c.getVertexType("Transaction"))["Attributes"]]
+    if "model_p" not in attrs:
+        print("-- schema change: Transaction.model_p")
+        show(gsql((ROOT / "graph" / "schema_model_score.gsql").read_text(encoding="utf-8")))
+    sc = pd.read_parquet(ROOT / "data" / "prep" / "model_scores.parquet")
+    rows = [(str(int(t)), {"model_p": round(float(v), 6)}) for t, v in zip(sc.TransactionID, sc.p_cal)]
+    t0 = time.time()
+    for i in range(0, len(rows), 5000):
+        part = rows[i:i + 5000]
+        retry(lambda: c.upsertVertices("Transaction", part))
+        if i % 50000 == 0:
+            print(f"  model scores {i + len(part):,}/{len(rows):,} ({time.time() - t0:.0f}s)")
+    print(f"model_p loaded on {len(rows):,} transactions in {time.time() - t0:.0f}s")
+
+
+# vertex types written only by the agent's case writer (agent/case_writer.py); the bank's data is never touched
+AGENT_MEMORY = ("InvestigationCase", "EvidenceRequest", "ActionRecord")
+
+
+def cmd_reset_memory() -> None:
+    """Delete the case memory the agent wrote (InvestigationCase, EvidenceRequest, ActionRecord and their edges) so an
+    official run rebuilds it in opened_at order: upserting over an older run would leave its edges and records behind."""
+    c = conn()
+    print("agent-written case memory:", {t: retry(lambda t=t: c.getVertexCount(t)) for t in AGENT_MEMORY})
+    if "--yes" not in sys.argv:
+        print("nothing deleted: add --yes to delete these vertices")
+        return
+    for t in AGENT_MEMORY:
+        print(f"  deleted {retry(lambda t=t: c.delVertices(t)):,} {t}")
+
+
 def cmd_stats() -> None:
     c = conn()
     print("vertices:", json.dumps(retry(lambda: c.getVertexCount("*")), indent=1))
@@ -162,4 +199,5 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "stats"
     rest = sys.argv[2:] or None
     {"schema": cmd_schema, "load": lambda: cmd_load(rest), "queries": lambda: cmd_queries(rest),
-     "vectors": cmd_vectors, "describe": cmd_describe, "stats": cmd_stats}[cmd]()
+     "vectors": cmd_vectors, "describe": cmd_describe, "stats": cmd_stats, "scores": cmd_scores,
+     "reset_memory": cmd_reset_memory}[cmd]()

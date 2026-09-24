@@ -1,18 +1,16 @@
 {
   "case_id": "HHG-013",
   "case": {
-    "status": "open",
-    "verdict": "uncertain",
-    "fraud_probability": 0.51,
-    "pattern": "card_not_present_new_device",
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
     "pattern_description": "",
-    "affected_txn_ids": [
-      "3526826"
-    ],
-    "first_suspicious_txn_id": "3526826",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
     "connected_card_ids": [],
     "connected_device_profiles": [],
-    "exposure_usd": 35.66,
+    "exposure_usd": 0.0,
     "evidence": [
       {
         "claim": "This card is used almost only in person (21 of 1431 earlier transactions online); this purchase is online",
@@ -33,32 +31,40 @@
       {
         "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-3761; latest note: \"Case CC-3761: model scored a $3,891.01 transaction at 0.89. Cardholder confirmed the purchase. Amount unusual for this customer but consiste\")",
         "source": "graph",
-        "ref": "query:prior_cases(card=C07671-K2)",
+        "ref": "query:prior_cases(card=C07671-K2, before_ts=2016-12-09 05:39:29)",
         "entity_ids": [
           "CC-3761"
         ]
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3216 (confirmed_fraud, card_not_present_new_device); CC-3356 (confirmed_fraud, card_not_present_new_device); CC-0948 (confirmed_fraud, card_not_present_new_device); CC-1335 (confirmed_fraud, card_not_present_new_device)",
+        "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.017, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
         "source": "graph",
-        "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=8, pattern=)",
+        "ref": "query:txn_context(txn=3526826)",
         "entity_ids": [
-          "CC-3216",
-          "CC-3356",
-          "CC-0948",
-          "CC-1335",
-          "CC-3552",
-          "CC-3353"
+          "3526826"
         ]
       },
       {
-        "claim": "Fraud Policy rules applied to this case: R1, R4 (retrieved from the policy knowledge graph via GraphRAG)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3216 (confirmed_fraud, card_not_present_new_device); CC-1475 (confirmed_fraud, account_takeover); CC-4294 (confirmed_fraud, account_takeover); CC-3761 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=8, pattern=, before_ts=2016-12-09 05:39:29)",
+        "entity_ids": [
+          "CC-3216",
+          "CC-1475",
+          "CC-4294",
+          "CC-3761",
+          "CC-0260",
+          "CC-3465"
+        ]
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
         "source": "document",
-        "ref": "document:Fraud Policy v1.0 section 3 R1/R4",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
         "entity_ids": []
       },
       {
-        "claim": "Step-up authentication (simulated, assumption stated in evidence_requests): No reply from the cardholder within 24 hours of the verification request",
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed the purchase was made from their own new device",
         "source": "customer",
         "ref": "evidence_request:1",
         "entity_ids": [
@@ -68,23 +74,23 @@
     ],
     "similar_prior_cases": [
       "CC-3216",
-      "CC-3356",
-      "CC-0948",
-      "CC-1335",
-      "CC-3552",
-      "CC-3353",
-      "CC-2246",
-      "CC-3761"
+      "CC-1475",
+      "CC-4294",
+      "CC-3761",
+      "CC-0260",
+      "CC-3465",
+      "CC-0635",
+      "CC-1660"
     ],
-    "summary": "The investigation was triggered when the real-time model scored a $35.66 online transaction (3526826) at 0.76. Evidence shows the purchase came from a new device profile, which is anomalous given the card is almost exclusively used in person. A step-up authentication request was sent, but the cardholder did not reply within 24 hours. Due to the lack of confirmation, the verdict is uncertain with a 51 percent fraud probability for a card-not-present new device pattern. The case remains open, and the final actions are to decline the transaction and monitor the card.",
+    "summary": "This investigation was triggered when the real-time risk score flagged online transaction 3526826 for $35.66 at 0.76. While the purchase was made using a generic new device profile on a card typically used in person, the transaction model scored the event at a low 0.017. The cardholder was contacted and confirmed the purchase was legitimate and made from their own new device. Therefore, the verdict is legitimate with no fraud pattern identified. The final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-013"
   },
   "evidence_requests": [
     {
-      "type": "step_up_auth",
-      "asked_after_step": 9,
-      "assumed_response": "No reply from the cardholder within 24 hours of the verification request"
+      "type": "customer_validation",
+      "asked_after_step": 10,
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device"
     }
   ],
   "next_best_actions": {
@@ -92,43 +98,38 @@
       {
         "action": "CREATE_CASE",
         "route": "auto",
-        "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+        "reason": "Section 3a: evidence is being requested"
       },
       {
-        "action": "DECLINE_TRANSACTION",
-        "route": "L1",
-        "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.51)"
-      },
-      {
-        "action": "STEP_UP_AUTH",
+        "action": "VERIFY_WITH_CUSTOMER",
         "route": "auto",
-        "reason": "R1: single signal (probability 0.51 < 0.70); verify before any block"
+        "reason": "R1: single signal (probability 0.03 < 0.70); verify before any block"
       }
     ],
     "final": [
       {
-        "action": "MONITOR_CARD",
+        "action": "ALLOW_TRANSACTION",
         "route": "auto",
-        "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+        "reason": "R3: the cardholder confirmed the transaction"
       },
       {
-        "action": "DECLINE_TRANSACTION",
-        "route": "L1",
-        "reason": "R4: decline the pending authorisation"
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
       }
     ],
-    "what_changed": "No reply within 24 hours left the alert unresolved at probability 0.51; R4 replaces verification with MONITOR_CARD, DECLINE_TRANSACTION."
+    "what_changed": "The assumed customer response (\"Cardholder confirmed the purchase was made from their own new device\") settled the alert: probability fell from 0.03 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
   },
   "sar": {
     "file": false,
-    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
+    "reason": "Section 3a: no report required - the activity is legitimate.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "Section 6: further automated steps are unlikely to change the decision without the cardholder's reply; the card is monitored for 72 hours and the case stays open.",
-  "tool_calls": 12,
-  "tokens": 7481,
-  "latency_s": 32.3
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 13,
+  "tokens": 8822,
+  "latency_s": 100.1
 }

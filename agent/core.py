@@ -10,7 +10,7 @@ from datetime import timedelta
 from typing import Any, Callable
 
 from agent.assess import ledger, pattern_of, verdict_of
-from agent.detectors import Finding, run_detectors
+from agent.detectors import Finding, region_label, run_detectors
 from agent.evidence import EvidencePack, P, gather
 from agent.policy import Situation, plan, sar_required, status_of
 
@@ -34,7 +34,7 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
         shared_desc = f"{kind} {val}"
     explanation = ""
     if not facts["online"]:
-        explanation = f"cardholder confirmed they made the purchase in billing region {t.get('addr1')} (travel / local purchase)"
+        explanation = f"cardholder confirmed they made the purchase in billing region {region_label(t.get('addr1'))} (travel / local purchase)"
     elif facts.get("new_device"):
         explanation = "cardholder confirmed the purchase was made from their own new device"
     elif facts.get("amount_anomaly"):

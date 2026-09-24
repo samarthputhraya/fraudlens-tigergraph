@@ -13,7 +13,8 @@ CREATE SCHEMA_CHANGE JOB build_fraud_schema FOR GRAPH Fraud {
                    c1 DOUBLE, c2 DOUBLE, c5 DOUBLE, c6 DOUBLE, c9 DOUBLE, c11 DOUBLE, c13 DOUBLE, c14 DOUBLE,
                    d1 DOUBLE, d2 DOUBLE, d3 DOUBLE, d4 DOUBLE, d10 DOUBLE, d15 DOUBLE,
                    v258 DOUBLE, v257 DOUBLE, v294 DOUBLE, v283 DOUBLE, v317 DOUBLE, v307 DOUBLE,
-                   v127 DOUBLE, v133 DOUBLE, v70 DOUBLE, v91 DOUBLE) WITH primary_id_as_attribute="true";
+                   v127 DOUBLE, v133 DOUBLE, v70 DOUBLE, v91 DOUBLE,
+                   model_p DOUBLE DEFAULT -1) WITH primary_id_as_attribute="true";
   // Resolved cardholder account behind an anonymised card: card + billing region + account-open day (from D1).
   ADD VERTEX Account (PRIMARY_ID id STRING, card_id STRING, addr1 STRING, open_day INT, n_txn INT,
                    first_ts DATETIME, last_ts DATETIME) WITH primary_id_as_attribute="true";

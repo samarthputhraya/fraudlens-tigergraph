@@ -1,5 +1,184 @@
 [
  {
+  "device": "MacOS | Mac OS X 10_9_5 | chrome 66.0 | 1280x800",
+  "customers": 6,
+  "all_time_cards": 6,
+  "kind": "model",
+  "members": [
+   "C02222-K1",
+   "C06224-K2",
+   "C07146-K1",
+   "C12418-K1",
+   "C13190-K2",
+   "C13303-K1"
+  ],
+  "model_scored_txns": 10
+ },
+ {
+  "device": "Windows | Windows 10 | comodo | 1920x1080",
+  "customers": 3,
+  "all_time_cards": 4,
+  "kind": "model",
+  "members": [
+   "C03598-K2",
+   "C04517-K1",
+   "C09900-K1"
+  ],
+  "model_scored_txns": 3
+ },
+ {
+  "device": "rv:59.0 | Mac OS X 10.12 | firefox 59.0 | 2560x1440",
+  "customers": 5,
+  "all_time_cards": 7,
+  "kind": "model",
+  "members": [
+   "C05342-K1",
+   "C07687-K1",
+   "C10287-K1",
+   "C11244-K1",
+   "C12552-K1"
+  ],
+  "model_scored_txns": 5
+ },
+ {
+  "device": "Windows | Windows 10 | edge 15.0 | 1365x768",
+  "customers": 3,
+  "all_time_cards": 5,
+  "kind": "model",
+  "members": [
+   "C04125-K2",
+   "C08226-K1",
+   "C12690-K2"
+  ],
+  "model_scored_txns": 6
+ },
+ {
+  "device": "VS425PP Build/LMY47V | Android 5.1.1 | chrome generic | 855x480",
+  "customers": 3,
+  "all_time_cards": 4,
+  "kind": "model",
+  "members": [
+   "C02265-K1",
+   "C02826-K1",
+   "C10326-K1"
+  ],
+  "model_scored_txns": 4
+ },
+ {
+  "device": "Windows | Windows 7 | chrome 60.0 | 2112x1188",
+  "customers": 3,
+  "all_time_cards": 3,
+  "kind": "model",
+  "members": [
+   "C05116-K1",
+   "C06532-K2",
+   "C13037-K1"
+  ],
+  "model_scored_txns": 3
+ },
+ {
+  "device": "Alcatel_5044R Build/NRD90M | Android 7.0 | chrome 66.0 for android | 855x480",
+  "customers": 3,
+  "all_time_cards": 3,
+  "kind": "model",
+  "members": [
+   "C00750-K2",
+   "C04108-K2",
+   "C05128-K1"
+  ],
+  "model_scored_txns": 3
+ },
+ {
+  "device": "MacOS | Mac | safari generic | 1366x768",
+  "customers": 3,
+  "all_time_cards": 8,
+  "kind": "model",
+  "members": [
+   "C01155-K2",
+   "C06544-K1",
+   "C08804-K1"
+  ],
+  "model_scored_txns": 3
+ },
+ {
+  "device": "SAMSUNG SM-G965U Build/R16NW | Android 8.0.0 | samsung browser 7.0 | 2220x1081",
+  "customers": 4,
+  "all_time_cards": 6,
+  "kind": "model",
+  "members": [
+   "C05416-K1",
+   "C08450-K2",
+   "C11000-K2",
+   "C11923-K2"
+  ],
+  "model_scored_txns": 5
+ },
+ {
+  "device": "FRD-L09 Build/HUAWEIFRD-L09 | Android 7.0 | chrome 66.0 for android | 1920x1080",
+  "customers": 6,
+  "all_time_cards": 8,
+  "kind": "model",
+  "members": [
+   "C02575-K2",
+   "C05402-K1",
+   "C06343-K1",
+   "C08893-K1",
+   "C09165-K2",
+   "C13284-K1"
+  ],
+  "model_scored_txns": 7
+ },
+ {
+  "device": "iOS Device | iOS 11.0.3 | mobile safari generic | 2001x1125",
+  "customers": 3,
+  "all_time_cards": 9,
+  "kind": "model",
+  "members": [
+   "C04984-K2",
+   "C10553-K1",
+   "C12230-K1"
+  ],
+  "model_scored_txns": 3
+ },
+ {
+  "device": "rv:59.0 | Windows 10 | firefox 59.0 | 1366x767",
+  "customers": 3,
+  "all_time_cards": 3,
+  "kind": "model",
+  "members": [
+   "C06224-K2",
+   "C08918-K2",
+   "C12838-K1"
+  ],
+  "model_scored_txns": 4
+ },
+ {
+  "device": "Windows | other | chrome 61.0 | 1280x720",
+  "customers": 5,
+  "all_time_cards": 5,
+  "kind": "model",
+  "members": [
+   "C01104-K2",
+   "C01983-K1",
+   "C06224-K2",
+   "C07987-K2",
+   "C11309-K1"
+  ],
+  "model_scored_txns": 5
+ },
+ {
+  "device": "MacOS | Mac OS X 10_10_5 | safari 10.0 | 1280x800",
+  "customers": 3,
+  "all_time_cards": 10,
+  "kind": "model",
+  "members": [
+   "C03784-K1",
+   "C10020-K1",
+   "C10398-K1"
+  ],
+  "model_scored_txns": 5
+ },
+ {
   "device": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
   "customers": 28,
   "all_time_cards": 52,
@@ -33,12 +212,6 @@
    "C12796-K1",
    "C13291-K1",
    "C13487-K1"
-  ],
-  "device_cases": [
-   "CC-2649",
-   "CC-2971",
-   "CC-2985",
-   "CC-3035"
   ]
  },
  {
@@ -127,10 +300,6 @@
    "C12897-K1",
    "C12961-K2",
    "C13153-K1"
-  ],
-  "device_cases": [
-   "CC-0487",
-   "CC-1447"
   ]
  },
  {
@@ -277,18 +446,6 @@
    "C13067-K1",
    "C13086-K2",
    "C13264-K2"
-  ],
-  "device_cases": [
-   "CC-0026",
-   "CC-0781",
-   "CC-0796",
-   "CC-0846",
-   "CC-0851",
-   "CC-0881",
-   "CC-0906",
-   "CC-0963",
-   "CC-0964",
-   "CC-0979"
   ]
  },
  {
@@ -433,7 +590,6 @@
    "C13058-K2",
    "C13245-K1",
    "C13328-K1"
-  ],
-  "device_cases": []
+  ]
  }
 ]

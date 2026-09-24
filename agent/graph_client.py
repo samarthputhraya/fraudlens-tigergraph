@@ -72,6 +72,10 @@ def fmt_ts(ts: datetime | str) -> str:
     return ts if isinstance(ts, str) else ts.strftime("%Y-%m-%d %H:%M:%S")
 
 
+# as-of bound for case-memory queries called outside an investigation (the UI, ad-hoc re-proves): all memory visible
+AS_OF_NOW = "2100-01-01 00:00:00"
+
+
 def local_query_descriptions() -> dict[str, str]:
     import re
     out = {}
@@ -268,8 +272,9 @@ class GraphClient:
         return self.run("region_activity", {"region": region, "start_ts": fmt_ts(start), "end_ts": fmt_ts(end),
                                             "max_cards": max_cards}, **kw)
 
-    def prior_cases(self, card_id: str, **kw) -> dict:
-        return self.run("prior_cases", {"card": card_id}, **kw)
+    def prior_cases(self, card_id: str, before=None, **kw) -> dict:
+        # case memory is as-of: investigations opened at or after `before` (the case's open time) are invisible
+        return self.run("prior_cases", {"card": card_id, "before_ts": fmt_ts(before) if before else AS_OF_NOW}, **kw)
 
     def account_history(self, txn_id: str, lookback_days: int = 200, **kw) -> dict:
         out = self.run("account_history", {"txn": txn_id, "lookback_days": lookback_days}, **kw)
@@ -278,9 +283,9 @@ class GraphClient:
         return out
 
     def similar_cases(self, qv: list[float], devices: list[str], cards: list[str], k: int = 8,
-                      pattern: str = "", **kw) -> dict:
-        return self.run("similar_cases", {"qv": qv, "devices": devices, "cards": cards, "k": k,
-                                          "pattern": pattern}, **kw)
+                      pattern: str = "", before=None, **kw) -> dict:
+        return self.run("similar_cases", {"qv": qv, "devices": devices, "cards": cards, "k": k, "pattern": pattern,
+                                          "before_ts": fmt_ts(before) if before else AS_OF_NOW}, **kw)
 
     def search_knowledge(self, qv: list[float], k: int = 6, **kw) -> dict:
         return self.run("search_knowledge", {"qv": qv, "k": k}, **kw)
@@ -297,6 +302,10 @@ class GraphClient:
     def card_testing_scan(self, start, end, small: float = 5.0, min_n: int = 3, **kw) -> list[dict]:
         return self.run("card_testing_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "small": small,
                                               "min_n": min_n}, **kw).get("cards", [])
+
+    def model_ring_scan(self, start, end, min_p: float = 0.6, min_customers: int = 3, max_cards_all: int = 12, **kw) -> list[dict]:
+        return self.run("model_ring_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "min_p": min_p,
+                                            "min_customers": min_customers, "max_cards_all": max_cards_all}, **kw).get("devices", [])
 
     def alert_scan(self, start, end, min_score: float = 0.85, max_n: int = 500, **kw) -> list[dict]:
         return self.run("alert_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "min_score": min_score,

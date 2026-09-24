@@ -85,7 +85,7 @@ def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
         ep.refs["region"] = _ref(g, n)
 
     n = len(g.trace.calls)
-    ep.prior = g.prior_cases(card_id, agent=an.get("prior", "precedent"))
+    ep.prior = g.prior_cases(card_id, opened, agent=an.get("prior", "precedent"))
     ep.refs["prior"] = _ref(g, n)
     return ep
 
@@ -102,7 +102,7 @@ def recall(ep: EvidencePack, g: Any, hypothesis: str, devices: list[str], cards:
     """Hybrid GraphRAG: case memory (vector + graph-filtered) and policy/typology knowledge."""
     qv = embed_query(memory_query_text(ep, hypothesis))
     n = len(g.trace.calls)
-    ep.memory = g.similar_cases(qv, devices, cards, 8, pattern, agent=agent)
+    ep.memory = g.similar_cases(qv, devices, cards, 8, pattern, before=ep.opened_at, agent=agent)
     ep.refs["memory"] = _ref(g, n)
     n = len(g.trace.calls)
     ep.knowledge = g.search_knowledge(embed_query(hypothesis or memory_query_text(ep)), 6, agent=agent)

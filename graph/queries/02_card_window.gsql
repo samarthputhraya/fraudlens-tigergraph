@@ -6,5 +6,5 @@ CREATE OR REPLACE QUERY card_window(VERTEX<Card> card, DATETIME start_ts, DATETI
   D = SELECT t FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
       ACCUM t.@device = d.id, t.@new_flag = e.dev_new, t.@proxy_type = e.proxy_type;
   PRINT T[T.id, T.ts, T.amt, T.product, T.channel, T.risk_score, T.addr1, T.p_email, T.r_email, T.dist1,
-          T.m4, T.m6, T.m123, T.m789, T.c1, T.c13, T.d1, T.d15, T.@device, T.@new_flag, T.@proxy_type] AS txns;
+          T.m4, T.m6, T.m123, T.m789, T.c1, T.c13, T.d1, T.d15, T.@device, T.@new_flag, T.@proxy_type, T.model_p] AS txns;
 }

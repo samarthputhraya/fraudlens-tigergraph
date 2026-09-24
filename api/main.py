@@ -206,13 +206,14 @@ def _approval_store() -> dict:
 
 @app.get("/api/approvals")
 def approvals():
+    from agent.case_writer import graph_case_id
     store = _approval_store()
     out = []
     for r in _pack():
         a = _answer(r["case_id"])
         if not a:
             continue
-        gid = a["case"].get("graph_case_id") or f"CASE-2016-{r['case_id'].split('-')[-1]}"
+        gid = a["case"].get("graph_case_id") or graph_case_id(r["case_id"])
         for i, act in enumerate(a["next_best_actions"]["final"], 1):
             if act["route"] == "auto":
                 continue
@@ -297,7 +298,7 @@ def reprove(body: Reprove):
                   "recurring_match": lambda p: {"matches": g.recurring_match(p["card"], float(p["amt"]), float(p["tol"]), p["before_ts"])},
                   "device_neighbors": lambda p: g.device_neighbors(p["dev"], p["start_ts"], p["end_ts"]),
                   "account_history": lambda p: g.account_history(p["txn"], int(p.get("lookback_days", 200))),
-                  "prior_cases": lambda p: g.prior_cases(p["card"]),
+                  "prior_cases": lambda p: g.prior_cases(p["card"], p.get("before_ts")),
                   "region_activity": lambda p: g.region_activity(p["region"], p["start_ts"], p["end_ts"])}[name]
             out = fn(params)
             via = "mirror"
@@ -373,15 +374,19 @@ def metrics():
     rings_path = ROOT / "runs" / "rings.json"
     rings = []
     for r in (json.loads(rings_path.read_text()) if rings_path.exists() else []):
+        if r.get("new_share") is not None and r["new_share"] < 0.6:
+            continue  # a WCC component held together by a common profile, not a ring (R6 needs the device New on most uses)
         rings.append({"component": r.get("wcc_id") or r.get("component") or (r.get("device") or "")[:40],
                       "members": r.get("members", []),
                       "devices": r.get("devices") or ([r["device"]] if r.get("device") else []),
                       "fraud_cases": r.get("device_cases") or r.get("fraud_cases_on_device") or []})
     rings.sort(key=lambda r: -len(r["members"]))
+    model_rep = ROOT / "eval" / "model_report.json"
+    model = json.loads(model_rep.read_text(encoding="utf-8")) if model_rep.exists() else None
     return {"backtest": backtest, "portfolio": {"verdicts": verdicts, "patterns": patterns, "sar_filed": sar,
                                                 "total_exposure": round(exp, 2), "avg_tool_calls": round(calls / max(n, 1), 1),
                                                 "avg_tokens": round(toks / max(n, 1)), "avg_latency_s": round(lat / max(n, 1), 1)},
-            "rings": rings}
+            "rings": rings, "model": model}
 
 
 STATIC = ROOT / "api" / "static"

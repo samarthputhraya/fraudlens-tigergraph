@@ -2,7 +2,7 @@
   "case_id": "HHG-004",
   "events": [
     {
-      "t": 1790184635.87,
+      "t": 1790262337.28,
       "kind": "trigger",
       "case_id": "HHG-004",
       "trigger_type": "customer_report",
@@ -10,92 +10,105 @@
       "opened_at": "2016-12-29 07:53:54"
     },
     {
-      "t": 1790184635.87,
+      "t": 1790262337.28,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1790184704.9,
+      "t": 1790262342.26,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
-        "The transaction is unauthorized (Account Takeover or Card Present/Not Present fraud) using a generic browser profile.",
-        "The transaction is a legitimate recurring charge or subscription that the customer has forgotten or failed to recognize.",
-        "The transaction is legitimate and associated with the customer's recent travel or change in purchasing behavior, similar to the previous false alarm in case CC-0696."
+        "Account Takeover (ATO) or Card-Not-Present (CNP) fraud by an unauthorized third party using a new device.",
+        "Legitimate transaction made by the cardholder or a family member that was forgotten or unrecognized.",
+        "An unauthorized recurring subscription or billing error that the customer does not recognize as a valid charge."
       ],
       "calls": [
         {
           "tool": "card_window",
-          "why": "To examine the card's full transaction history around the flagged date to identify other suspicious activities, velocity, or changes in purchasing patterns.",
+          "why": "To examine the card's full transaction history around the flagged event for other unrecognized charges or patterns of compromise.",
           "days_back": 30
         },
         {
           "tool": "recurring_match",
-          "why": "To check if there are prior transactions of a similar amount ($128.33) on this card, which would suggest an overlooked recurring subscription.",
+          "why": "To check if there are prior transactions of a similar amount on this card, which would suggest a recurring subscription or billing agreement.",
           "tol_pct": 1.0
         }
       ]
     },
     {
-      "t": 1790184706.54,
+      "t": 1790262344.21,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.78,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
-      "assessment": "The customer has disputed transaction 3583227 ($128.33), which was conducted using a new, generic device profile. While the transaction amount is within the card's historical baseline (max $138.89), the sudden appearance of new device signatures (including transaction 3580804 a day prior) and historical rapid-fire transaction bursts in early December suggest potential card compromise.",
+      "assessment": "The customer C08106 has explicitly disputed transaction 3583227 ($128.33), which was conducted using a 'New' generic device profile and a hotmail.com email address. Although the transaction amount is within the historical baseline maximum of $138.89, the change in device and email signature supports the customer's claim of unauthorized activity.",
       "key_points": [
-        "Customer C08106 explicitly disputed transaction 3583227 ($128.33) as unauthorized.",
-        "The disputed transaction was executed via a new, generic device signature (' |  | firefox 47.0 | ') with d1=0 and d15=0, indicating a fresh session.",
-        "A previous transaction 3580804 ($92.86) on 2016-12-28 also utilized a new device signature ('Windows |  | chrome 66.0 | ') and may also be unauthorized.",
-        "Historical patterns from 2016-12-07 show rapid-velocity bursts of similar amounts (e.g., 3521159, 3521199, 3521219, 3521229, 3521237) within minutes of each other, indicating a history of high-velocity card usage."
+        "Customer C08106 reported transaction 3583227 ($128.33) as unauthorized.",
+        "Transaction 3583227 was executed on 2016-12-29 using a 'New' generic device profile (' |  | firefox 47.0 | ') and a hotmail.com email.",
+        "A prior transaction 3580804 ($92.86) on 2016-12-28 also utilized a 'New' device profile ('Windows |  | chrome 66.0 | ') and a different email (gmail.com), indicating potential escalating unauthorized access."
       ]
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.78,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
-      "assessment": "Customer C08106 reported an unauthorized transaction of $128.33 (transaction 3583227) on card C08106-K1. The transaction was initiated from a generic desktop browser profile (' |  | firefox 47.0 | ') flagged as a New device for this account, which has a very short history of only two transactions on 2016-12-29.",
+      "assessment": "Customer C08106 has disputed transaction 3583227, stating they did not authorize the $128.33 purchase. The transaction was conducted via a generic browser signature flagged as a 'New' device that has never been seen on card C08106-K1. Given the direct customer dispute and the unrecognized device access, this transaction is highly likely to be fraudulent.",
       "key_points": [
-        "Customer C08106 disputed transaction 3583227 for $128.33 on card C08106-K1.",
-        "The transaction was conducted using a generic browser profile (' |  | firefox 47.0 | ') that was registered as a New device.",
-        "The account C08106-K1||180 has a limited history of only 2 transactions, both occurring on 2016-12-29."
+        "Customer C08106 reported transaction 3583227 ($128.33) as unauthorized.",
+        "The transaction utilized a generic device profile (' |  | firefox 47.0 | ') which was flagged as 'New' and has a device_seen_on_card count of 0.",
+        "The card account C08106-K1 has a very brief history of only 2 transactions, both occurring on 2016-12-29."
       ]
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.78,
       "kind": "specialist",
       "agent": "network",
       "risk": "high",
-      "assessment": "Customer C08106 reported transaction 3583227 ($128.33) on card C08106-K1 as unauthorized. The transaction was conducted via a device flagged as 'New' that is shared with 6 different cards all-time, indicating a high likelihood of coordinated fraud or a shared device ring.",
+      "assessment": "Customer C08106 reported transaction 3583227 as unauthorized, confirming fraud on card C08106-K1. The transaction was executed on a device marked as 'New' for this customer, which is linked to 6 different cards in total. This suggests a card-not-present fraud pattern utilizing a device associated with multiple accounts.",
       "key_points": [
-        "Customer C08106 disputed transaction 3583227 on card C08106-K1 as unauthorized.",
-        "The transaction was executed on a device flagged as 'New' for this customer.",
-        "The device profile is linked to 6 different cards all-time, suggesting a shared device network."
+        "Customer C08106 disputed transaction 3583227 ($128.33) on card C08106-K1, confirming unauthorized activity.",
+        "The transaction was completed using a 'New' device profile for this customer.",
+        "The device neighbor data shows the device has been associated with 6 cards all-time, indicating potential multi-card abuse or a shared device profile."
       ]
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.78,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "Customer C08106 has a recurring history of card_not_present_fraud disputes, with three prior cases confirmed as fraudulent on card C08106-K1. The current dispute regarding transaction 3583227 for $128.33 strongly aligns with this established pattern of unauthorized online activity. Immediate investigation and card restriction are warranted given the high likelihood of continued compromise.",
+      "assessment": "Customer C08106 has reported an unrecognized transaction of $128.33 (ID 3583227). The customer has a significant history of card-not-present fraud on card C08106-K1, with three prior cases confirmed as fraud. This pattern strongly suggests the customer's card details have been compromised again.",
       "key_points": [
-        "Customer C08106 has three prior confirmed fraud cases (CC-1736, CC-2121, and CC-3778) totaling $171.00 in exposure, all classified as card_not_present_fraud.",
-        "One prior case (CC-0696) was cleared after the customer confirmed travel to the billing region.",
-        "Despite analyst notes in CC-1736, CC-2121, and CC-3778 stating the card was blocked and reissued, the same card ID C08106-K1 is linked to all historical disputes and the current alert."
+        "Customer C08106 has three prior confirmed fraud cases (CC-1736, CC-2121, and CC-3778) on card C08106-K1, all involving card-not-present fraud.",
+        "The current alert involves a customer report for an unrecognized transaction of $128.33 (ID 3583227).",
+        "Prior case CC-0696 was cleared as non-fraudulent after the customer confirmed travel, but subsequent cases have consistently been confirmed as fraud."
       ]
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.79,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.011, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+      "lr": 0.5234421699492309,
+      "family": "model",
+      "ref": "query:txn_context(txn=3583227)",
+      "entity_ids": [
+        "3583227"
+      ],
+      "in_model": false,
+      "model_p": 0.01105
+    },
+    {
+      "t": 1790262353.79,
       "kind": "finding",
       "key": "new_device",
       "claim": "The purchase came from a device profile marked New for this account and never seen on this card before ( |  | firefox 47.0 | )",
@@ -104,10 +117,11 @@
       "ref": "query:txn_context(txn=3583227)",
       "entity_ids": [
         "3583227"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.79,
       "kind": "finding",
       "key": "amount_high",
       "claim": "$128.33 is in the top 3% of this card's purchase amounts",
@@ -116,45 +130,57 @@
       "ref": "query:card_profile(card=C08106-K1, before_ts=2016-12-29 01:53:54, recent_days=30)",
       "entity_ids": [
         "3583227"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.79,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0696; latest note: \"Case CC-0696: model scored a $13.68 transaction at 0.83. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
       "lr": 0.8,
       "family": "memory",
-      "ref": "query:prior_cases(card=C08106-K1)",
+      "ref": "query:prior_cases(card=C08106-K1, before_ts=2016-12-29 07:53:54)",
       "entity_ids": [
         "CC-0696"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.79,
       "kind": "assessment",
-      "p": 0.67,
-      "prior": 0.6,
+      "p": 0.76,
+      "prior": 0.7627763032713003,
       "verdict": "uncertain",
       "pattern": "card_not_present_new_device",
       "contributions": [
         {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.52,
+          "delta_logodds": 0.0,
+          "note": "starting point"
+        },
+        {
           "key": "new_device",
           "family": "device",
           "lr": 1.4,
-          "delta_logodds": 0.336
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "amount_high",
           "family": "amount",
           "lr": 1.2,
-          "delta_logodds": 0.182
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "card_prior_cleared",
           "family": "memory",
           "lr": 0.8,
-          "delta_logodds": -0.223
+          "delta_logodds": 0.0,
+          "note": "in model score"
         }
       ],
       "exposure": 128.33,
@@ -210,10 +236,10 @@
       }
     },
     {
-      "t": 1790184711.91,
+      "t": 1790262353.79,
       "kind": "decision",
       "verdict": "fraud",
-      "p": 0.67,
+      "p": 0.76,
       "pattern": "card_not_present_new_device",
       "final": [
         {
@@ -234,40 +260,37 @@
       ]
     },
     {
-      "t": 1790184712.16,
+      "t": 1790262354.01,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-4714",
         "CC-2843",
         "CC-3123",
-        "CC-3473",
-        "CC-2833",
         "CC-3193",
+        "CC-0403",
+        "CC-3473",
         "CC-0696"
       ],
       "knowledge": [
         "Card-not-present fraud from a new device",
         "The five known fraud patterns",
+        "Card-not-present fraud",
         "Account takeover",
         "The five known fraud patterns",
-        "Card-not-present fraud",
         "Out-of-region use"
       ]
     },
     {
-      "t": 1790184726.25,
+      "t": 1790262371.89,
       "kind": "review",
       "agent": "compliance",
-      "agree": false,
-      "issues": [
-        "The final fraud_probability is 0.67, but the customer explicitly denied the transaction ('I never made this...'). A customer denial confirms the fraud, so the probability should be updated to near 1.0 (>= 0.85) to reflect the evidence and properly trigger the stop rule (Section 6).",
-        "The reason cited for CREATE_CASE ('fraud confirmed or strongly suspected') incorrectly uses the Section 3a criteria for filing a SAR. The correct Section 3a criteria for CREATE_CASE is that there is a dispute or the probability is >= 0.30."
-      ],
-      "what_would_change_verdict": "Update the final fraud_probability to >= 0.85 to reflect the customer's denial, and correct the reasoning for CREATE_CASE to cite the dispute/probability threshold from Section 3a."
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "Nothing; the customer's explicit denial definitively establishes fraud, and the actions correctly follow R2 and Section 3a without requiring a SAR due to the low exposure."
     },
     {
-      "t": 1790184748.86,
+      "t": 1790262443.3,
       "kind": "final",
       "problems": [],
       "written": {
@@ -288,7 +311,7 @@
         "txn": "3583227"
       },
       "rows": 2,
-      "ms": 46.8,
+      "ms": 41.4,
       "via": "mcp"
     },
     {
@@ -302,7 +325,7 @@
         "end_ts": "2016-12-29 07:53:54"
       },
       "rows": 17,
-      "ms": 52.2,
+      "ms": 42.7,
       "via": "mcp"
     },
     {
@@ -316,7 +339,7 @@
         "recent_days": 30
       },
       "rows": 209,
-      "ms": 75.1,
+      "ms": 47.7,
       "via": "mcp"
     },
     {
@@ -331,7 +354,7 @@
         "before_ts": "2016-12-29 01:53:54"
       },
       "rows": 0,
-      "ms": 42.4,
+      "ms": 37.9,
       "via": "mcp"
     },
     {
@@ -344,7 +367,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 47.2,
+      "ms": 40.6,
       "via": "mcp"
     },
     {
@@ -358,19 +381,20 @@
         "end_ts": "2016-12-29 07:53:54"
       },
       "rows": 2,
-      "ms": 42.2,
+      "ms": 40.5,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "prior_cases",
-      "ref": "query:prior_cases(card=C08106-K1)",
+      "ref": "query:prior_cases(card=C08106-K1, before_ts=2016-12-29 07:53:54)",
       "params": {
-        "card": "C08106-K1"
+        "card": "C08106-K1",
+        "before_ts": "2016-12-29 07:53:54"
       },
       "rows": 5,
-      "ms": 42.2,
+      "ms": 44.8,
       "via": "mcp"
     },
     {
@@ -384,7 +408,7 @@
         "end_ts": "2016-12-29 07:53:54"
       },
       "rows": 42,
-      "ms": 1599.7,
+      "ms": 46.6,
       "via": "mcp"
     },
     {
@@ -399,14 +423,34 @@
         "before_ts": "2016-12-29 01:53:54"
       },
       "rows": 0,
-      "ms": 46.8,
+      "ms": 40.1,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "similar_cases",
-      "ref": "query:similar_cases(devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'], k=8, pattern=)",
+      "ref": "query:similar_cases(devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'], k=6, pattern=, before_ts=2016-12-29 07:53:54)",
+      "params": {
+        "devices": [
+          " |  | firefox 47.0 | "
+        ],
+        "cards": [
+          "C08106-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2016-12-29 07:53:54"
+      },
+      "rows": 15,
+      "ms": 112.8,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[' |  | firefox 47.0 | '], cards=['C08106-K1'], k=8, pattern=, before_ts=2016-12-29 07:53:54)",
       "params": {
         "devices": [
           " |  | firefox 47.0 | "
@@ -415,10 +459,11 @@
           "C08106-K1"
         ],
         "k": 8,
-        "pattern": ""
+        "pattern": "",
+        "before_ts": "2016-12-29 07:53:54"
       },
       "rows": 17,
-      "ms": 136.5,
+      "ms": 115.4,
       "via": "mcp"
     },
     {
@@ -430,14 +475,14 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 103.8,
+      "ms": 103.3,
       "via": "mcp"
     },
     {
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3583227'], card_ids=[], case_ids=['CC-4714', 'CC-2843', 'CC-3123', 'CC-3473', 'CC-2833', 'CC-3193', 'CC-0696'], customer_ids=['C08106'])",
+      "ref": "query:ids_exist(txn_ids=['3583227'], card_ids=[], case_ids=['CC-4714', 'CC-2843', 'CC-3123', 'CC-3193', 'CC-0403', 'CC-3473', 'CC-0696'], customer_ids=['C08106'])",
       "params": {
         "txn_ids": [
           "3583227"
@@ -447,9 +492,9 @@
           "CC-4714",
           "CC-2843",
           "CC-3123",
-          "CC-3473",
-          "CC-2833",
           "CC-3193",
+          "CC-0403",
+          "CC-3473",
           "CC-0696"
         ],
         "customer_ids": [
@@ -457,96 +502,92 @@
         ]
       },
       "rows": 9,
-      "ms": 184.2,
+      "ms": 115.1,
       "via": "mcp"
     }
   ],
   "specialists": {
     "transaction": {
-      "assessment": "The customer has disputed transaction 3583227 ($128.33), which was conducted using a new, generic device profile. While the transaction amount is within the card's historical baseline (max $138.89), the sudden appearance of new device signatures (including transaction 3580804 a day prior) and historical rapid-fire transaction bursts in early December suggest potential card compromise.",
+      "assessment": "The customer C08106 has explicitly disputed transaction 3583227 ($128.33), which was conducted using a 'New' generic device profile and a hotmail.com email address. Although the transaction amount is within the historical baseline maximum of $138.89, the change in device and email signature supports the customer's claim of unauthorized activity.",
       "risk": "high",
       "key_points": [
-        "Customer C08106 explicitly disputed transaction 3583227 ($128.33) as unauthorized.",
-        "The disputed transaction was executed via a new, generic device signature (' |  | firefox 47.0 | ') with d1=0 and d15=0, indicating a fresh session.",
-        "A previous transaction 3580804 ($92.86) on 2016-12-28 also utilized a new device signature ('Windows |  | chrome 66.0 | ') and may also be unauthorized.",
-        "Historical patterns from 2016-12-07 show rapid-velocity bursts of similar amounts (e.g., 3521159, 3521199, 3521219, 3521229, 3521237) within minutes of each other, indicating a history of high-velocity card usage."
+        "Customer C08106 reported transaction 3583227 ($128.33) as unauthorized.",
+        "Transaction 3583227 was executed on 2016-12-29 using a 'New' generic device profile (' |  | firefox 47.0 | ') and a hotmail.com email.",
+        "A prior transaction 3580804 ($92.86) on 2016-12-28 also utilized a 'New' device profile ('Windows |  | chrome 66.0 | ') and a different email (gmail.com), indicating potential escalating unauthorized access."
       ],
       "open_questions": [
-        "Is transaction 3580804 ($92.86) also unauthorized, given it used a different new device profile just 24 hours prior?",
-        "Were the rapid-velocity transactions on 2016-12-07 authorized by the customer, or was the card compromised earlier?"
+        "Is transaction 3580804 also unauthorized, given it used a different 'New' device and email address within 24 hours of the disputed transaction?",
+        "Why are there multiple different email domains (hotmail.com, gmail.com, yahoo.com.mx) associated with this card's transaction history?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "identity": {
-      "assessment": "Customer C08106 reported an unauthorized transaction of $128.33 (transaction 3583227) on card C08106-K1. The transaction was initiated from a generic desktop browser profile (' |  | firefox 47.0 | ') flagged as a New device for this account, which has a very short history of only two transactions on 2016-12-29.",
+      "assessment": "Customer C08106 has disputed transaction 3583227, stating they did not authorize the $128.33 purchase. The transaction was conducted via a generic browser signature flagged as a 'New' device that has never been seen on card C08106-K1. Given the direct customer dispute and the unrecognized device access, this transaction is highly likely to be fraudulent.",
       "risk": "high",
       "key_points": [
-        "Customer C08106 disputed transaction 3583227 for $128.33 on card C08106-K1.",
-        "The transaction was conducted using a generic browser profile (' |  | firefox 47.0 | ') that was registered as a New device.",
-        "The account C08106-K1||180 has a limited history of only 2 transactions, both occurring on 2016-12-29."
+        "Customer C08106 reported transaction 3583227 ($128.33) as unauthorized.",
+        "The transaction utilized a generic device profile (' |  | firefox 47.0 | ') which was flagged as 'New' and has a device_seen_on_card count of 0.",
+        "The card account C08106-K1 has a very brief history of only 2 transactions, both occurring on 2016-12-29."
       ],
       "open_questions": [
-        "What was the exact IP address or location associated with transaction 3583227?",
-        "Are there other transactions associated with card C08106-K1 that have not been reported yet?"
+        "What was the status and nature of the other transaction recorded on card C08106-K1 on 2016-12-29?",
+        "Are there IP address or location details available for transaction 3583227 to confirm if it originated out of the customer's region?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "network": {
-      "assessment": "Customer C08106 reported transaction 3583227 ($128.33) on card C08106-K1 as unauthorized. The transaction was conducted via a device flagged as 'New' that is shared with 6 different cards all-time, indicating a high likelihood of coordinated fraud or a shared device ring.",
+      "assessment": "Customer C08106 reported transaction 3583227 as unauthorized, confirming fraud on card C08106-K1. The transaction was executed on a device marked as 'New' for this customer, which is linked to 6 different cards in total. This suggests a card-not-present fraud pattern utilizing a device associated with multiple accounts.",
       "risk": "high",
       "key_points": [
-        "Customer C08106 disputed transaction 3583227 on card C08106-K1 as unauthorized.",
-        "The transaction was executed on a device flagged as 'New' for this customer.",
-        "The device profile is linked to 6 different cards all-time, suggesting a shared device network."
+        "Customer C08106 disputed transaction 3583227 ($128.33) on card C08106-K1, confirming unauthorized activity.",
+        "The transaction was completed using a 'New' device profile for this customer.",
+        "The device neighbor data shows the device has been associated with 6 cards all-time, indicating potential multi-card abuse or a shared device profile."
       ],
       "open_questions": [
-        "What are the other 5 card IDs associated with this shared device?",
-        "Have any of the other cards linked to this device been reported for fraud or chargebacks?"
+        "What are the specific model, OS, and browser details of the device to determine if it is a generic profile or a unique fingerprint?",
+        "Have any of the other 5 cards associated with this device reported fraudulent activity or closed cases?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "precedent": {
-      "assessment": "Customer C08106 has a recurring history of card_not_present_fraud disputes, with three prior cases confirmed as fraudulent on card C08106-K1. The current dispute regarding transaction 3583227 for $128.33 strongly aligns with this established pattern of unauthorized online activity. Immediate investigation and card restriction are warranted given the high likelihood of continued compromise.",
+      "assessment": "Customer C08106 has reported an unrecognized transaction of $128.33 (ID 3583227). The customer has a significant history of card-not-present fraud on card C08106-K1, with three prior cases confirmed as fraud. This pattern strongly suggests the customer's card details have been compromised again.",
       "risk": "high",
       "key_points": [
-        "Customer C08106 has three prior confirmed fraud cases (CC-1736, CC-2121, and CC-3778) totaling $171.00 in exposure, all classified as card_not_present_fraud.",
-        "One prior case (CC-0696) was cleared after the customer confirmed travel to the billing region.",
-        "Despite analyst notes in CC-1736, CC-2121, and CC-3778 stating the card was blocked and reissued, the same card ID C08106-K1 is linked to all historical disputes and the current alert."
+        "Customer C08106 has three prior confirmed fraud cases (CC-1736, CC-2121, and CC-3778) on card C08106-K1, all involving card-not-present fraud.",
+        "The current alert involves a customer report for an unrecognized transaction of $128.33 (ID 3583227).",
+        "Prior case CC-0696 was cleared as non-fraudulent after the customer confirmed travel, but subsequent cases have consistently been confirmed as fraud."
       ],
       "open_questions": [
-        "Why does card C08106-K1 remain active and vulnerable to new transactions if previous cases indicated it was blocked and reissued?",
-        "What are the specific merchant and device details associated with the disputed transaction 3583227?"
+        "Is the transaction 3583227 associated with the same card C08106-K1 or a newly reissued card?",
+        "What device and IP information are associated with transaction 3583227?"
       ],
       "suggested_pattern": "card_not_present_fraud"
     }
   },
   "lead": {
     "hypotheses": [
-      "The transaction is unauthorized (Account Takeover or Card Present/Not Present fraud) using a generic browser profile.",
-      "The transaction is a legitimate recurring charge or subscription that the customer has forgotten or failed to recognize.",
-      "The transaction is legitimate and associated with the customer's recent travel or change in purchasing behavior, similar to the previous false alarm in case CC-0696."
+      "Account Takeover (ATO) or Card-Not-Present (CNP) fraud by an unauthorized third party using a new device.",
+      "Legitimate transaction made by the cardholder or a family member that was forgotten or unrecognized.",
+      "An unauthorized recurring subscription or billing error that the customer does not recognize as a valid charge."
     ],
     "extra_calls": [
       {
         "tool": "card_window",
-        "why": "To examine the card's full transaction history around the flagged date to identify other suspicious activities, velocity, or changes in purchasing patterns.",
+        "why": "To examine the card's full transaction history around the flagged event for other unrecognized charges or patterns of compromise.",
         "days_back": 30
       },
       {
         "tool": "recurring_match",
-        "why": "To check if there are prior transactions of a similar amount ($128.33) on this card, which would suggest an overlooked recurring subscription.",
+        "why": "To check if there are prior transactions of a similar amount on this card, which would suggest a recurring subscription or billing agreement.",
         "tol_pct": 1.0
       }
     ],
-    "focus": "Determine if the transaction is an unauthorized fraudulent charge by analyzing the card's historical transaction patterns and checking for recurring matches."
+    "focus": "Determine if the transaction is an isolated unauthorized charge (ATO/CNP fraud) or part of a recurring billing pattern that the customer may have forgotten."
   },
   "critic": {
-    "agree": false,
-    "issues": [
-      "The final fraud_probability is 0.67, but the customer explicitly denied the transaction ('I never made this...'). A customer denial confirms the fraud, so the probability should be updated to near 1.0 (>= 0.85) to reflect the evidence and properly trigger the stop rule (Section 6).",
-      "The reason cited for CREATE_CASE ('fraud confirmed or strongly suspected') incorrectly uses the Section 3a criteria for filing a SAR. The correct Section 3a criteria for CREATE_CASE is that there is a dispute or the probability is >= 0.30."
-    ],
-    "what_would_change_verdict": "Update the final fraud_probability to >= 0.85 to reflect the customer's denial, and correct the reasoning for CREATE_CASE to cite the dispute/probability threshold from Section 3a."
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "Nothing; the customer's explicit denial definitively establishes fraud, and the actions correctly follow R2 and Section 3a without requiring a SAR due to the low exposure."
   },
   "problems": [],
   "written": {

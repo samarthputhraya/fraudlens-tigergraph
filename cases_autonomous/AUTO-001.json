@@ -31,7 +31,7 @@
       "verdict": "fraud",
       "fraud_probability": 0.97,
       "pattern": "undocumented",
-      "pattern_description": "The undocumented pattern involves rapid, sequential online transactions with amounts deliberately chosen to stay just under a specific authorization threshold, in this case $500. It affects cardholders whose typical behavior is primarily in-person, and it was identified by an autonomous monitor detecting the velocity and specific dollar amounts of the purchases.",
+      "pattern_description": "The undocumented pattern consists of a rapid succession of high-value online transactions, each carefully structured to remain just under a suspected $500 authorization threshold. This coordinated activity affects cardholders with historically low online usage and was identified by the autonomous monitor detecting multiple transactions within a 21-minute window.",
       "affected_txn_ids": [
         "3487284",
         "3487318",
@@ -51,6 +51,14 @@
             "3487284",
             "3487318",
             "3487340",
+            "3487348"
+          ]
+        },
+        {
+          "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.140, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+          "source": "graph",
+          "ref": "query:txn_context(txn=3487348)",
+          "entity_ids": [
             "3487348"
           ]
         },
@@ -79,16 +87,34 @@
           ]
         },
         {
+          "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3841; CC-3748; CC-3907; CC-4124",
+          "source": "graph",
+          "ref": "query:similar_cases(devices=['MacOS | Mac OS X 10_8_5 | chrome 49.0 | 1280x800'], cards=['C03633-K1'], k=8, pattern=, before_ts=2016-11-25 22:21:00)",
+          "entity_ids": [
+            "CC-3841",
+            "CC-3748",
+            "CC-3907",
+            "CC-4124",
+            "CC-4086"
+          ]
+        },
+        {
           "claim": "Fraud Policy rules applied to this case: R9 (retrieved from the policy knowledge graph via GraphRAG)",
           "source": "document",
           "ref": "document:Fraud Policy v1.0 section 3 R9",
           "entity_ids": []
         }
       ],
-      "similar_prior_cases": [],
-      "summary": "An autonomous monitor triggered an alert for four online purchases totaling $1,935.29 made within 21 minutes on card C03633-K1. Evidence shows the transactions were all just under $500, suggesting an attempt to bypass authorization thresholds, which is highly unusual for a card historically used almost exclusively in person. The policy engine reached a verdict of fraud with a 0.97 probability. The final actions taken are BLOCK_CARD, CREATE_CASE, FILE_REPORT, and ESCALATE_TO_ANALYST.",
+      "similar_prior_cases": [
+        "CC-3841",
+        "CC-3748",
+        "CC-3907",
+        "CC-4124",
+        "CC-4086"
+      ],
+      "summary": "An autonomous monitor triggered an alert on card C03633-K1 after detecting four online purchases totaling $1,935.29, each just under $500, within a single hour. Graph evidence revealed that this card is used almost exclusively in person, making this rapid burst of high-value online transactions highly anomalous. The transaction model scored the flagged transaction at 0.140, and the bank's real-time risk score was 0.15. The final verdict is fraud with a probability of 0.97, and the final actions taken are BLOCK_CARD, CREATE_CASE, FILE_REPORT, and ESCALATE_TO_ANALYST.",
       "written_to_graph": true,
-      "graph_case_id": "CASE-2016-001"
+      "graph_case_id": "CASE-2016-AUTO-001"
     },
     "evidence_requests": [],
     "next_best_actions": {
@@ -141,7 +167,7 @@
     "sar": {
       "file": true,
       "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $1,935.29 exceeds $1,000; the pattern is coordinated and undocumented (R9).",
-      "narrative": "This report details suspicious online activity involving customer C03633 and their card C03633-K1. On November 25, 2016, between 21:00:00 and 21:21:00, four online transactions were conducted in rapid succession. The transactions were for $488.31, $489.91, $479.33, and $477.74, totaling $1,935.29. The final transaction was traced to a MacOS device running Chrome 49.0. This activity is highly suspicious because the card is historically used almost exclusively for in-person transactions, with only 4 out of 108 prior purchases occurring online. Furthermore, the transaction amounts are all just under $500, indicating a deliberate attempt to evade standard authorization thresholds. The transaction amounts also fall within the top 3% of the cardholder's typical purchase history. Due to the rapid succession of high-value, out-of-character online purchases designed to avoid detection, a suspicious activity report is being filed.",
+      "narrative": "On November 25, 2016, at 22:21:00, the bank's autonomous monitor flagged suspicious activity on card C03633-K1, belonging to customer C03633. Between 21:00:00 and 21:21:00, a series of four online transactions occurred, totaling $1,935.29. The individual transaction amounts were $488.31 (at 21:00:00), $489.91 (at 21:10:00), $479.33 (at 21:18:00), and $477.74 (at 21:21:00). All four transactions were conducted online using billing address code '191'. The final transaction (ID 3487348) was associated with a MacOS device running Mac OS X 10_8_5 and Chrome 49.0, which was marked as 'Found' for this card. This activity is highly suspicious because the card is used almost exclusively in person, with only 4 of 108 prior transactions occurring online. Furthermore, the transaction amount of $477.74 is in the top 3% of this card's historical purchase amounts. The rapid succession of four transactions, each positioned just below $500, strongly suggests an intentional attempt to bypass a $500 authorization threshold. Consequently, a suspicious activity report is recommended.",
       "subjects": [
         "C03633",
         "C03633-K1"
@@ -152,9 +178,9 @@
         "2016-11-25"
       ]
     },
-    "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (behaviour); further queries would not change the actions.",
-    "tool_calls": 13,
-    "tokens": 11661,
-    "latency_s": 145.3
+    "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (behaviour, model); further queries would not change the actions.",
+    "tool_calls": 15,
+    "tokens": 10195,
+    "latency_s": 365.6
   }
 }

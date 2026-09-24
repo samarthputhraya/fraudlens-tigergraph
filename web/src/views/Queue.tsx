@@ -188,7 +188,7 @@ export default function QueueView() {
               <th className="px-4 py-2.5 font-medium">Case</th>
               <th className="px-2 py-2.5 font-medium">Opened</th>
               <th className="px-2 py-2.5 font-medium">Trigger</th>
-              <th className="px-2 py-2.5 font-medium">Model score</th>
+              <th className="px-2 py-2.5 font-medium">Bank risk score</th>
               <th className="px-2 py-2.5 font-medium">Status</th>
               <th className="px-2 py-2.5 font-medium">Verdict</th>
               <th className="px-2 py-2.5 font-medium">Pattern</th>

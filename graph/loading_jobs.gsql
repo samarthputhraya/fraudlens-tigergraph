@@ -20,7 +20,7 @@ CREATE LOADING JOB load_transactions FOR GRAPH Fraud {
         $"m123", $"m4", $"m5", $"m6", $"m789",
         $"c1", $"c2", $"c5", $"c6", $"c9", $"c11", $"c13", $"c14",
         $"d1", $"d2", $"d3", $"d4", $"d10", $"d15",
-        $"v258", $"v257", $"v294", $"v283", $"v317", $"v307", $"v127", $"v133", $"v70", $"v91")
+        $"v258", $"v257", $"v294", $"v283", $"v317", $"v307", $"v127", $"v133", $"v70", $"v91", _)
        USING header="true", separator=",", QUOTE="double";
   LOAD f TO EDGE MADE VALUES ($"card_id", $"id") USING header="true", separator=",", QUOTE="double";
   LOAD f TO EDGE BILLED_IN VALUES ($"id", $"addr1") WHERE $"addr1" != "" USING header="true", separator=",", QUOTE="double";

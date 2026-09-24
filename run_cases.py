@@ -2,7 +2,7 @@
 
   python run_cases.py                   # all 20, TigerGraph via MCP, write case memory to the graph
   python run_cases.py HHG-006 HHG-014   # a subset
-  python run_cases.py --mirror --no-write --no-llm   # offline dry run
+  python run_cases.py --mirror --no-write --no-llm --out runs/dry   # offline dry run (does not touch cases/)
 """
 from __future__ import annotations
 
@@ -22,6 +22,12 @@ TRACE = ROOT / "runs" / "traces"
 
 
 def main() -> None:
+    global OUT, TRACE
+    if "--out" in sys.argv:
+        # dry runs write somewhere else so the official answers in cases/ are never touched by accident
+        OUT = ROOT / sys.argv[sys.argv.index("--out") + 1]
+        TRACE = OUT / "traces"
+        sys.argv.pop(sys.argv.index("--out") + 1)
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     mirror = "--mirror" in sys.argv
     if mirror:
@@ -58,7 +64,8 @@ def main() -> None:
                 f"{ans['latency_s']:>5.1f}s graph={a['written_to_graph']} problems={out.get('problems')}")
         print(line, flush=True)
         summary.append(line)
-    (ROOT / "runs" / "last_run.txt").write_text("\n".join(summary), encoding="utf-8")
+    last = ROOT / "runs" / "last_run.txt" if OUT == ROOT / "cases" else OUT / "last_run.txt"
+    last.write_text("\n".join(summary), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
   "case_id": "HHG-014",
   "events": [
     {
-      "t": 1790179162.36,
+      "t": 1790260419.79,
       "kind": "trigger",
       "case_id": "HHG-014",
       "trigger_type": "analyst_request",
@@ -10,89 +10,104 @@
       "opened_at": "2016-11-22 20:11:00"
     },
     {
-      "t": 1790179162.36,
+      "t": 1790260419.79,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1790179178.78,
+      "t": 1790260425.74,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
-        "Account Takeover (ATO) by a fraud ring using a spoofed or shared device profile and anonymous proxies to compromise multiple cards.",
-        "Legitimate transaction by the cardholder using a new device/emulator, with the shared device profile being a false positive due to a common emulator signature."
+        "Account Takeover (ATO) by a fraud ring using a shared, fully specified device profile and anonymous proxies to cash out compromised cards",
+        "Legitimate transaction where the cardholder is using a new mobile device and a VPN/proxy for privacy"
       ],
       "calls": [
         {
           "tool": "device_neighbors",
-          "why": "To identify other cards and customers using this specific device profile and check if they are linked to known fraud cases or investigations.",
+          "why": "To identify the other 19 cards and customers sharing this specific device profile, and to check if any of those accounts have confirmed fraud cases.",
           "days_back": 14
         },
         {
           "tool": "card_window",
-          "why": "To review the transaction history of card C13487-K1 around the flagged date for other unusual online activity or testing patterns.",
+          "why": "To review the recent history of card C13487-K1 for other unusual online transactions or signs of compromise.",
           "days_back": 30
         }
       ]
     },
     {
-      "t": 1790179178.82,
+      "t": 1790260427.64,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
-      "assessment": "Transaction 3478561 is highly suspicious as it represents a sharp departure from the card's established baseline of in-person transactions. The transaction was conducted online using a new device profile behind an anonymous proxy, while the physical card was used in-person shortly before and after this event, indicating likely card-not-present fraud.",
+      "assessment": "Transaction 3478561 on card C13487-K1 represents a high-risk event. The cardholder's baseline consists almost entirely of in-person transactions (69 out of 71), whereas this transaction is online, uses an anonymous proxy, and is associated with a specific, non-generic device profile ('SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080') that has been linked to 114 transactions across the system.",
       "key_points": [
-        "Transaction 3478561 ($74.96) is an online purchase (Product C) using a new device profile ('SM-G935F...') and an anonymous proxy, whereas the card's baseline is overwhelmingly in-person (69 out of 71 transactions are Product W).",
-        "The specific device profile used in 3478561 is non-generic and has been observed in 114 transactions across the system, indicating a potential fraud ring.",
-        "The legitimate cardholder appears to have possession of the physical card, as evidenced by in-person transactions 3477218 (addr1 191.0) and 3478886 (addr1 272.0) occurring shortly before and after the online transaction."
+        "Transaction 3478561 is a significant departure from the cardholder's historical baseline, which is 97% in-person 'W' product transactions.",
+        "The transaction was conducted via an anonymous proxy ('IP_PROXY:ANONYMOUS') and flagged as a 'New' device for this card.",
+        "The specific device profile used is highly active across the network, appearing in 114 transactions, indicating a shared fraudulent device or botnet rather than a single user's device."
       ]
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
-      "assessment": "The transaction on card C13487-K1 was conducted via a fully specified mobile device profile flagged as 'New' and routing through an anonymous proxy. Given the lack of prior account history and the high-risk connection method, this activity is highly suspicious of fraudulent card-not-present activity.",
+      "assessment": "The transaction on card C13487-K1 was conducted using a fully specified, new mobile device profile associated with an anonymous proxy. Since this card has only one recorded transaction, the combination of a new device and proxy usage indicates a high risk of fraud. Further investigation is needed to confirm if this device has been used across other accounts as suggested by the alert.",
       "key_points": [
-        "Card C13487-K1 was used with a specific mobile device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) marked as 'New'.",
-        "The connection utilized an anonymous proxy (IP_PROXY:ANONYMOUS), masking the user's true location.",
-        "The resolved account C13487-K1|191.0|143 has only 1 transaction and no prior history."
+        "The transaction on card C13487-K1 was performed using a fully specified device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) flagged as 'New'.",
+        "The connection utilized an anonymous proxy ('IP_PROXY:ANONYMOUS'), which is a common indicator of obfuscation.",
+        "The card account C13487-K1 has a history of only 1 transaction, occurring on 2016-11-22, meaning there is no established trusted behavior for this card."
       ]
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "specialist",
       "agent": "network",
       "risk": "high",
-      "assessment": "A highly specific device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) is being used as a 'New' device across at least 52 distinct cards in a short timeframe. All transactions utilize anonymous proxies, indicating a coordinated card-not-present fraud ring operating across multiple compromised accounts.",
+      "assessment": "Transaction 3478561 on card C13487-K1 is part of a larger cluster of transactions sharing the same device profile, with 52 cards associated all-time. All observed transactions in this group utilize anonymous proxies (IP_PROXY:ANONYMOUS) and are flagged as 'New' devices, suggesting a coordinated card-not-present campaign rather than isolated organic behavior.",
       "key_points": [
-        "The rare, fully specified device profile 'SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080' is shared across 52 different cards, including C13487-K1, C10326-K1, and C08168-K1.",
-        "Every transaction in the network utilizes an anonymous proxy (IP_PROXY:ANONYMOUS), strongly suggesting a deliberate attempt to mask the perpetrators' true locations.",
-        "Transactions occurred in rapid succession between November 14 and November 18, 2016, with varying billing addresses (e.g., addr1 181.0, 191.0, 441.0) and email domains."
+        "Card C13487-K1 initiated transaction 3460634 on 2016-11-15 using an anonymous proxy, which shares the same device profile as 51 other cards.",
+        "Multiple distinct cards, including C10326-K1, C01996-K2, and C09906-K1, show a pattern of sequential 'New' device transactions utilizing anonymous proxies within a short timeframe.",
+        "The transaction model scores for these transactions remain low-to-moderate (ranging from 0.01 to 0.28), which may indicate the pattern is successfully bypassing standard real-time risk thresholds."
       ]
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "specialist",
       "agent": "precedent",
-      "risk": "low",
-      "assessment": "The investigation into transaction 3478561 on card C13487-K1 cannot be completed because the provided database queries returned no transaction, customer, or device records. Without this evidence, we are unable to verify the existence of the unusual device profile or link it to other cards.",
+      "risk": "high",
+      "assessment": "The alert regarding transaction 3478561 on card C13487-K1 is highly suspicious due to its association with a recurring fraudulent device profile. Multiple closed cases (CC-2985, CC-2971, CC-3035, and CC-2649) confirm a pattern of unauthorized online purchases originating from a Samsung SM-G935F on Chrome for Android behind an anonymous proxy. This indicates a coordinated card-not-present fraud campaign using a shared, specific device signature across unrelated cardholders.",
       "key_points": [
-        "The query returned no closed cases or similar patterns associated with the customer or transaction.",
-        "No transaction details, device profiles, or card history for C13487-K1 were provided in the evidence."
+        "Four closed cases (CC-2985, CC-2971, CC-3035, and CC-2649) were confirmed as fraud involving the exact same Samsung SM-G935F device profile behind an anonymous proxy.",
+        "The fraudulent activity across these closed cases involved multiple unrelated cardholders (C06617, C09998, C09733, and C03528) reporting unauthorized online purchases.",
+        "Similar historical cases like CC-0334 and CC-5122 also confirm unauthorized card-not-present transactions using variants of the SM-G935F device profile."
       ]
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.064, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+      "lr": 3.1773389211144636,
+      "family": "model",
+      "ref": "query:txn_context(txn=3478561)",
+      "entity_ids": [
+        "3478561"
+      ],
+      "in_model": false,
+      "model_p": 0.063516
+    },
+    {
+      "t": 1790260435.16,
       "kind": "finding",
       "key": "proxy",
       "claim": "The session was routed through an anonymous proxy",
@@ -101,10 +116,11 @@
       "ref": "query:txn_context(txn=3478561)",
       "entity_ids": [
         "3478561"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "finding",
       "key": "shared_device",
       "claim": "The same device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) was used on 19 other card(s) of 19 other customer(s) between 2016-11-14 and 2016-11-22, 24 of those uses as a New device, 24 behind an anonymising proxy. The profile appears on only 52 card(s) in the whole dataset",
@@ -120,10 +136,11 @@
         "C04108-K2",
         "C04274-K1",
         "C05448-K2"
-      ]
+      ],
+      "in_model": false
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "finding",
       "key": "amount_typical",
       "claim": "$74.96 is a typical amount for this card (percentile 79%)",
@@ -132,10 +149,11 @@
       "ref": "query:card_profile(card=C13487-K1, before_ts=2016-11-22 16:11:00, recent_days=30)",
       "entity_ids": [
         "3478561"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "finding",
       "key": "channel_shift",
       "claim": "This card is used almost only in person (2 of 71 earlier transactions online); this purchase is online",
@@ -144,39 +162,51 @@
       "ref": "query:card_profile(card=C13487-K1, before_ts=2016-11-22 16:11:00, recent_days=30)",
       "entity_ids": [
         "3478561"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "assessment",
       "p": 0.97,
-      "prior": 0.45,
+      "prior": 0.7221945138611547,
       "verdict": "fraud",
       "pattern": "undocumented",
       "contributions": [
         {
+          "key": "model_score",
+          "family": "model",
+          "lr": 3.18,
+          "delta_logodds": 0.0,
+          "note": "starting point"
+        },
+        {
           "key": "proxy",
           "family": "device",
           "lr": 3.0,
-          "delta_logodds": 1.099
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "shared_device",
           "family": "network",
           "lr": 28.0,
-          "delta_logodds": 3.332
+          "delta_logodds": 3.332,
+          "note": ""
         },
         {
           "key": "amount_typical",
           "family": "amount",
           "lr": 1.0,
-          "delta_logodds": 0.0
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "channel_shift",
           "family": "behaviour",
           "lr": 2.7,
-          "delta_logodds": 0.993
+          "delta_logodds": 0.0,
+          "note": "in model score"
         }
       ],
       "exposure": 187.33,
@@ -292,7 +322,7 @@
       }
     },
     {
-      "t": 1790179243.89,
+      "t": 1790260435.16,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -332,57 +362,60 @@
       ]
     },
     {
-      "t": 1790179245.78,
+      "t": 1790260435.5,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
+        "CC-2985",
         "CC-3035",
         "CC-2971",
-        "CC-2985",
         "CC-2649"
       ],
       "knowledge": [
         "The five known fraud patterns",
         "Card-not-present fraud",
-        "The five known fraud patterns",
-        "Undocumented pattern",
         "Card testing",
+        "Undocumented pattern",
+        "The five known fraud patterns",
         "Out-of-region use"
       ]
     },
     {
-      "t": 1790179269.94,
+      "t": 1790260457.05,
       "kind": "review",
       "agent": "compliance",
       "agree": true,
       "issues": [],
-      "what_would_change_verdict": "The verdict is solidly supported by the discovery of a coordinated ring using an anonymising proxy and a specific device profile across 19 other cards. The decision to block the card, file a SAR, and escalate to an analyst for further investigation of the ring is correct and complies with R6, R9, and Section 3a. To change the verdict, we would need evidence that this device profile is actually a generic signature shared by benign users (e.g., a default browser string missing specific hardware details) rather than a fully specified device, or that the proxy is a benign corporate VPN used by a single legitimate customer."
+      "what_would_change_verdict": "The verdict is solid based on the rare, fully specified device profile used as a New device by 19 other customers behind an anonymizing proxy, which is strong evidence of a coordinated ring. If the device profile were generic (e.g., missing model/OS/screen fields) or if the other cards belonged to the same customer, the probability would be significantly lower and the verdict might change."
     },
     {
-      "t": 1790179337.26,
+      "t": 1790260509.28,
       "kind": "final",
       "problems": [],
       "written": {
-        "ok": false
+        "ok": true,
+        "graph_case_id": "CASE-2016-014",
+        "n_vertices": 12,
+        "n_edges": 42
       }
     }
   ],
   "tool_calls": [
     {
       "agent": "lead",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "txn_context",
       "ref": "query:txn_context(txn=3478561)",
       "params": {
         "txn": "3478561"
       },
-      "rows": 1,
-      "ms": 7544.2,
-      "via": "mirror"
+      "rows": 2,
+      "ms": 48.1,
+      "via": "mcp"
     },
     {
       "agent": "transaction",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "card_window",
       "ref": "query:card_window(card=C13487-K1, start_ts=2016-11-08 16:11:00, end_ts=2016-11-22 20:11:00)",
       "params": {
@@ -391,12 +424,12 @@
         "end_ts": "2016-11-22 20:11:00"
       },
       "rows": 10,
-      "ms": 28.2,
-      "via": "mirror"
+      "ms": 44.6,
+      "via": "mcp"
     },
     {
       "agent": "transaction",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "card_profile",
       "ref": "query:card_profile(card=C13487-K1, before_ts=2016-11-22 16:11:00, recent_days=30)",
       "params": {
@@ -405,12 +438,12 @@
         "recent_days": 30
       },
       "rows": 71,
-      "ms": 41.7,
-      "via": "mirror"
+      "ms": 46.3,
+      "via": "mcp"
     },
     {
       "agent": "transaction",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "recurring_match",
       "ref": "query:recurring_match(card=C13487-K1, amt=74.96, tol=0.75, before_ts=2016-11-22 16:11:00)",
       "params": {
@@ -420,25 +453,25 @@
         "before_ts": "2016-11-22 16:11:00"
       },
       "rows": 0,
-      "ms": 8.7,
-      "via": "mirror"
+      "ms": 49.1,
+      "via": "mcp"
     },
     {
       "agent": "identity",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "account_history",
       "ref": "query:account_history(txn=3478561, lookback_days=200)",
       "params": {
         "txn": "3478561",
         "lookback_days": 200
       },
-      "rows": 0,
-      "ms": 99.5,
-      "via": "mirror"
+      "rows": 1,
+      "ms": 46.5,
+      "via": "mcp"
     },
     {
       "agent": "network",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "device_neighbors",
       "ref": "query:device_neighbors(dev=SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080, start_ts=2016-10-23 16:11:00, end_ts=2016-11-22 20:11:00)",
       "params": {
@@ -446,37 +479,26 @@
         "start_ts": "2016-10-23 16:11:00",
         "end_ts": "2016-11-22 20:11:00"
       },
-      "rows": 26,
-      "ms": 38.0,
-      "via": "mirror"
+      "rows": 27,
+      "ms": 47.3,
+      "via": "mcp"
     },
     {
       "agent": "precedent",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "prior_cases",
-      "ref": "query:prior_cases(card=C13487-K1)",
+      "ref": "query:prior_cases(card=C13487-K1, before_ts=2016-11-22 20:11:00)",
       "params": {
-        "card": "C13487-K1"
+        "card": "C13487-K1",
+        "before_ts": "2016-11-22 20:11:00"
       },
-      "rows": 0,
-      "ms": 8.3,
-      "via": "mirror"
-    },
-    {
-      "agent": "lead",
-      "tool": "mirror",
-      "query": "describe_queries",
-      "ref": "query:describe_queries(query_name=all)",
-      "params": {
-        "query_name": "all"
-      },
-      "rows": 17,
-      "ms": 6.0,
-      "via": "mirror"
+      "rows": 1,
+      "ms": 40.0,
+      "via": "mcp"
     },
     {
       "agent": "network",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "device_neighbors",
       "ref": "query:device_neighbors(dev=SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080, start_ts=2016-11-08 16:11:00, end_ts=2016-11-22 20:11:00)",
       "params": {
@@ -484,13 +506,13 @@
         "start_ts": "2016-11-08 16:11:00",
         "end_ts": "2016-11-22 20:11:00"
       },
-      "rows": 26,
-      "ms": 26.6,
-      "via": "mirror"
+      "rows": 27,
+      "ms": 48.6,
+      "via": "mcp"
     },
     {
       "agent": "transaction",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "card_window",
       "ref": "query:card_window(card=C13487-K1, start_ts=2016-10-23 16:11:00, end_ts=2016-11-22 20:11:00)",
       "params": {
@@ -499,17 +521,35 @@
         "end_ts": "2016-11-22 20:11:00"
       },
       "rows": 17,
-      "ms": 14.4,
-      "via": "mirror"
+      "ms": 51.8,
+      "via": "mcp"
     },
     {
       "agent": "precedent",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "similar_cases",
-      "ref": "query:similar_cases(k=8, pattern=, devices=['SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080'], cards=['C13487-K1', 'C01289-K1', 'C01996-K2', 'C02910-K1', 'C02975-K1', 'C03676-K2', 'C04108-K2', 'C04274-K1', 'C05448-K2', 'C06710-K1', 'C08168-K1'])",
+      "ref": "query:similar_cases(devices=['SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080'], cards=['C13487-K1'], k=6, pattern=, before_ts=2016-11-22 20:11:00)",
       "params": {
-        "k": 8,
+        "devices": [
+          "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080"
+        ],
+        "cards": [
+          "C13487-K1"
+        ],
+        "k": 6,
         "pattern": "",
+        "before_ts": "2016-11-22 20:11:00"
+      },
+      "rows": 13,
+      "ms": 118.0,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080'], cards=['C13487-K1', 'C01289-K1', 'C01996-K2', 'C02910-K1', 'C02975-K1', 'C03676-K2', 'C04108-K2', 'C04274-K1', 'C05448-K2', 'C06710-K1', 'C08168-K1'], k=8, pattern=, before_ts=2016-11-22 20:11:00)",
+      "params": {
         "devices": [
           "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080"
         ],
@@ -525,108 +565,181 @@
           "C05448-K2",
           "C06710-K1",
           "C08168-K1"
-        ]
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2016-11-22 20:11:00"
       },
-      "rows": 16,
-      "ms": 1778.2,
-      "via": "mirror"
+      "rows": 19,
+      "ms": 117.3,
+      "via": "mcp"
     },
     {
       "agent": "precedent",
-      "tool": "mirror",
+      "tool": "tigergraph__run_installed_query",
       "query": "search_knowledge",
       "ref": "query:search_knowledge(k=6)",
       "params": {
         "k": 6
       },
       "rows": 6,
-      "ms": 69.0,
-      "via": "mirror"
+      "ms": 109.2,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080'], cards=['C13487-K1'], k=8, pattern=undocumented, before_ts=2016-11-22 20:11:00)",
+      "params": {
+        "devices": [
+          "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080"
+        ],
+        "cards": [
+          "C13487-K1"
+        ],
+        "k": 8,
+        "pattern": "undocumented",
+        "before_ts": "2016-11-22 20:11:00"
+      },
+      "rows": 15,
+      "ms": 99.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3460634', '3478561'], card_ids=['C01289-K1', 'C01996-K2', 'C02910-K1', 'C02975-K1', 'C03676-K2', 'C04108-K2', 'C04274-K1', 'C05448-K2', 'C06710-K1', 'C08168-K1', 'C09049-K1', 'C09906-K1', 'C09975-K1', 'C10193-K2', 'C10326-K1', 'C11082-K1', 'C11670-K2', 'C12796-K1', 'C13291-K1'], case_ids=['CC-2985', 'CC-3035', 'CC-2971', 'CC-2649'], customer_ids=['C13487'])",
+      "params": {
+        "txn_ids": [
+          "3460634",
+          "3478561"
+        ],
+        "card_ids": [
+          "C01289-K1",
+          "C01996-K2",
+          "C02910-K1",
+          "C02975-K1",
+          "C03676-K2",
+          "C04108-K2",
+          "C04274-K1",
+          "C05448-K2",
+          "C06710-K1",
+          "C08168-K1",
+          "C09049-K1",
+          "C09906-K1",
+          "C09975-K1",
+          "C10193-K2",
+          "C10326-K1",
+          "C11082-K1",
+          "C11670-K2",
+          "C12796-K1",
+          "C13291-K1"
+        ],
+        "case_ids": [
+          "CC-2985",
+          "CC-3035",
+          "CC-2971",
+          "CC-2649"
+        ],
+        "customer_ids": [
+          "C13487"
+        ]
+      },
+      "rows": 26,
+      "ms": 140.2,
+      "via": "mcp"
     }
   ],
   "specialists": {
     "transaction": {
-      "assessment": "Transaction 3478561 is highly suspicious as it represents a sharp departure from the card's established baseline of in-person transactions. The transaction was conducted online using a new device profile behind an anonymous proxy, while the physical card was used in-person shortly before and after this event, indicating likely card-not-present fraud.",
+      "assessment": "Transaction 3478561 on card C13487-K1 represents a high-risk event. The cardholder's baseline consists almost entirely of in-person transactions (69 out of 71), whereas this transaction is online, uses an anonymous proxy, and is associated with a specific, non-generic device profile ('SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080') that has been linked to 114 transactions across the system.",
       "risk": "high",
       "key_points": [
-        "Transaction 3478561 ($74.96) is an online purchase (Product C) using a new device profile ('SM-G935F...') and an anonymous proxy, whereas the card's baseline is overwhelmingly in-person (69 out of 71 transactions are Product W).",
-        "The specific device profile used in 3478561 is non-generic and has been observed in 114 transactions across the system, indicating a potential fraud ring.",
-        "The legitimate cardholder appears to have possession of the physical card, as evidenced by in-person transactions 3477218 (addr1 191.0) and 3478886 (addr1 272.0) occurring shortly before and after the online transaction."
+        "Transaction 3478561 is a significant departure from the cardholder's historical baseline, which is 97% in-person 'W' product transactions.",
+        "The transaction was conducted via an anonymous proxy ('IP_PROXY:ANONYMOUS') and flagged as a 'New' device for this card.",
+        "The specific device profile used is highly active across the network, appearing in 114 transactions, indicating a shared fraudulent device or botnet rather than a single user's device."
       ],
       "open_questions": [
-        "Which other card accounts are linked to the 114 transactions associated with this specific device profile?",
-        "What is the geographic location associated with the anonymous proxy IP used in transaction 3478561?"
+        "Which other customer accounts and cards are linked to the 114 transactions associated with this specific device profile?",
+        "Are there any chargebacks or confirmed fraud cases already associated with this device profile?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "identity": {
-      "assessment": "The transaction on card C13487-K1 was conducted via a fully specified mobile device profile flagged as 'New' and routing through an anonymous proxy. Given the lack of prior account history and the high-risk connection method, this activity is highly suspicious of fraudulent card-not-present activity.",
+      "assessment": "The transaction on card C13487-K1 was conducted using a fully specified, new mobile device profile associated with an anonymous proxy. Since this card has only one recorded transaction, the combination of a new device and proxy usage indicates a high risk of fraud. Further investigation is needed to confirm if this device has been used across other accounts as suggested by the alert.",
       "risk": "high",
       "key_points": [
-        "Card C13487-K1 was used with a specific mobile device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) marked as 'New'.",
-        "The connection utilized an anonymous proxy (IP_PROXY:ANONYMOUS), masking the user's true location.",
-        "The resolved account C13487-K1|191.0|143 has only 1 transaction and no prior history."
+        "The transaction on card C13487-K1 was performed using a fully specified device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) flagged as 'New'.",
+        "The connection utilized an anonymous proxy ('IP_PROXY:ANONYMOUS'), which is a common indicator of obfuscation.",
+        "The card account C13487-K1 has a history of only 1 transaction, occurring on 2016-11-22, meaning there is no established trusted behavior for this card."
       ],
       "open_questions": [
-        "Are there other cards in the system that have recently transacted using this exact SM-G935F device profile?",
-        "What was the transaction amount and merchant category for transaction 3478561?"
+        "Are there other specific card accounts in our database that have transacted using this exact device profile during this month?",
+        "What are the details and status of the other transactions associated with this device profile that triggered the initial analyst request?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "network": {
-      "assessment": "A highly specific device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080) is being used as a 'New' device across at least 52 distinct cards in a short timeframe. All transactions utilize anonymous proxies, indicating a coordinated card-not-present fraud ring operating across multiple compromised accounts.",
+      "assessment": "Transaction 3478561 on card C13487-K1 is part of a larger cluster of transactions sharing the same device profile, with 52 cards associated all-time. All observed transactions in this group utilize anonymous proxies (IP_PROXY:ANONYMOUS) and are flagged as 'New' devices, suggesting a coordinated card-not-present campaign rather than isolated organic behavior.",
       "risk": "high",
       "key_points": [
-        "The rare, fully specified device profile 'SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080' is shared across 52 different cards, including C13487-K1, C10326-K1, and C08168-K1.",
-        "Every transaction in the network utilizes an anonymous proxy (IP_PROXY:ANONYMOUS), strongly suggesting a deliberate attempt to mask the perpetrators' true locations.",
-        "Transactions occurred in rapid succession between November 14 and November 18, 2016, with varying billing addresses (e.g., addr1 181.0, 191.0, 441.0) and email domains."
+        "Card C13487-K1 initiated transaction 3460634 on 2016-11-15 using an anonymous proxy, which shares the same device profile as 51 other cards.",
+        "Multiple distinct cards, including C10326-K1, C01996-K2, and C09906-K1, show a pattern of sequential 'New' device transactions utilizing anonymous proxies within a short timeframe.",
+        "The transaction model scores for these transactions remain low-to-moderate (ranging from 0.01 to 0.28), which may indicate the pattern is successfully bypassing standard real-time risk thresholds."
       ],
       "open_questions": [
-        "Are there any common merchant IDs or specific products being targeted by this device profile?",
-        "What is the ultimate status of transaction 3478561, and have any of these associated cards already reported chargebacks?"
+        "What are the specific model, OS, and screen fields of this shared device profile to confirm if it is a rare, fully specified profile or a generic browser signature?",
+        "Are there any chargebacks or confirmed fraud cases associated with the other 51 cards in this device neighbor cluster?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "precedent": {
-      "assessment": "The investigation into transaction 3478561 on card C13487-K1 cannot be completed because the provided database queries returned no transaction, customer, or device records. Without this evidence, we are unable to verify the existence of the unusual device profile or link it to other cards.",
-      "risk": "low",
+      "assessment": "The alert regarding transaction 3478561 on card C13487-K1 is highly suspicious due to its association with a recurring fraudulent device profile. Multiple closed cases (CC-2985, CC-2971, CC-3035, and CC-2649) confirm a pattern of unauthorized online purchases originating from a Samsung SM-G935F on Chrome for Android behind an anonymous proxy. This indicates a coordinated card-not-present fraud campaign using a shared, specific device signature across unrelated cardholders.",
+      "risk": "high",
       "key_points": [
-        "The query returned no closed cases or similar patterns associated with the customer or transaction.",
-        "No transaction details, device profiles, or card history for C13487-K1 were provided in the evidence."
+        "Four closed cases (CC-2985, CC-2971, CC-3035, and CC-2649) were confirmed as fraud involving the exact same Samsung SM-G935F device profile behind an anonymous proxy.",
+        "The fraudulent activity across these closed cases involved multiple unrelated cardholders (C06617, C09998, C09733, and C03528) reporting unauthorized online purchases.",
+        "Similar historical cases like CC-0334 and CC-5122 also confirm unauthorized card-not-present transactions using variants of the SM-G935F device profile."
       ],
       "open_questions": [
-        "What are the specific details of transaction 3478561 and card C13487-K1?",
-        "What is the exact device profile mentioned in the analyst request, and which other cards are associated with it?"
+        "Is transaction 3478561 on card C13487-K1 confirmed as unauthorized by the cardholder?",
+        "Does the device profile for transaction 3478561 match the specific Samsung SM-G935F and anonymous proxy signature seen in the fraudulent cases?",
+        "Are there other pending or recent transactions on card C13487-K1 from this same device profile?"
       ],
-      "suggested_pattern": "none"
+      "suggested_pattern": "card_not_present_new_device"
     }
   },
   "lead": {
     "hypotheses": [
-      "Account Takeover (ATO) by a fraud ring using a spoofed or shared device profile and anonymous proxies to compromise multiple cards.",
-      "Legitimate transaction by the cardholder using a new device/emulator, with the shared device profile being a false positive due to a common emulator signature."
+      "Account Takeover (ATO) by a fraud ring using a shared, fully specified device profile and anonymous proxies to cash out compromised cards",
+      "Legitimate transaction where the cardholder is using a new mobile device and a VPN/proxy for privacy"
     ],
     "extra_calls": [
       {
         "tool": "device_neighbors",
-        "why": "To identify other cards and customers using this specific device profile and check if they are linked to known fraud cases or investigations.",
+        "why": "To identify the other 19 cards and customers sharing this specific device profile, and to check if any of those accounts have confirmed fraud cases.",
         "days_back": 14
       },
       {
         "tool": "card_window",
-        "why": "To review the transaction history of card C13487-K1 around the flagged date for other unusual online activity or testing patterns.",
+        "why": "To review the recent history of card C13487-K1 for other unusual online transactions or signs of compromise.",
         "days_back": 30
       }
     ],
-    "focus": "The high number of 'New' device associations (24 uses across 19 customers) for a fully specified device profile strongly suggests a coordinated fraud ring or device spoofing campaign."
+    "focus": "The shared use of a highly specific device profile (SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 | 1920x1080) as a 'New' device across 20 different customer accounts under an anonymous proxy strongly suggests a coordinated fraud ring."
   },
   "critic": {
     "agree": true,
     "issues": [],
-    "what_would_change_verdict": "The verdict is solidly supported by the discovery of a coordinated ring using an anonymising proxy and a specific device profile across 19 other cards. The decision to block the card, file a SAR, and escalate to an analyst for further investigation of the ring is correct and complies with R6, R9, and Section 3a. To change the verdict, we would need evidence that this device profile is actually a generic signature shared by benign users (e.g., a default browser string missing specific hardware details) rather than a fully specified device, or that the proxy is a benign corporate VPN used by a single legitimate customer."
+    "what_would_change_verdict": "The verdict is solid based on the rare, fully specified device profile used as a New device by 19 other customers behind an anonymizing proxy, which is strong evidence of a coordinated ring. If the device profile were generic (e.g., missing model/OS/screen fields) or if the other cards belonged to the same customer, the probability would be significantly lower and the verdict might change."
   },
   "problems": [],
   "written": {
-    "ok": false
+    "ok": true,
+    "graph_case_id": "CASE-2016-014",
+    "n_vertices": 12,
+    "n_edges": 42
   }
 }

@@ -71,6 +71,7 @@ def main(n_fraud: int = 350, month: str = "2016-10") -> None:
                      "pred_pattern": pat, "jaccard": inter / len(set(ep_ids) | set(txns)), "exposure": exp,
                      "true_exposure": float(c["exposure_usd"]), "sar_pred": sar, "sar_true": c["report_filed"] == "Yes",
                      "strong": led["strong"], "score": float(flagged["score"]),
+                     "model_p": facts.get("model_p"),
                      "evidence_logodds": round(sum(x["delta_logodds"] for x in led["contributions"]), 3)})
         if i % 50 == 0:
             print(f"{i}/{len(sample)} {time.time() - t0:.0f}s", flush=True)
@@ -106,7 +107,17 @@ def score(rows: list[dict]) -> dict:
         wins = sum((1.0 if a > b else 0.5 if a == b else 0.0) for a in pos for b in neg)
         return round(wins / (len(pos) * len(neg)), 3)
     band = [r for r in rows if r.get("score", 0) >= 0.5]
+
+    def auc_p(rs, key="p"):
+        pos = [r[key] for r in rs if y(r) == 1 and r.get(key) is not None]
+        neg = [r[key] for r in rs if y(r) == 0 and r.get(key) is not None]
+        if not pos or not neg:
+            return None
+        wins = sum((1.0 if a > b else 0.5 if a == b else 0.0) for a in pos for b in neg)
+        return round(wins / (len(pos) * len(neg)), 3)
     return {
+        "auc_final_probability": auc_p(rows), "auc_final_probability_score_ge_0_5": auc_p(band),
+        "auc_model_only": auc_p(rows, "model_p"),
         "n_cases": len(rows), "n_confirmed": len(fr), "n_cleared": len(cl),
         "verdict_accuracy": round(acc, 3), "uncertain_share": round(1 - len(decided) / max(len(rows), 1), 3),
         "fraud_recall": round(sum(1 for r in fr if r["verdict"] == "fraud") / max(len(fr), 1), 3),

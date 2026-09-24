@@ -28,6 +28,9 @@ def summary(ep) -> dict:
         "account.fraud": sum(1 for h in ep.account.get("history", []) if "confirmed_fraud" in (h.get("outcomes") or [])),
         "device.txns": len((ep.device or {}).get("txns", [])), "device.cards_all": (ep.device or {}).get("n_cards_all_time"),
         "prior.closed": len((ep.prior or {}).get("closed_cases", [])),
+        # v2: the transaction model's score must come back from the graph exactly as the mirror serves it
+        "txn.model_p": round(float(ep.txn.get("model_p", -1) or -1), 4),
+        "window.model_p_sum": round(sum(float(w.get("model_p", -1) or -1) for w in ep.window), 3),
     }
 
 

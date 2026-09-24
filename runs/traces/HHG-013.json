@@ -2,7 +2,7 @@
   "case_id": "HHG-013",
   "events": [
     {
-      "t": 1790184219.23,
+      "t": 1790261332.82,
       "kind": "trigger",
       "case_id": "HHG-013",
       "trigger_type": "risk_score",
@@ -10,91 +10,104 @@
       "opened_at": "2016-12-09 05:39:29"
     },
     {
-      "t": 1790184219.23,
+      "t": 1790261332.82,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1790184224.86,
+      "t": 1790261339.0,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
-        "Legitimate cardholder transaction representing an occasional online purchase (consistent with the cardholder's history of rare but high-value cleared transactions like CC-3761)",
-        "Card-Not-Present (CNP) fraud or Account Takeover (ATO) where an unauthorized user is transacting online with a card primarily used in-person",
-        "A recurring subscription or card-on-file transaction that has been misclassified or initiated via a generic browser profile"
+        "Legitimate channel shift: The cardholder is making an unusual but authorized online purchase, possibly a recurring subscription or one-off transaction.",
+        "Card-Not-Present (CNP) Fraud: An unauthorized user has obtained the card details and is conducting low-value online transactions."
       ],
       "calls": [
         {
           "tool": "card_window",
-          "why": "To analyze the card's transaction history surrounding the flagged event, checking for other online attempts, card testing, or sudden location/channel shifts.",
+          "why": "To review the card's recent transaction history for any other online activity, rapid sequence of charges, or signs of compromise.",
           "days_back": 30
         },
         {
           "tool": "recurring_match",
-          "why": "To check if the amount of $35.66 matches any prior recurring charges on this card, which would indicate a legitimate subscription.",
+          "why": "To check if the card has previous transactions of approximately $35.66, which would indicate a legitimate recurring subscription.",
           "tol_pct": 1.0
         }
       ]
     },
     {
-      "t": 1790184225.22,
+      "t": 1790261339.98,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.09,
       "kind": "specialist",
       "agent": "transaction",
-      "risk": "medium",
-      "assessment": "The flagged transaction 3526826 is a card-not-present online transaction ($35.66) on card C07671-K2, which has no prior history in the 72-hour window. The transaction is flagged with a high risk score of 0.76 and utilizes a generic desktop browser signature ('Windows |  | chrome 66.0 | ') marked as a 'New' device for this customer, while the rest of the window consists entirely of in-person transactions.",
+      "risk": "low",
+      "assessment": "The flagged online transaction 3526826 ($35.66) is marked as originating from a 'New' device, but it uses a highly generic browser signature shared across 1,531 transactions. While the real-time risk score is elevated at 0.76, the transaction model score is very low at 0.017176, and there is no evidence of card-testing or velocity bursts.",
       "key_points": [
-        "Flagged transaction 3526826 is an online purchase of $35.66 on card C07671-K2, which has no other transactions in the provided 72-hour window.",
-        "The transaction uses a generic desktop browser profile ('Windows |  | chrome 66.0 | ') that is shared across 1,531 transactions in the dataset, indicating it is a generic signature rather than a unique device link.",
-        "All other transactions in the 72-hour window (e.g., 3518402, 3518429, 3518566) are in-person ('W' product type) with low risk scores, making this sudden online 'New' device transaction anomalous for the card's immediate baseline."
+        "Flagged transaction 3526826 is an online purchase that deviates from the card's historical pattern of in-person transactions (such as 3518402 and 3518429).",
+        "The transaction model score for the flagged transaction is low (0.017176) compared to the real-time risk score of 0.76.",
+        "The device profile 'Windows |  | chrome 66.0 | ' is generic and shared by many unrelated users, meaning its classification as 'New' is not indicative of a dedicated fraud ring or account takeover."
       ]
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.09,
       "kind": "specialist",
       "agent": "identity",
       "risk": "medium",
-      "assessment": "The transaction on card C07671-K2 is flagged with a high risk score of 0.76 using a generic Windows Chrome device profile marked as New. Because the account has no prior transaction history and the device profile is highly generic, it is difficult to definitively confirm fraud, but the lack of established history warrants caution.",
+      "assessment": "Transaction 3526826 is flagged with a high real-time risk score of 0.76 on a newly seen card account C07671-K2. The transaction was made using a generic Windows desktop browser signature, which is too common to link to a specific fraud ring but represents a new device for this card.",
       "key_points": [
-        "The transaction was made using a generic device profile 'Windows |  | chrome 66.0 | ' which is marked as New.",
-        "The card account C07671-K2 has only 1 recorded transaction and no prior history to establish a baseline.",
-        "The real-time model scored transaction 3526826 highly at 0.76."
+        "The transaction was attempted on card C07671-K2, which has no prior transaction history (n_txn: 1) and was first seen on 2016-12-09.",
+        "The device profile 'Windows |  | chrome 66.0 | ' is generic and lacks specific model or screen details, meaning it cannot be used to definitively link this activity to a fraud ring.",
+        "The device is flagged as 'New' for this card, and there are no previous transactions associated with this account to establish a baseline."
       ]
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.09,
       "kind": "specialist",
       "agent": "network",
-      "risk": "medium",
-      "assessment": "The transaction 3526826 is flagged with a high risk score of 0.76. While it shares a device profile with 266 other cards, this high volume of connections suggests a generic browser signature rather than a coordinated fraud ring or account takeover.",
+      "risk": "low",
+      "assessment": "The alert transaction 3526826 is flagged with a high real-time risk score of 0.76. However, the associated device profile is shared by 266 cards all-time, indicating it is a generic browser signature rather than a unique device fingerprint. Consequently, the shared device connections do not provide evidence of a coordinated fraud ring or account takeover.",
       "key_points": [
-        "Transaction 3526826 has a high model risk score of 0.76.",
-        "The device profile is shared by 266 cards all time, including cards like C02782-K2, C01433-K1, and C06940-K1, indicating a highly generic browser signature.",
-        "There are no active or closed fraud cases associated with the neighboring transactions in the provided data."
+        "The device profile is shared by 266 cards all-time, which represents a generic browser signature shared by many unrelated users.",
+        "Transactions from multiple distinct customers (such as C02782, C01433, and C06940) appear in the device neighbors list, but this overlap is non-probative due to the generic nature of the device profile.",
+        "There are no active or closed fraud cases associated with the neighboring transactions listed in the evidence."
       ]
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.09,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The customer C07671 has a severe history of fraud, with three separate confirmed fraud cases (CC-1475, CC-3216, and CC-4294) on card C07671-K2 within a three-month period, primarily involving account takeover and card-not-present fraud. Given this highly repetitive fraud pattern and the high model risk score of 0.76 on the current transaction, there is a strong likelihood that this transaction is also fraudulent.",
+      "assessment": "The customer C07671 has a severe history of recurring fraud on card C07671-K2, including account takeover (CC-1475, CC-4294) and card-not-present fraud from new devices (CC-3216). Given this highly compromised history and the elevated real-time risk score of 0.76, the current online transaction is highly suspicious and likely represents a continuation of unauthorized activity.",
       "key_points": [
-        "Customer C07671 has three prior confirmed fraud cases on card C07671-K2: CC-1475 (account takeover, $1,307.98), CC-3216 (CNP new device, $449.97), and CC-4294 (account takeover, $506.01).",
-        "One previous high-scoring alert (CC-3761 for $3,891.01) was cleared as legitimate after customer verification.",
-        "The current transaction 3526826 is flagged with a high risk score of 0.76, which is highly concerning given the account's vulnerability to repeated compromise."
+        "Customer C07671 has three prior confirmed fraud cases on card C07671-K2: CC-1475 (account takeover, $1,307.98), CC-3216 (card-not-present new device, $449.97), and CC-4294 (account takeover, $506.01).",
+        "A single high-value transaction was previously cleared under CC-3761 after customer verification, showing a mix of legitimate and fraudulent activity on this account.",
+        "The current transaction 3526826 is an online purchase of $35.66 flagged with a high real-time risk score of 0.76, which aligns with the customer's historical vulnerability to card-not-present and account takeover patterns."
       ]
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared investigations, July-October; October hold-out AUC 0.973) scores this transaction 0.017, against a 2.1% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time (it never sees the case outcome)",
+      "lr": 0.8187042459465599,
+      "family": "model",
+      "ref": "query:txn_context(txn=3526826)",
+      "entity_ids": [
+        "3526826"
+      ],
+      "in_model": false,
+      "model_p": 0.017176
+    },
+    {
+      "t": 1790261409.21,
       "kind": "finding",
       "key": "new_device",
       "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (Windows |  | chrome 66.0 | )",
@@ -103,10 +116,11 @@
       "ref": "query:txn_context(txn=3526826)",
       "entity_ids": [
         "3526826"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
       "kind": "finding",
       "key": "channel_shift",
       "claim": "This card is used almost only in person (21 of 1431 earlier transactions online); this purchase is online",
@@ -115,45 +129,57 @@
       "ref": "query:card_profile(card=C07671-K2, before_ts=2016-12-09 02:39:29, recent_days=30)",
       "entity_ids": [
         "3526826"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-3761; latest note: \"Case CC-3761: model scored a $3,891.01 transaction at 0.89. Cardholder confirmed the purchase. Amount unusual for this customer but consiste\")",
       "lr": 0.8,
       "family": "memory",
-      "ref": "query:prior_cases(card=C07671-K2)",
+      "ref": "query:prior_cases(card=C07671-K2, before_ts=2016-12-09 05:39:29)",
       "entity_ids": [
         "CC-3761"
-      ]
+      ],
+      "in_model": true
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
       "kind": "assessment",
-      "p": 0.51,
-      "prior": 0.25235670170115937,
-      "verdict": "uncertain",
-      "pattern": "card_not_present_new_device",
+      "p": 0.03,
+      "prior": 0.017176,
+      "verdict": "legitimate",
+      "pattern": "none",
       "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.82,
+          "delta_logodds": 0.0,
+          "note": "starting point"
+        },
         {
           "key": "new_device",
           "family": "device",
           "lr": 1.4,
-          "delta_logodds": 0.336
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "channel_shift",
           "family": "behaviour",
           "lr": 2.7,
-          "delta_logodds": 0.993
+          "delta_logodds": 0.0,
+          "note": "in model score"
         },
         {
           "key": "card_prior_cleared",
           "family": "memory",
           "lr": 0.8,
-          "delta_logodds": -0.223
+          "delta_logodds": 0.0,
+          "note": "in model score"
         }
       ],
       "exposure": 35.66,
@@ -161,17 +187,12 @@
         {
           "action": "CREATE_CASE",
           "route": "auto",
-          "reason": "Section 3a: evidence is being requested and probability >= 0.30"
+          "reason": "Section 3a: evidence is being requested"
         },
         {
-          "action": "DECLINE_TRANSACTION",
-          "route": "L1",
-          "reason": "R1 / R4: hold the flagged authorisation while it is verified (probability 0.51)"
-        },
-        {
-          "action": "STEP_UP_AUTH",
+          "action": "VERIFY_WITH_CUSTOMER",
           "route": "auto",
-          "reason": "R1: single signal (probability 0.51 < 0.70); verify before any block"
+          "reason": "R1: single signal (probability 0.03 < 0.70); verify before any block"
         }
       ],
       "branches": {
@@ -214,79 +235,75 @@
       }
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
       "kind": "evidence_request",
-      "type": "step_up_auth",
-      "branch": "no_reply",
-      "assumed_response": "No reply from the cardholder within 24 hours of the verification request",
-      "asked_after_step": 9
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed the purchase was made from their own new device",
+      "asked_after_step": 10
     },
     {
-      "t": 1790184232.48,
+      "t": 1790261409.21,
       "kind": "decision",
-      "verdict": "uncertain",
-      "p": 0.51,
-      "pattern": "card_not_present_new_device",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
       "final": [
         {
-          "action": "MONITOR_CARD",
+          "action": "ALLOW_TRANSACTION",
           "route": "auto",
-          "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          "reason": "R3: the cardholder confirmed the transaction"
         },
         {
-          "action": "DECLINE_TRANSACTION",
-          "route": "L1",
-          "reason": "R4: decline the pending authorisation"
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed the purchase was made from their own new device; confirmation noted in the case file"
         }
       ],
-      "status": "open",
-      "exposure": 35.66,
-      "episode": [
-        "3526826"
-      ]
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
     },
     {
-      "t": 1790184232.71,
+      "t": 1790261409.49,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-3216",
-        "CC-3356",
-        "CC-0948",
-        "CC-1335",
-        "CC-3552",
-        "CC-3353",
-        "CC-2246",
-        "CC-3761"
+        "CC-1475",
+        "CC-4294",
+        "CC-3761",
+        "CC-0260",
+        "CC-3465",
+        "CC-0635",
+        "CC-1660"
       ],
       "knowledge": [
-        "Card-not-present fraud from a new device",
-        "The five known fraud patterns",
-        "Card-not-present fraud",
-        "Account takeover",
-        "The five known fraud patterns",
-        "Out-of-region use"
+        "Glossary",
+        "No fraud",
+        "Things to know",
+        "R5 Card testing",
+        "R3 Customer confirms the transaction",
+        "Notes"
       ]
     },
     {
-      "t": 1790184241.54,
+      "t": 1790261422.13,
       "kind": "review",
       "agent": "compliance",
-      "agree": false,
-      "issues": [
-        "DECLINE_TRANSACTION is incorrectly included in the initial actions citing R4. Rule R4 only applies after 24 hours of no reply, so it cannot be used as an initial action."
-      ],
-      "what_would_change_verdict": "Remove DECLINE_TRANSACTION from the initial actions."
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering R2 or R4 respectively."
     },
     {
-      "t": 1790184251.49,
+      "t": 1790261432.94,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-013",
-        "n_vertices": 8,
-        "n_edges": 21
+        "n_vertices": 7,
+        "n_edges": 20
       }
     }
   ],
@@ -300,7 +317,7 @@
         "txn": "3526826"
       },
       "rows": 2,
-      "ms": 57.5,
+      "ms": 40.1,
       "via": "mcp"
     },
     {
@@ -314,7 +331,7 @@
         "end_ts": "2016-12-09 05:39:29"
       },
       "rows": 151,
-      "ms": 151.5,
+      "ms": 99.5,
       "via": "mcp"
     },
     {
@@ -328,7 +345,7 @@
         "recent_days": 30
       },
       "rows": 1431,
-      "ms": 65.0,
+      "ms": 53.8,
       "via": "mcp"
     },
     {
@@ -343,7 +360,7 @@
         "before_ts": "2016-12-09 02:39:29"
       },
       "rows": 31,
-      "ms": 43.3,
+      "ms": 38.5,
       "via": "mcp"
     },
     {
@@ -356,7 +373,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 47.7,
+      "ms": 45.5,
       "via": "mcp"
     },
     {
@@ -370,19 +387,20 @@
         "end_ts": "2016-12-09 05:39:29"
       },
       "rows": 167,
-      "ms": 127.4,
+      "ms": 69.6,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "prior_cases",
-      "ref": "query:prior_cases(card=C07671-K2)",
+      "ref": "query:prior_cases(card=C07671-K2, before_ts=2016-12-09 05:39:29)",
       "params": {
-        "card": "C07671-K2"
+        "card": "C07671-K2",
+        "before_ts": "2016-12-09 05:39:29"
       },
       "rows": 6,
-      "ms": 44.0,
+      "ms": 40.9,
       "via": "mcp"
     },
     {
@@ -396,7 +414,7 @@
         "end_ts": "2016-12-09 05:39:29"
       },
       "rows": 271,
-      "ms": 311.9,
+      "ms": 105.2,
       "via": "mcp"
     },
     {
@@ -411,14 +429,34 @@
         "before_ts": "2016-12-09 02:39:29"
       },
       "rows": 31,
-      "ms": 42.4,
+      "ms": 41.4,
       "via": "mcp"
     },
     {
       "agent": "precedent",
       "tool": "tigergraph__run_installed_query",
       "query": "similar_cases",
-      "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=8, pattern=)",
+      "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=6, pattern=, before_ts=2016-12-09 05:39:29)",
+      "params": {
+        "devices": [
+          "Windows |  | chrome 66.0 | "
+        ],
+        "cards": [
+          "C07671-K2"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2016-12-09 05:39:29"
+      },
+      "rows": 15,
+      "ms": 104.6,
+      "via": "mcp"
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Windows |  | chrome 66.0 | '], cards=['C07671-K2'], k=8, pattern=, before_ts=2016-12-09 05:39:29)",
       "params": {
         "devices": [
           "Windows |  | chrome 66.0 | "
@@ -427,10 +465,11 @@
           "C07671-K2"
         ],
         "k": 8,
-        "pattern": ""
+        "pattern": "",
+        "before_ts": "2016-12-09 05:39:29"
       },
       "rows": 17,
-      "ms": 113.1,
+      "ms": 166.1,
       "via": "mcp"
     },
     {
@@ -442,128 +481,122 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 101.0,
+      "ms": 101.6,
       "via": "mcp"
     },
     {
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3526826'], card_ids=[], case_ids=['CC-3216', 'CC-3356', 'CC-0948', 'CC-1335', 'CC-3552', 'CC-3353', 'CC-2246', 'CC-3761'], customer_ids=['C07671'])",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-3216', 'CC-1475', 'CC-4294', 'CC-3761', 'CC-0260', 'CC-3465', 'CC-0635', 'CC-1660'], customer_ids=['C07671'])",
       "params": {
-        "txn_ids": [
-          "3526826"
-        ],
+        "txn_ids": [],
         "card_ids": [],
         "case_ids": [
           "CC-3216",
-          "CC-3356",
-          "CC-0948",
-          "CC-1335",
-          "CC-3552",
-          "CC-3353",
-          "CC-2246",
-          "CC-3761"
+          "CC-1475",
+          "CC-4294",
+          "CC-3761",
+          "CC-0260",
+          "CC-3465",
+          "CC-0635",
+          "CC-1660"
         ],
         "customer_ids": [
           "C07671"
         ]
       },
-      "rows": 10,
-      "ms": 106.3,
+      "rows": 9,
+      "ms": 100.1,
       "via": "mcp"
     }
   ],
   "specialists": {
     "transaction": {
-      "assessment": "The flagged transaction 3526826 is a card-not-present online transaction ($35.66) on card C07671-K2, which has no prior history in the 72-hour window. The transaction is flagged with a high risk score of 0.76 and utilizes a generic desktop browser signature ('Windows |  | chrome 66.0 | ') marked as a 'New' device for this customer, while the rest of the window consists entirely of in-person transactions.",
-      "risk": "medium",
+      "assessment": "The flagged online transaction 3526826 ($35.66) is marked as originating from a 'New' device, but it uses a highly generic browser signature shared across 1,531 transactions. While the real-time risk score is elevated at 0.76, the transaction model score is very low at 0.017176, and there is no evidence of card-testing or velocity bursts.",
+      "risk": "low",
       "key_points": [
-        "Flagged transaction 3526826 is an online purchase of $35.66 on card C07671-K2, which has no other transactions in the provided 72-hour window.",
-        "The transaction uses a generic desktop browser profile ('Windows |  | chrome 66.0 | ') that is shared across 1,531 transactions in the dataset, indicating it is a generic signature rather than a unique device link.",
-        "All other transactions in the 72-hour window (e.g., 3518402, 3518429, 3518566) are in-person ('W' product type) with low risk scores, making this sudden online 'New' device transaction anomalous for the card's immediate baseline."
+        "Flagged transaction 3526826 is an online purchase that deviates from the card's historical pattern of in-person transactions (such as 3518402 and 3518429).",
+        "The transaction model score for the flagged transaction is low (0.017176) compared to the real-time risk score of 0.76.",
+        "The device profile 'Windows |  | chrome 66.0 | ' is generic and shared by many unrelated users, meaning its classification as 'New' is not indicative of a dedicated fraud ring or account takeover."
       ],
       "open_questions": [
-        "Is this the customer's first online transaction on this card, or is there historical online activity prior to the 72-hour window?",
-        "Are the billing and shipping addresses for transaction 3526826 consistent with the customer's profile, given that addr1 and addr2 are blank in the transaction details?"
+        "Is this online transaction a legitimate first-time online purchase by the cardholder, or is it an unauthorized card-not-present transaction?"
       ],
-      "suggested_pattern": "card_not_present_new_device"
+      "suggested_pattern": "none"
     },
     "identity": {
-      "assessment": "The transaction on card C07671-K2 is flagged with a high risk score of 0.76 using a generic Windows Chrome device profile marked as New. Because the account has no prior transaction history and the device profile is highly generic, it is difficult to definitively confirm fraud, but the lack of established history warrants caution.",
+      "assessment": "Transaction 3526826 is flagged with a high real-time risk score of 0.76 on a newly seen card account C07671-K2. The transaction was made using a generic Windows desktop browser signature, which is too common to link to a specific fraud ring but represents a new device for this card.",
       "risk": "medium",
       "key_points": [
-        "The transaction was made using a generic device profile 'Windows |  | chrome 66.0 | ' which is marked as New.",
-        "The card account C07671-K2 has only 1 recorded transaction and no prior history to establish a baseline.",
-        "The real-time model scored transaction 3526826 highly at 0.76."
+        "The transaction was attempted on card C07671-K2, which has no prior transaction history (n_txn: 1) and was first seen on 2016-12-09.",
+        "The device profile 'Windows |  | chrome 66.0 | ' is generic and lacks specific model or screen details, meaning it cannot be used to definitively link this activity to a fraud ring.",
+        "The device is flagged as 'New' for this card, and there are no previous transactions associated with this account to establish a baseline."
       ],
       "open_questions": [
-        "Are there other transactions associated with card C07671-K2 that are not captured in this view?",
-        "What is the billing or shipping address associated with this transaction to verify cardholder identity?"
+        "What is the billing and shipping address associated with card C07671-K2, as addr1 is missing from the profile?",
+        "Are there other transactions on this card that occurred after the initial query window?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     },
     "network": {
-      "assessment": "The transaction 3526826 is flagged with a high risk score of 0.76. While it shares a device profile with 266 other cards, this high volume of connections suggests a generic browser signature rather than a coordinated fraud ring or account takeover.",
-      "risk": "medium",
+      "assessment": "The alert transaction 3526826 is flagged with a high real-time risk score of 0.76. However, the associated device profile is shared by 266 cards all-time, indicating it is a generic browser signature rather than a unique device fingerprint. Consequently, the shared device connections do not provide evidence of a coordinated fraud ring or account takeover.",
+      "risk": "low",
       "key_points": [
-        "Transaction 3526826 has a high model risk score of 0.76.",
-        "The device profile is shared by 266 cards all time, including cards like C02782-K2, C01433-K1, and C06940-K1, indicating a highly generic browser signature.",
-        "There are no active or closed fraud cases associated with the neighboring transactions in the provided data."
+        "The device profile is shared by 266 cards all-time, which represents a generic browser signature shared by many unrelated users.",
+        "Transactions from multiple distinct customers (such as C02782, C01433, and C06940) appear in the device neighbors list, but this overlap is non-probative due to the generic nature of the device profile.",
+        "There are no active or closed fraud cases associated with the neighboring transactions listed in the evidence."
       ],
       "open_questions": [
-        "What are the specific device profile details (OS, browser version, screen size) to confirm if it is indeed a generic signature?",
-        "Are there any chargebacks or confirmed fraud reports on the other 266 cards sharing this profile?"
+        "What are the specific device attributes (OS, browser version, screen size) that caused this profile to be so widely shared?",
+        "Are there other non-device linkages, such as shared billing addresses or IP subnets, between card C02782 and the other accounts?"
       ],
       "suggested_pattern": "none"
     },
     "precedent": {
-      "assessment": "The customer C07671 has a severe history of fraud, with three separate confirmed fraud cases (CC-1475, CC-3216, and CC-4294) on card C07671-K2 within a three-month period, primarily involving account takeover and card-not-present fraud. Given this highly repetitive fraud pattern and the high model risk score of 0.76 on the current transaction, there is a strong likelihood that this transaction is also fraudulent.",
+      "assessment": "The customer C07671 has a severe history of recurring fraud on card C07671-K2, including account takeover (CC-1475, CC-4294) and card-not-present fraud from new devices (CC-3216). Given this highly compromised history and the elevated real-time risk score of 0.76, the current online transaction is highly suspicious and likely represents a continuation of unauthorized activity.",
       "risk": "high",
       "key_points": [
-        "Customer C07671 has three prior confirmed fraud cases on card C07671-K2: CC-1475 (account takeover, $1,307.98), CC-3216 (CNP new device, $449.97), and CC-4294 (account takeover, $506.01).",
-        "One previous high-scoring alert (CC-3761 for $3,891.01) was cleared as legitimate after customer verification.",
-        "The current transaction 3526826 is flagged with a high risk score of 0.76, which is highly concerning given the account's vulnerability to repeated compromise."
+        "Customer C07671 has three prior confirmed fraud cases on card C07671-K2: CC-1475 (account takeover, $1,307.98), CC-3216 (card-not-present new device, $449.97), and CC-4294 (account takeover, $506.01).",
+        "A single high-value transaction was previously cleared under CC-3761 after customer verification, showing a mix of legitimate and fraudulent activity on this account.",
+        "The current transaction 3526826 is an online purchase of $35.66 flagged with a high real-time risk score of 0.76, which aligns with the customer's historical vulnerability to card-not-present and account takeover patterns."
       ],
       "open_questions": [
-        "Why does the card ID C07671-K2 remain active or associated with new transactions if it was reportedly blocked and reissued multiple times in previous cases?",
-        "Is the current transaction 3526826 originating from a recognized device or a new device profile?"
+        "Is the current transaction 3526826 initiated from a known device or a new device profile?",
+        "Has the customer reported any unauthorized activity or credential compromise since the last case CC-4294?"
       ],
       "suggested_pattern": "account_takeover"
     }
   },
   "lead": {
     "hypotheses": [
-      "Legitimate cardholder transaction representing an occasional online purchase (consistent with the cardholder's history of rare but high-value cleared transactions like CC-3761)",
-      "Card-Not-Present (CNP) fraud or Account Takeover (ATO) where an unauthorized user is transacting online with a card primarily used in-person",
-      "A recurring subscription or card-on-file transaction that has been misclassified or initiated via a generic browser profile"
+      "Legitimate channel shift: The cardholder is making an unusual but authorized online purchase, possibly a recurring subscription or one-off transaction.",
+      "Card-Not-Present (CNP) Fraud: An unauthorized user has obtained the card details and is conducting low-value online transactions."
     ],
     "extra_calls": [
       {
         "tool": "card_window",
-        "why": "To analyze the card's transaction history surrounding the flagged event, checking for other online attempts, card testing, or sudden location/channel shifts.",
+        "why": "To review the card's recent transaction history for any other online activity, rapid sequence of charges, or signs of compromise.",
         "days_back": 30
       },
       {
         "tool": "recurring_match",
-        "why": "To check if the amount of $35.66 matches any prior recurring charges on this card, which would indicate a legitimate subscription.",
+        "why": "To check if the card has previous transactions of approximately $35.66, which would indicate a legitimate recurring subscription.",
         "tol_pct": 1.0
       }
     ],
-    "focus": "Establish whether the transaction is an isolated online event, a recurring charge, or part of a broader pattern of unauthorized CNP activity on a card that is historically used in-person."
+    "focus": "Determine if the transaction is a legitimate recurring charge or part of an unauthorized CNP fraud pattern by analyzing the card's history and recurring patterns."
   },
   "critic": {
-    "agree": false,
-    "issues": [
-      "DECLINE_TRANSACTION is incorrectly included in the initial actions citing R4. Rule R4 only applies after 24 hours of no reply, so it cannot be used as an initial action."
-    ],
-    "what_would_change_verdict": "Remove DECLINE_TRANSACTION from the initial actions."
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering R2 or R4 respectively."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-013",
-    "n_vertices": 8,
-    "n_edges": 21
+    "n_vertices": 7,
+    "n_edges": 20
   }
 }

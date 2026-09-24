@@ -20,9 +20,13 @@ for (const [src, dst] of pairs) {
     n++;
   }
 }
-const report = join(root, "eval", "report.json");
-if (existsSync(report)) {
-  copyFileSync(report, join(web, "src", "fixtures", "backtest_report.json"));
+const reports = [
+  [join(root, "eval", "report.json"), join(web, "src", "fixtures", "backtest_report.json")],
+  [join(root, "eval", "model_report.json"), join(web, "src", "fixtures", "model_report.json")],
+];
+for (const [src, dst] of reports) {
+  if (!existsSync(src)) continue;
+  copyFileSync(src, dst);
   n++;
 }
 console.log(`synced ${n} fixture file(s)`);

@@ -39,13 +39,13 @@ def backtest_table() -> str:
         return "_run `python eval/backtest.py`_"
     r = json.loads(p.read_text())
     return "\n".join([
-        "| Metric (October closed cases, temporal replay) | Value |", "|---|---|",
+        "| Agent replay on October closed cases | Value |", "|---|---|",
         f"| Cases replayed | {r['n_cases']} ({r['n_confirmed']} confirmed, {r['n_cleared']} cleared) |",
-        f"| Episode reconstruction (Jaccard vs the case's txn_ids) | **{r['episode_jaccard']:.2f}** |",
+        f"| Fraud vs false alarm, final probability (AUC) | **{r['auc_final_probability']:.3f}** ({r['auc_final_probability_score_ge_0_5']:.3f} on alerts scored ≥ 0.5) |",
         f"| Pattern accuracy (confirmed cases, 5 known patterns + undocumented) | **{r['pattern_accuracy']:.0%}** |",
+        f"| Episode reconstruction (Jaccard vs the case's txn_ids) | **{r['episode_jaccard']:.2f}** |",
         f"| SAR decision agreement with the bank's filings | **{r['sar_agreement']:.0%}** |",
         f"| Exposure mean absolute error | ${r['exposure_mae']:,.2f} |",
-        f"| Evidence-only discrimination within alerts scored ≥ 0.5 (AUC) | {r['evidence_auc_score_ge_0_5']} (n={r['n_score_ge_0_5']}) |",
     ])
 
 
@@ -55,7 +55,8 @@ def main() -> None:
         p = ROOT / name
         s = p.read_text(encoding="utf-8")
         s = re.sub(r"<!-- RESULTS_TABLE -->.*?(?=\n## )", "<!-- RESULTS_TABLE -->\n" + res + "\n\n", s, flags=re.S) if "<!-- RESULTS_TABLE -->" in s else s
-        s = re.sub(r"<!-- BACKTEST_TABLE -->.*?(?=\n\S)", "<!-- BACKTEST_TABLE -->\n" + bt + "\n", s, flags=re.S) if "<!-- BACKTEST_TABLE -->" in s else s
+        # the marker is followed by one or more tables (rows and blank lines); replace all of them
+        s = re.sub(r"<!-- BACKTEST_TABLE -->\r?\n(?:(?:\|[^\n]*)?\r?\n)*", lambda _: "<!-- BACKTEST_TABLE -->\n" + bt + "\n\n", s) if "<!-- BACKTEST_TABLE -->" in s else s
         s = s.replace("<!-- filled from cases/ and eval/report.json -->", "<!-- RESULTS_TABLE -->\n" + res + "\n\n<!-- BACKTEST_TABLE -->\n" + bt + "\n")
         p.write_text(s, encoding="utf-8")
     print(res)

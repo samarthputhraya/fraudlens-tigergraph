@@ -23,11 +23,12 @@ flowchart TB
     A4["<b>Precedent</b><br/>case memory<br/>policy · FinCEN"]
   end
   MCP[["<b>TigerGraph MCP</b><br/>tigergraph__run_installed_query<br/>least-privilege allowlist"]]
-  TG[("<b>TigerGraph Savanna</b><br/>590k txns · 221k resolved accounts<br/>17 installed GSQL queries<br/>TigerVector · GDBMS_ALGO WCC")]
+  TG[("<b>TigerGraph Savanna</b><br/>590k txns · 221k resolved accounts<br/>18 installed GSQL queries<br/>TigerVector · GDBMS_ALGO WCC")]
+  M["<b>Transaction model</b><br/>LightGBM, offline<br/>5,565 closed cases<br/>hold-out AUC 0.973<br/>no look-ahead"]
   subgraph DEC["2 · Decide: code, not the LLM"]
     direction LR
-    D["<b>Detectors</b><br/>typed findings<br/>LR + query ref + IDs"]
-    LED["<b>Calibrated ledger</b><br/>log-odds, LRs fitted on<br/>14k fraud / 402k background"]
+    D["<b>Detectors</b><br/>graph-only findings<br/>LR + query ref + IDs"]
+    LED["<b>Calibrated ledger</b><br/>starts from the model's p<br/>moved by graph evidence"]
     P["<b>Policy engine</b><br/>R1–R10 · §3a case vs SAR<br/>§6 stop · routes auto/L1/L2"]
     C["<b>Evidence request</b><br/>verify / step-up<br/>confirm · deny · no reply"]
   end
@@ -43,6 +44,7 @@ flowchart TB
   L --> A1 & A2 & A3 & A4
   A1 & A2 & A3 & A4 --> MCP --> TG
   A1 & A2 & A3 & A4 --> D --> LED --> P
+  M -->|"model_p on every Transaction"| TG
   P <--> C
   P --> RV --> W --> V --> CW
   V --> UI

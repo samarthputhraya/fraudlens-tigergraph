@@ -1,0 +1,174 @@
+{
+ "voice": "Charon",
+ "model": "gemini-2.5-pro-tts",
+ "lines": [
+  {
+   "id": "hook1",
+   "scene": "cold_open",
+   "text": "Every day, a bank's fraud model raises thousands of alerts, and most of the high-scoring ones are false alarms.",
+   "file": "voice/hook1.wav",
+   "seconds": 7.741,
+   "tail_db": -47.3
+  },
+  {
+   "id": "hook2",
+   "scene": "cold_open",
+   "text": "Real fraud hides where no single alert can see it: on other cards, on shared devices, in cases the bank already closed.",
+   "file": "voice/hook2.wav",
+   "seconds": 9.141,
+   "tail_db": -70.0
+  },
+  {
+   "id": "hook3",
+   "scene": "cold_open",
+   "text": "This is FraudLens: a team of AI investigators that works every case on TigerGraph, and proves every claim it makes.",
+   "file": "voice/hook3.wav",
+   "seconds": 9.631,
+   "tail_db": -120.0
+  },
+  {
+   "id": "arch1",
+   "scene": "architecture",
+   "text": "An alert comes in: a model score, a customer complaint, or an analyst's hunch. A lead investigator sends four specialists after it.",
+   "file": "voice/arch1.wav",
+   "seconds": 9.901,
+   "tail_db": -65.3
+  },
+  {
+   "id": "arch2",
+   "scene": "architecture",
+   "text": "Every question goes to TigerGraph through the official MCP server, read-only, limited to eighteen installed queries.",
+   "file": "voice/arch2.wav",
+   "seconds": 10.381,
+   "tail_db": -45.3
+  },
+  {
+   "id": "arch3",
+   "scene": "architecture",
+   "text": "A model trained on the bank's own closed cases estimates the odds. Code, not the language model, owns the policy, the numbers and the approvals.",
+   "file": "voice/arch3.wav",
+   "seconds": 10.351,
+   "tail_db": -56.2
+  },
+  {
+   "id": "live1",
+   "scene": "live",
+   "text": "Here's an analyst's lead: several cards this month made purchases from the same unusual phone.",
+   "file": "voice/live1.wav",
+   "seconds": 7.481,
+   "tail_db": -58.1
+  },
+  {
+   "id": "live2",
+   "scene": "live",
+   "text": "The network specialist asks TigerGraph who else used this phone. Nineteen other cardholders in eight days, the phone new to every one of them, every session behind an anonymous proxy.",
+   "file": "voice/live2.wav",
+   "seconds": 13.341,
+   "tail_db": -72.9
+  },
+  {
+   "id": "live3",
+   "scene": "live",
+   "text": "The precedent specialist searches case memory with a graph-filtered vector search, and finds four confirmed cases from the summer, with the very same device.",
+   "file": "voice/live3.wav",
+   "seconds": 11.181,
+   "tail_db": -37.2
+  },
+  {
+   "id": "live4",
+   "scene": "live",
+   "text": "It fits none of the five known patterns. So the agent names a new one: a shared-device ring.",
+   "file": "voice/live4.wav",
+   "seconds": 8.001,
+   "tail_db": -120.0
+  },
+  {
+   "id": "dec1",
+   "scene": "decide",
+   "text": "Every finding moves a calibrated ledger. At ninety-seven percent, on independent evidence, the policy says: stop investigating, and act.",
+   "file": "voice/dec1.wav",
+   "seconds": 11.031,
+   "tail_db": -120.0
+  },
+  {
+   "id": "dec2",
+   "scene": "decide",
+   "text": "Block the card, file a suspicious activity report, and watch all nineteen connected cards. Every action cites its rule, and who must approve it.",
+   "file": "voice/dec2.wav",
+   "seconds": 11.881,
+   "tail_db": -43.8
+  },
+  {
+   "id": "proof1",
+   "scene": "proof",
+   "text": "Nothing is taken on faith. Every claim carries the exact query behind it. Press re-prove, and it runs again, live, on TigerGraph Savanna.",
+   "file": "voice/proof1.wav",
+   "seconds": 13.361,
+   "tail_db": -69.9
+  },
+  {
+   "id": "proof2",
+   "scene": "proof",
+   "text": "The suspicious activity report is written to FinCEN's standard: who, what, when, where, how, and why.",
+   "file": "voice/proof2.wav",
+   "seconds": 10.021,
+   "tail_db": -38.6
+  },
+  {
+   "id": "unc1",
+   "scene": "uncertain",
+   "text": "Most alerts aren't fraud. This one scored ninety percent: a thousand dollars, from a device the card had never used.",
+   "file": "voice/unc1.wav",
+   "seconds": 9.151,
+   "tail_db": -44.3
+  },
+  {
+   "id": "unc2",
+   "scene": "uncertain",
+   "text": "Our transaction model puts it below one percent. So the agent verifies before it blocks, and plans for every reply.",
+   "file": "voice/unc2.wav",
+   "seconds": 8.651,
+   "tail_db": -85.0
+  },
+  {
+   "id": "unc3",
+   "scene": "metrics",
+   "text": "On October's high-score alerts, which the model never saw, the bank's own score ranks a real fraud above a false alarm sixty times in a hundred. Ours does it ninety-three times.",
+   "file": "voice/unc3.wav",
+   "seconds": 13.851,
+   "tail_db": -45.6
+  },
+  {
+   "id": "gov1",
+   "scene": "governance",
+   "text": "The agent only executes automatic actions. A team lead can't approve a suspicious activity report; only a fraud manager can.",
+   "file": "voice/gov1.wav",
+   "seconds": 9.211,
+   "tail_db": -65.9
+  },
+  {
+   "id": "gov2",
+   "scene": "governance",
+   "text": "And every decision is written back to the graph, so the next investigation remembers it.",
+   "file": "voice/gov2.wav",
+   "seconds": 5.411,
+   "tail_db": -56.9
+  },
+  {
+   "id": "out1",
+   "scene": "autonomy",
+   "text": "With no alert at all, the monitor sweeps the graph by itself, and finds rings that nobody reported.",
+   "file": "voice/out1.wav",
+   "seconds": 8.051,
+   "tail_db": -47.2
+  },
+  {
+   "id": "out2",
+   "scene": "outro",
+   "text": "FraudLens. Agentic, calibrated, and provable. The model predicts. TigerGraph proves.",
+   "file": "voice/out2.wav",
+   "seconds": 12.261,
+   "tail_db": -37.6
+  }
+ ]
+}

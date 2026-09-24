@@ -1,0 +1,8 @@
+USE GRAPH Fraud
+// v2: the transaction model's calibrated fraud probability lives on the Transaction vertex, so every installed query
+// (and therefore every MCP tool call) returns it next to the raw evidence. Loaded by `python graph/setup.py scores`.
+CREATE SCHEMA_CHANGE JOB add_model_score FOR GRAPH Fraud {
+  ALTER VERTEX Transaction ADD ATTRIBUTE (model_p DOUBLE DEFAULT -1);
+}
+RUN SCHEMA_CHANGE JOB add_model_score
+DROP JOB add_model_score
