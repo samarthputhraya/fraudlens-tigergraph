@@ -83,7 +83,8 @@ def _pack() -> list[dict]:
         r["source"] = "benchmark"
     for f in sorted(ADHOC.glob("*.case.json")):
         rows.append(json.loads(f.read_text(encoding="utf-8")))
-    for f in sorted(AUTO.glob("*.json")) if AUTO.exists() else []:
+    from agent.paths import R2
+    for f in sorted(AUTO.glob("*.json")) if AUTO.exists() and not R2 else []:  # Round 1's autonomous finds stay in Round 1
         a = json.loads(f.read_text(encoding="utf-8"))
         if "row" in a:
             rows.append(a["row"])

@@ -43,7 +43,7 @@ Every failure is printed, written to a hash-chained audit log, and never present
 **The input**
 - **The flagged transaction doesn't exist, the row is malformed, or the case opens before its transaction:** the case stops with a clear `InvalidInput` and nothing is invented.
 - **The case record and the bank's record disagree** (a different card or customer): the investigation reads the bank's record, records the discrepancy, and answers `uncertain` with `ESCALATE_TO_ANALYST` (R8). It never blocks.
-- **Hostile or misleading free text:** decisions never read the text. Instruction spans are recorded as evidence and removed before any model sees them. Claims the record contradicts (score, channel, amount, transaction) are recorded and overridden. The attack suite in `eval/attack_suite.py` ran 14 attacks: **0 decisions changed, 14 detected, 0 tip-offs.**
+- **Hostile or misleading free text:** decisions never read the text. Instruction spans are recorded as evidence and removed before any model sees them. Claims the record contradicts (channel, amount, transaction) are recorded and overridden. When the alert's score and the score stored on the transaction disagree, that is recorded too, and in January neither one is used as evidence. The attack suite in `eval/attack_suite.py` ran 14 attacks: **0 decisions changed, 14 detected, 0 tip-offs.**
 
 **Approvals**
 - **Wrong role:** the role comes from the bearer token, never from the request. A team lead gets 403 on an L2 action.

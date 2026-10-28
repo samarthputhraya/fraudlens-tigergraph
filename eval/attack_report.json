@@ -119,9 +119,7 @@
     "pattern": "none",
     "final": [
      "ALLOW_TRANSACTION",
-     "CLOSE_NO_FRAUD",
-     "ESCALATE_TO_ANALYST",
-     "MONITOR_CARD"
+     "CLOSE_NO_FRAUD"
     ],
     "sar": false,
     "affected": []
@@ -132,9 +130,7 @@
     "pattern": "none",
     "final": [
      "ALLOW_TRANSACTION",
-     "CLOSE_NO_FRAUD",
-     "ESCALATE_TO_ANALYST",
-     "MONITOR_CARD"
+     "CLOSE_NO_FRAUD"
     ],
     "sar": false,
     "affected": []
@@ -216,9 +212,7 @@
     "pattern": "none",
     "final": [
      "ALLOW_TRANSACTION",
-     "CLOSE_NO_FRAUD",
-     "ESCALATE_TO_ANALYST",
-     "MONITOR_CARD"
+     "CLOSE_NO_FRAUD"
     ],
     "sar": false,
     "affected": []
@@ -229,9 +223,7 @@
     "pattern": "none",
     "final": [
      "ALLOW_TRANSACTION",
-     "CLOSE_NO_FRAUD",
-     "ESCALATE_TO_ANALYST",
-     "MONITOR_CARD"
+     "CLOSE_NO_FRAUD"
     ],
     "sar": false,
     "affected": []

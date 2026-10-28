@@ -25,6 +25,7 @@ from agent.paths import R2
 # are unseen: from this date a low model score is not used as evidence of innocence.
 DRIFT_FROM = "2017-01-01" if R2 else "9999"
 TYPOLOGY_LR = {"micro_run": 25.0, "spoofed_device": 40.0, "escalating_ramp": 30.0, "recipient_surge": 30.0}
+HIGH_PRECISION = {"spoofed_device", "recipient_surge"}  # eval/typology_backtest.json: no innocent hits, clean background
 TYPOLOGY_FAMILY = {"micro_run": "behaviour", "spoofed_device": "device", "escalating_ramp": "behaviour",
                    "recipient_surge": "network"}
 
@@ -130,10 +131,19 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         facts["hostile_text"] = hostile
     mism = claims_vs_record(trig, t, ep.case.get("trigger_type", ""))
     if mism:
-        f.append(Finding("trigger_mismatch",
-                         "The alert text says " + ", ".join(f"{m['field']} {m['claimed']}" for m in mism)
-                         + "; the bank's transaction record says " + ", ".join(f"{m['field']} {m['record']}" for m in mism)
-                         + ". The record is used and the claim is not", 1.0, "integrity",
+        facts_m = [m for m in mism if m["field"] != "risk score"]
+        score_m = [m for m in mism if m["field"] == "risk score"]
+        parts = []
+        if facts_m:
+            parts.append("The alert text says " + ", ".join(f"{m['field']} {m['claimed']}" for m in facts_m)
+                         + "; the bank's transaction record says " + ", ".join(f"{m['field']} {m['record']}" for m in facts_m)
+                         + ". The record is used")
+        if score_m:
+            m = score_m[0]
+            parts.append(f"The alert's score ({m['claimed']}, as in the case record) differs from the score stored on the "
+                         f"transaction ({m['record']}). Two bank sources disagree, and neither moves the decision: the bank "
+                         f"warns its model is near useless for January, so its score is not used as evidence")
+        f.append(Finding("trigger_mismatch", ". ".join(parts), 1.0, "integrity",
                          ref=ep.refs.get("context", ""), entity_ids=[t["id"]], data={"mismatch": mism}))
         facts["trigger_mismatch"] = mism
     cm = ep.extra.get("card_mismatch")
@@ -505,12 +515,18 @@ def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
             facts["shared_links"].append(best.shared)
         facts["pattern_signals"]["undocumented:" + best.key] += 4
     for typ in side:
+        # Only signatures that never touched a legitimate customer in July-December justify protective actions on a
+        # card whose flagged transaction is clean. Micro-charge runs and ramps are about 1 in 3 confirmed there, so
+        # on other charges they are noted, not acted on.
+        acted = typ.key in HIGH_PRECISION
         f.append(Finding("card_other_typology",
                          f"Other charges on this card, not the flagged transaction, match the {typ.name} pattern: {typ.claim}. "
-                         f"They go to an analyst as a separate concern and don't change the assessment of the flagged "
-                         f"transaction", 1.0, "integrity", ref=ref(typ), entity_ids=typ.txns[:12],
-                         data={"txns": typ.txns, "typology": typ.key}))
-        facts.setdefault("side_typologies", []).append(typ)
+                         + ("They go to an analyst as a separate concern and don't change the assessment of the flagged "
+                            "transaction" if acted else
+                            "This signature is confirmed only about 1 time in 3 in July-October, so it is noted, not acted on"),
+                         1.0, "integrity", ref=ref(typ), entity_ids=typ.txns[:12], data={"txns": typ.txns, "typology": typ.key}))
+        if acted:
+            facts.setdefault("side_typologies", []).append(typ)
 
 
 def region_label(x) -> str:

@@ -1,0 +1,299 @@
+{
+ "checks": [
+  {
+   "check": "missing_identity",
+   "finding": "HHF-003: the flagged online transaction has no identity record",
+   "record_ids": [
+    "3660153"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-003"
+   ],
+   "impact": "Device, New-device and proxy signals are unknown, not negative"
+  },
+  {
+   "check": "missing_identity",
+   "finding": "HHF-004: the flagged online transaction has no identity record",
+   "record_ids": [
+    "3660260"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-004"
+   ],
+   "impact": "Device, New-device and proxy signals are unknown, not negative"
+  },
+  {
+   "check": "missing_identity",
+   "finding": "HHF-005: the flagged online transaction has no identity record",
+   "record_ids": [
+    "3660250"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-005"
+   ],
+   "impact": "Device, New-device and proxy signals are unknown, not negative"
+  },
+  {
+   "check": "missing_identity",
+   "finding": "HHF-006: the flagged online transaction has no identity record",
+   "record_ids": [
+    "3660263"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-006"
+   ],
+   "impact": "Device, New-device and proxy signals are unknown, not negative"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-008: alert text claims channel online, risk score 0.81; record says channel in-person, risk score 0.11",
+   "record_ids": [
+    "3660353"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-008"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-009: alert text claims risk score 0.80; record says risk score 0.10",
+   "record_ids": [
+    "3660355"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-009"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-010: alert text claims risk score 0.66; record says risk score 0.07",
+   "record_ids": [
+    "3631383"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-010"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "case_vs_record",
+   "finding": "HHF-011: the case names card C09241-K1, the bank's record puts 3640919 on C09241-K2 (whose closed cases use C09241-K2 too)",
+   "record_ids": [
+    "3640919",
+    "C09241-K2",
+    "C09241-K1"
+   ],
+   "n_records": 3,
+   "cases": [
+    "HHF-011"
+   ],
+   "impact": "Investigated on the record's card; verdict uncertain and escalated (R8) instead of guessing"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-011: alert text claims risk score 0.71; record says risk score 0.31",
+   "record_ids": [
+    "3640919"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-011"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-012: alert text claims risk score 0.53; record says risk score 0.05",
+   "record_ids": [
+    "3655457"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-012"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-013: alert text claims risk score 0.69; record says risk score 0.11",
+   "record_ids": [
+    "3626720"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-013"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-014: alert text claims risk score 0.57; record says risk score 0.06",
+   "record_ids": [
+    "3602445"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-014"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-015: alert text claims risk score 0.71; record says risk score 0.07",
+   "record_ids": [
+    "3601725"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-015"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-016: alert text claims risk score 0.79; record says risk score 0.13",
+   "record_ids": [
+    "3611043"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-016"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-017: alert text claims risk score 0.55; record says risk score 0.01",
+   "record_ids": [
+    "3638829"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-017"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "alert_vs_record",
+   "finding": "HHF-018: alert text claims risk score 0.80; record says risk score 0.03",
+   "record_ids": [
+    "3612011"
+   ],
+   "n_records": 1,
+   "cases": [
+    "HHF-018"
+   ],
+   "impact": "Recorded as evidence. A channel, amount or transaction claim is overridden by the record; for the score, two bank sources disagree and neither is used in January (the bank's own warning)"
+  },
+  {
+   "check": "card_network_missing",
+   "finding": "54 January transactions have no card network or type, so the card_id rule files them under the customer's blank-network card",
+   "record_ids": [
+    "3607348",
+    "3611993",
+    "3611996",
+    "3613266",
+    "3614689",
+    "3614692",
+    "3614694",
+    "3619889",
+    "3620018",
+    "3626084",
+    "3630074",
+    "3631881",
+    "3635857",
+    "3636521",
+    "3650550",
+    "3652068",
+    "3652522",
+    "3652685",
+    "3659239",
+    "3660137",
+    "3660138",
+    "3660139",
+    "3660140",
+    "3660141",
+    "3660142"
+   ],
+   "n_records": 54,
+   "cases": [
+    "HHF-011"
+   ],
+   "impact": "This is the root of the HHF-011 card mismatch; such rows are investigated on the record's card"
+  },
+  {
+   "check": "thin_history",
+   "finding": "HHF-011: 13 earlier transactions on the case's card",
+   "record_ids": [],
+   "n_records": 0,
+   "cases": [
+    "HHF-011"
+   ],
+   "impact": "Baseline-based signals (amount percentile, region history) are weak or absent"
+  }
+ ],
+ "tainted_cases": {
+  "HHF-003": [
+   "missing_identity"
+  ],
+  "HHF-004": [
+   "missing_identity"
+  ],
+  "HHF-005": [
+   "missing_identity"
+  ],
+  "HHF-006": [
+   "missing_identity"
+  ],
+  "HHF-008": [
+   "alert_vs_record"
+  ],
+  "HHF-009": [
+   "alert_vs_record"
+  ],
+  "HHF-010": [
+   "alert_vs_record"
+  ],
+  "HHF-011": [
+   "case_vs_record",
+   "alert_vs_record",
+   "card_network_missing",
+   "thin_history"
+  ],
+  "HHF-012": [
+   "alert_vs_record"
+  ],
+  "HHF-013": [
+   "alert_vs_record"
+  ],
+  "HHF-014": [
+   "alert_vs_record"
+  ],
+  "HHF-015": [
+   "alert_vs_record"
+  ],
+  "HHF-016": [
+   "alert_vs_record"
+  ],
+  "HHF-017": [
+   "alert_vs_record"
+  ],
+  "HHF-018": [
+   "alert_vs_record"
+  ]
+ },
+ "january": {
+  "transactions": 60196,
+  "online": 16893,
+  "online_without_identity": 1003
+ }
+}
