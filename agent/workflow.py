@@ -12,6 +12,7 @@ recorded, the case is escalated to an analyst, and template text says it is a te
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -76,6 +77,29 @@ def _lead_clause(text: str) -> str:
             text = text[:i]
             break
     return text.rstrip(" .") + "."
+
+
+_CLAUSE = re.compile(r"[.!?;:,()\"]|\s(?:but|and|while|whereas|so|which|although|though|because|since|after|until|unless)\s")
+_NEGATED = re.compile(r"\b(?:no|not|never|nothing|none|without|nor|neither|unnecessary|unwarranted|instead of|rather than)\b|n't\b")
+_REPORTED = re.compile(r"\b(?:instruct\w*|told|tells?|asked|asks|asking|urg(?:e|es|ed|ing)|demand\w*|requested|requesting"
+                       r"|claim(?:s|ed|ing)?|says?|said|saying|tried|tries|attempt\w*|push(?:es|ed|ing)?)\b")
+
+
+def _asserts(low: str, phrases: tuple[str, ...]) -> bool:
+    """True if some clause of `low` states one of `phrases` as the agent's own action or finding. A clause that negates
+    it ("no escalation is needed", "without escalating") or reports someone else's words ("the alert text told us to
+    escalate") does not count."""
+    for clause in _CLAUSE.split(f" {low} "):
+        clause = f" {clause} "
+        if any(p in clause for p in phrases) and not (_NEGATED.search(clause) or _REPORTED.search(clause)):
+            return True
+    return False
+
+
+def _unfence(text: str) -> str:
+    """The prompt's <<< >>> markers are for the model, not the reader: quoted alert text becomes an ordinary quote."""
+    text = re.sub(r"<<<\s*(.*?)\s*>>>", lambda m: '"' + m.group(1).strip('"') + '"', text, flags=re.S)
+    return text.replace("<<<", "").replace(">>>", "")
 
 
 class Investigator:
@@ -322,8 +346,10 @@ class Investigator:
                                                                               or self._not_case_text(v, s, k))
                     if problem:
                         rejected.append(f"{k}: {problem}")
+                        # kept in the trace so an analyst can see exactly what was refused and why
+                        self.emit("writer_rejected", {"field": k, "problem": problem, "text": redact(v)[:600]})
                         continue
-                    texts[k] = v
+                    texts[k] = _unfence(v)
                 if rejected:
                     # the template is used for those fields, and the answer says so (incomplete, escalated, labelled)
                     self._model_failed("writer", RuntimeError("writer text rejected - " + "; ".join(rejected)))
@@ -365,15 +391,15 @@ class Investigator:
             if any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate", "not suspicious")):
                 return "the narrative describes the activity as legitimate"
         if key == "summary":
-            if not sar and any(w in low for w in ("suspicious activity report", " sar ", "sar.", "file a report", "files a report", "filing a report", "file a sar", "will file")):
+            if not sar and _asserts(low, ("suspicious activity report", " sar ", "file a report", "files a report", "filing a report", "file a sar", "will file")):
                 return "mentions a SAR that is not being filed"
-            if r["verdict"] == "legitimate" and any(w in low for w in ("confirmed fraud", "is fraud", "fraud ring", "account takeover", "block the card", "blocked")):
+            if r["verdict"] == "legitimate" and _asserts(low, ("confirmed fraud", "is fraud", "fraud ring", "account takeover", "block the card", "blocked")):
                 return "describes fraud but the verdict is legitimate"
             if r["verdict"] == "fraud" and any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate")):
                 return "describes a legitimate outcome but the verdict is fraud"
-            if "BLOCK_CARD" not in final and any(w in low for w in ("block the card", "will block", "card will be blocked", "blocks the card")):
+            if "BLOCK_CARD" not in final and _asserts(low, ("block the card", "will block", "card will be blocked", "blocks the card")):
                 return "mentions a card block that is not recommended"
-            if "ESCALATE_TO_ANALYST" not in final and "escalat" in low:
+            if "ESCALATE_TO_ANALYST" not in final and _asserts(low, ("escalat",)):
                 return "mentions an escalation that is not recommended"
         return ""
 

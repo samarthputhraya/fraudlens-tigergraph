@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 
-from agent.evidence import EvidencePack, P
+from agent.evidence import EvidencePack, P, known_device
 from agent.integrity import claims_vs_record, hostile_spans
 from agent.paths import R2
 
@@ -242,7 +242,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             facts["pattern_signals"]["card_testing"] += 3
 
     # ---------------------------------------------------------------- device & identity
-    dev = t.get("device", "")
+    dev = known_device(t.get("device"))
     dn = ep.device or {}
     n_cards_all = dn.get("n_cards_all_time", 0) or 0
     rare = bool(dev) and 0 < n_cards_all <= RARE_DEVICE_CARDS and dev.split(" | ")[0] != ""
@@ -352,7 +352,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         # "their own recurring pattern": the earlier charge must look like the same cardholder (same purchaser e-mail
         # domain and the same device profile / channel), not another person sharing an anonymised card bucket
         monthly_hits = [r for r in monthly_hits if (r.get("p_email") or "") == (t.get("p_email") or "")
-                        and (r.get("device") or "") == (t.get("device") or "") and r.get("product") == t.get("product")]
+                        and known_device(r.get("device")) == known_device(t.get("device")) and r.get("product") == t.get("product")]
     if monthly_hits and len(six_m) <= 12:
         months = sorted({r["ts"][:7] for r in six_m})
         f.append(Finding("recurring_amount",

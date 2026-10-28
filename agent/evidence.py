@@ -44,6 +44,12 @@ def _ref(g, before: int) -> str:
     return calls[-1].ref() if calls else ""
 
 
+def known_device(profile: str | None) -> str:
+    """A device profile with every field blank (" |  |  | ", about 4,000 identity rows) says nothing about the device:
+    it is treated as no profile, never as one device shared by everyone who has it."""
+    return profile if profile and profile.replace("|", "").strip() else ""
+
+
 def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
     """Run the core toolkit. `agent_names` maps step -> specialist name for the trace."""
     an = agent_names or {}
@@ -54,6 +60,8 @@ def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
     ctx = g.txn_context(case["flagged_txn_id"], agent=an.get("context", "lead"))
     ep.txn, ep.card = ctx["txn"], ctx["card"]
     ep.refs["context"] = _ref(g, n)
+    if ep.txn and "device" in ep.txn:
+        ep.txn["device"] = known_device(ep.txn["device"])
     if not ep.txn or not ep.txn.get("ts"):
         from agent.safety import InvalidInput
         raise InvalidInput("txn_context", f"flagged transaction {case['flagged_txn_id']} does not exist in the graph; "

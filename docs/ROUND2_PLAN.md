@@ -19,7 +19,7 @@ Brief: https://hhgoa-tg-round2.vercel.app/ · Dataset: the Google Drive folder l
 | Status | What |
 |---|---|
 | **Done** (offline mirror) | Gaps 1-8 below; challenges 1, 7 and 10; the data-quality case (HHF-011) |
-| **Done** | Grader 18/18 clean; 140 tests; attack suite (14 attacks, 0 decisions changed); attestation check (0 mismatches); ablation; resilience statement; innovation claim |
+| **Done** | Grader 18/18 clean; 156 tests; attack suite (14 attacks, 0 decisions changed); attestation check (0 mismatches); ablation; resilience statement; innovation claim |
 | **Left** (needs TigerGraph) | Everything in [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) |
 
 TigerGraph Savanna was stopped all night ("Auto start is not enabled for this workspace").

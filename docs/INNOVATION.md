@@ -80,7 +80,7 @@ Precision on the labelled months sets how far the containment planner trusts a r
 ## Every claim can be checked (`eval/attest_check.py`)
 
 We re-ran the query behind every evidence claim in all 18 answers:
-- **78 of 78 query-backed claims** returned every ID they cite (0 mismatches);
+- **77 of 77 query-backed claims** returned every ID they cite (0 mismatches);
 - 18 vector-search claims need the query embedding to replay;
 - 28 claims are not queries (customer responses, the policy, the alert text).
 

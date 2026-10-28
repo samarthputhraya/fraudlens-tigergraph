@@ -51,7 +51,8 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
   - A model failure keeps the coded decision but marks the answer incomplete and escalates it (exit 3).
   - Approvals are enforced server-side, one per action.
   - The audit log is hash-chained, keyed and anchored.
-- **Attested claims.** Every evidence item cites only IDs its own query returns. [`eval/attest_check.py`](eval/attest_check.py) re-runs them all: 78 of 78 query-backed claims reproduce.
+- **Attested claims.** Every evidence item cites only IDs its own query returns. [`eval/attest_check.py`](eval/attest_check.py) re-runs them all: 77 of 77 query-backed claims reproduce.
+- **Step-by-step replay.** `python eval/replay.py HHF-007 --rerun` prints one investigation the way an auditor would read it: the alert, each finding with its weight, the decision, every tool call in order and, with `--rerun`, whether each query still returns the same number of rows on the offline mirror.
 
 Offline-mirror results tonight: the organisers' grader (`grader/grade.py` in the round's dataset) reports **18/18 clean (0 hard, 0 policy, 0 warnings)**. The official TigerGraph run follows the [morning runbook](docs/MORNING_RUNBOOK.md).
 
@@ -216,7 +217,7 @@ python rag/embed_cases.py                           # case-memory embeddings for
 # TigerGraph: graph/setup.py load / queries / describe / scores / vectors (docs/MORNING_RUNBOOK.md, steps 1-5)
 python run_cases.py HHF-007                         # one case; no argument runs all 18 -> cases_r2/
 python run_cases.py --mirror --no-write HHF-007     # the same, on the offline mirror (labelled not official)
-python -m pytest tests -q                           # 140 tests: fail-closed, approvals, injection, policy, answers
+python -m pytest tests -q                           # 156 tests: fail-closed, approvals, injection, writer guard, policy, answers
 ```
 
 ### Round 1

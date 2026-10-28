@@ -13,7 +13,7 @@
 |---|---|---|
 | 0:00-0:20 | — | "Round 1 asked whether the agent can investigate. This round asks whether a bank can run it. Every number, verdict, route and action FraudLens produces comes from code reading TigerGraph. The model only plans queries and writes the text." |
 | 0:20-2:20 | Run the chosen case live: Command Center → the case → **Live**, or `python run_cases.py <case>`. Follow the trace as it streams. | Use the per-case lines below. |
-| 2:20-3:30 | Open the answer file: verdict, evidence (each item with its query reference), actions with routes. Click **re-prove** on one evidence line. | "Every claim cites only IDs its own query returns. We re-ran all of them: 78 of 78 reproduce." |
+| 2:20-3:30 | Open the answer file: verdict, evidence (each item with its query reference), actions with routes. Click **re-prove** on one evidence line. | "Every claim cites only IDs its own query returns. We re-ran all of them: all 77 reproduce." |
 | 3:30-4:15 | Drill: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case>` | "The graph fails mid-run. The case stops, no answer is written, the old one is moved aside, and the failure is in the hash-chained audit log. Exit status 2." |
 | 4:15-5:00 | Innovation slide (INNOVATION.md, ablation table) | "Both scores are blind in January. Our typology detectors and drift-aware weighting catch all 7 frauds and file 6 reports. Switch them off and we miss 4 and file none. On July to October they never touched a cleared case." |
 
