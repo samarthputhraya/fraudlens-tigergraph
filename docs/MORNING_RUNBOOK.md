@@ -20,9 +20,11 @@ Everything below was prepared overnight on the offline mirror. **TigerGraph Sava
 ## 1. Check the connection
 
 ```bash
+.venv/Scripts/python eval/preflight.py --live
 .venv/Scripts/python graph/setup.py stats
 ```
-This should print vertex and edge counts. If it says the workspace isn't running, step 0.1 didn't take.
+- **Preflight** checks `.env` (without printing any secret), the data files, the git branch, TigerGraph and one tiny Gemini call. Fix every FAIL before going on. At 04:00 the only FAILs were the two approver tokens, the audit key and TigerGraph itself, all expected.
+- **`stats`** should print vertex and edge counts. If it says the workspace isn't running, step 0.1 didn't take.
 
 ## 2. Load January (the delta is already exported)
 
