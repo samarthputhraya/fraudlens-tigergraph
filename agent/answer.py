@@ -51,10 +51,15 @@ def similar_prior_cases(r: dict) -> list[str]:
     return res[:8]
 
 
+# Findings that move no probability but must be on the record: what the agent refused to follow, which claims it
+# overrode with the bank's record, and concerns it handed to an analyst.
+ALWAYS_SHOWN = {"known_device", "hostile_text", "trigger_mismatch", "card_record_mismatch", "card_other_typology"}
+
+
 def evidence_list(r: dict, knowledge_refs: list[dict]) -> list[dict]:
     ev = []
     for f in sorted(r["findings"], key=lambda x: -abs(x.weight)):
-        if abs(f.weight) < 0.05 and f.key not in ("known_device",):
+        if abs(f.weight) < 0.05 and f.key not in ALWAYS_SHOWN:
             continue
         ev.append({"claim": f.claim, "source": f.source, "ref": f.ref or "query:unknown",
                    "entity_ids": [str(e) for e in f.entity_ids]})

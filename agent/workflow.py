@@ -25,6 +25,7 @@ from agent.assess import ledger, pattern_of, verdict_of
 from agent.core import REPLY_TEXT, amount_of, choose_reply, situation
 from agent.detectors import region_label, run_detectors
 from agent.evidence import P, gather, recall
+from agent.integrity import fence
 from agent.llm import Usage
 from agent.policy import plan, status_of
 from agent.safety import DependencyFailure, audit, redact
@@ -353,6 +354,9 @@ class Investigator:
         if r["evidence_requests"]:
             meta["asked_after_step"] = r["evidence_requests"][0]["asked_after_step"]
         ans = build_answer(case, r, s["texts"], meta)
+        for ev in ans["case"]["evidence"]:
+            # attestation "when": every query read the graph as of the case's open time (no look-ahead)
+            ev.setdefault("as_of", case["opened_at"])
         ids = set(ans["case"]["affected_txn_ids"]) | {ans["case"]["first_suspicious_txn_id"]} - {""}
         exists = self.g.ids_exist(sorted(ids), ans["case"]["connected_card_ids"], ans["case"]["similar_prior_cases"], [case["customer_id"]])
         amounts = {}
@@ -438,7 +442,7 @@ class Investigator:
         r, ep = s["result"], s["ep"]
         rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or []) + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]}
         return {
-            "case_id": s["case"]["case_id"], "trigger": s["case"]["trigger_text"], "opened_at": s["case"]["opened_at"],
+            "case_id": s["case"]["case_id"], "trigger": fence(s["case"]["trigger_text"]), "opened_at": s["case"]["opened_at"],
             "customer_id": s["case"]["customer_id"], "card_id": s["case"]["card_id"],
             "flagged": {k: (region_label(ep.txn.get(k)) if k == "addr1" else ep.txn.get(k))
                         for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email")},
