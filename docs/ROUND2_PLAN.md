@@ -14,6 +14,16 @@ Brief: https://hhgoa-tg-round2.vercel.app/ · Dataset: the Google Drive folder l
 - **Any failed gate rules us out:** disallowed data, undeclared data egress, or an unreproducible run.
 - **The schedule** (freeze, Stage 1, demo order) is "confirmed on the day". Ask Devanshu today.
 
+## Status: overnight, 29 Oct
+
+| Status | What |
+|---|---|
+| **Done** (offline mirror) | Gaps 1-8 below; challenges 1, 7 and 10; the data-quality case (HHF-011) |
+| **Done** | Grader 18/18 clean; 140 tests; attack suite (14 attacks, 0 decisions changed); attestation check (0 mismatches); ablation; resilience statement; innovation claim |
+| **Left** (needs TigerGraph) | Everything in [MORNING_RUNBOOK.md](MORNING_RUNBOOK.md) |
+
+TigerGraph Savanna was stopped all night ("Auto start is not enabled for this workspace").
+
 ## Gaps in the Round 1 code against the new rules (fix these first)
 
 | # | Where | Problem | Fix |

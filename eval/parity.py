@@ -32,6 +32,11 @@ def summary(ep) -> dict:
         # v2: the transaction model's score must come back from the graph exactly as the mirror serves it
         "txn.model_p": round(float(ep.txn.get("model_p", -1) or -1), 4),
         "window.model_p_sum": round(sum(float(w.get("model_p", -1) or -1) for w in ep.window), 3),
+        # Round 2: the new-typology queries (19_typology_scan, 20_recipient_activity) and the 30-day window
+        "window_30d": len(ep.extra.get("window_30d") or []), "micro_prior_n": ep.extra.get("micro_prior_n"),
+        "recipient": {d: (len(st["cards_window"]), len(st.get("window_txns") or []))
+                      for d, st in (ep.extra.get("recipient") or {}).items()},
+        "typology_scan": {k: len(v) for k, v in (ep.extra.get("typology_scan") or {}).items()},
     }
 
 

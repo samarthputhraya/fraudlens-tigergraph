@@ -199,7 +199,8 @@ def validate(ans: dict, exists: dict | None = None) -> list[str]:
     else:
         if ans["sar"]["narrative"] or ans["sar"]["subjects"] or ans["sar"]["total_amount_usd"] or ans["sar"]["activity_dates"]:
             p.append("sar fields must be empty when file is false")
-    if not ans.get("evidence_requests") and nba.get("final") != nba.get("initial"):
+    if not ans.get("evidence_requests") and nba.get("final") != nba.get("initial")             and (ans.get("run") or {}).get("complete", True):
+        # the one allowed difference: a fail-closed escalation added because a dependency failed (what_changed says so)
         p.append("final must equal initial when nothing was requested")
     if "BLOCK_ALL_CARDS" in final_acts:
         p.append("R10: BLOCK_ALL_CARDS not justified")

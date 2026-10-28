@@ -135,8 +135,8 @@ def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) ->
         "suspicious activity report unless one is filed, and do not speculate beyond the evidence list. Use ONLY facts, "
         "amounts, dates and IDs present in the DRAFT.\n"
         f"DECISION: {decision}\n"
-        "- summary: 2-6 plain sentences an analyst can read: what triggered the alert, what the graph evidence showed, the "
-        "verdict, and exactly the final actions.\n"
+        "- summary: 2-6 plain sentences an analyst can read: what triggered the alert (name the flagged transaction ID and "
+        "the card ID), what the graph evidence showed, the verdict, and exactly the final actions.\n"
         + ("- sar_narrative: 6-12 sentences, a regulator-ready suspicious activity report that stands on its own: WHO "
            "(customer, cards, devices), WHAT happened, WHEN (dates and times), WHERE (channel, billing region), HOW it was "
            "carried out, WHY it is suspicious, and the total amount. Follow the FinCEN narrative guidance below.\n" if want_sar else "")

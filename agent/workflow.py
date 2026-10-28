@@ -341,9 +341,10 @@ class Investigator:
         need = {"summary": 12, "sar_narrative": 60, "pattern_description": 15}.get(key, 8)
         if words < need:
             return f"too short to be case text ({words} words)"
-        anchors = {s["case"]["flagged_txn_id"], s["case"]["card_id"], s["case"]["customer_id"]}
+        amt = float(s["ep"].txn.get("amt") or 0)
+        anchors = {s["case"]["flagged_txn_id"], s["case"]["card_id"], s["case"]["customer_id"], f"{amt:,.2f}", f"{amt:.2f}"}
         if key != "pattern_description" and not any(a and a in text for a in anchors):
-            return "names none of this case's transaction, card or customer"
+            return "names none of this case's transaction, card, customer or amount"
         return ""
 
     @staticmethod

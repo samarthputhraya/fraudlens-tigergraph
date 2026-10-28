@@ -17,6 +17,46 @@ Built for the **TigerGraph × Hacker House Goa 2026, Task 4: Agentic Fraud Inves
 
 ---
 
+## Final Round (Round 2): what changed
+
+The Final Round asks whether a bank can **run** the agent: on 18 unseen January cases (9 of them legitimate), with hostile text in the alerts, and with live failure drills.
+
+| | |
+|---|---|
+| Answer files | [`cases_r2/`](cases_r2/): HHF-001 to HHF-018, produced by `python run_cases.py` |
+| One command, one case | `python run_cases.py HHF-007` (setup: [Run it](#run-it), then [the morning runbook](docs/MORNING_RUNBOOK.md)) |
+| Resilience statement | [docs/RESILIENCE.md](docs/RESILIENCE.md) |
+| Innovation claim | [docs/INNOVATION.md](docs/INNOVATION.md): finding the fraud no model can see |
+
+**What the agent does differently now:**
+
+- **New typologies (challenge 1).** In January both scores are blind: every flagged transaction scores 0.29 or below. Four detectors find the fraud from the shape of the activity instead:
+  - micro-charge runs;
+  - recipient surges;
+  - spoofed device fingerprints;
+  - escalating ramps.
+
+  Each has a ring scan across cards (`graph/queries/19_typology_scan.gsql`, `20_recipient_activity.gsql`). On July to October, they never touched a cleared (legitimate) case.
+- **Drift-aware assessment.** For activity the model has never seen, a low score is not used as evidence of innocence. Ablation: without the detectors and this weighting, 4 of the 7 frauds are missed and 0 of the 6 reports are filed.
+- **Containment planner (challenge 7).** It blocks a ring card only on that card's own evidence, with an explicit cost for every innocent customer, and names the customers a block would touch.
+- **Break the agent (challenge 10).** Free text is data:
+  - instructions are detected (including zero-width and full-width disguises), recorded and removed before any model sees them;
+  - claims the bank's record contradicts are overridden;
+  - the decision is code.
+
+  Across 14 reproducible attacks ([`eval/attack_suite.py`](eval/attack_suite.py)): 0 decisions changed, 14 detected, 0 tip-offs.
+- **Data-quality detective.** HHF-011's case record names a different card from the bank's own transaction record. The agent investigates the real card, records the discrepancy, and escalates instead of guessing.
+- **Fail closed:**
+  - A graph or tool failure stops the case: no answer, a stale answer moved aside, exit 2.
+  - A model failure keeps the coded decision but marks the answer incomplete and escalates it (exit 3).
+  - Approvals are enforced server-side, one per action.
+  - The audit log is hash-chained, keyed and anchored.
+- **Attested claims.** Every evidence item cites only IDs its own query returns. [`eval/attest_check.py`](eval/attest_check.py) re-runs them all: 78 of 78 query-backed claims reproduce.
+
+Offline-mirror results tonight: the organisers' grader (`grader/grade.py` in the round's dataset) reports **18/18 clean (0 hard, 0 policy, 0 warnings)**. The official TigerGraph run follows the [morning runbook](docs/MORNING_RUNBOOK.md).
+
+---
+
 ## What it does in 30 seconds
 
 1. **Trigger.** A case from the case pack, an analyst request in the UI, or the autonomous monitor.
