@@ -327,6 +327,8 @@ class Investigator:
                 if rejected:
                     # the template is used for those fields, and the answer says so (incomplete, escalated, labelled)
                     self._model_failed("writer", RuntimeError("writer text rejected - " + "; ".join(rejected)))
+            except Exception as e:  # noqa: BLE001
+                self._model_failed("writer", e)
         if sar and texts.get("sar_narrative"):
             # a regulator needs every affected transaction: any the narrative leaves out are listed from the record
             rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or []) + [ep.txn]}
@@ -334,8 +336,6 @@ class Investigator:
             if missing:
                 texts["sar_narrative"] = texts["sar_narrative"].rstrip() + " Affected transactions: " + "; ".join(
                     f"{i} on {rows[i]['ts'][:10]} for ${float(rows[i]['amt']):,.2f}" for i in r["episode"] if i in rows) + "."
-            except Exception as e:  # noqa: BLE001
-                self._model_failed("writer", e)
         if not r["evidence_requests"]:
             texts["what_changed"] = "nothing"
         return {"texts": texts}
