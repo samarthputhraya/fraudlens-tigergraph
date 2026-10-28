@@ -136,10 +136,12 @@ def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) ->
         "amounts, dates and IDs present in the DRAFT.\n"
         f"DECISION: {decision}\n"
         "- summary: 2-6 plain sentences an analyst can read: what triggered the alert (name the flagged transaction ID and "
-        "the card ID), what the graph evidence showed, the verdict, and exactly the final actions.\n"
+        "the card ID), what the graph evidence showed, the verdict, and exactly the final actions. Actions routed L1 or L2 "
+        "are recommendations awaiting a human's approval: say so, never that they were taken.\n"
         + ("- sar_narrative: 6-12 sentences, a regulator-ready suspicious activity report that stands on its own: WHO "
            "(customer, cards, devices), WHAT happened, WHEN (dates and times), WHERE (channel, billing region), HOW it was "
-           "carried out, WHY it is suspicious, and the total amount. Follow the FinCEN narrative guidance below.\n" if want_sar else "")
+           "carried out, WHY it is suspicious, and the total amount. Name every affected transaction ID with its date and "
+           "amount. Follow the FinCEN narrative guidance below.\n" if want_sar else "")
         + ("- pattern_description: 2-3 sentences on what the undocumented pattern is, who it affects and how it was found.\n" if want_desc else "")
         + f"\nFINCEN / POLICY GUIDANCE:\n{chr(10).join(guidance)[:4000]}\n\nDRAFT:\n{_compact(draft, 9000)}")
     return generate_json(prompt, schema, system=SYSTEM, model=PRO, temperature=0.2, role="writer")
