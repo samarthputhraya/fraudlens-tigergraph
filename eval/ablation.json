@@ -1,0 +1,558 @@
+{
+ "full": {
+  "cases": {
+   "HHF-017": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-016": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-014": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-018": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-010": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-012": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-007": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_testing",
+    "block": true,
+    "sar": false
+   },
+   "HHF-001": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-002": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-011": {
+    "verdict": "uncertain",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-008": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-015": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-013": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-004": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-009": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-006": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-005": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-003": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   }
+  },
+  "verdicts": {
+   "legitimate": 10,
+   "fraud": 7,
+   "uncertain": 1
+  },
+  "blocks": 7,
+  "sars": 6
+ },
+ "-typologies": {
+  "cases": {
+   "HHF-017": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-016": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-014": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-018": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-010": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-012": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-007": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_testing",
+    "block": true,
+    "sar": false
+   },
+   "HHF-001": {
+    "verdict": "fraud",
+    "p": 0.94,
+    "pattern": "card_not_present_new_device",
+    "block": true,
+    "sar": false
+   },
+   "HHF-002": {
+    "verdict": "fraud",
+    "p": 0.93,
+    "pattern": "card_not_present_new_device",
+    "block": true,
+    "sar": false
+   },
+   "HHF-011": {
+    "verdict": "uncertain",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-008": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-015": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-013": {
+    "verdict": "legitimate",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-004": {
+    "verdict": "fraud",
+    "p": 0.75,
+    "pattern": "card_not_present_fraud",
+    "block": true,
+    "sar": false
+   },
+   "HHF-009": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-006": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_not_present_fraud",
+    "block": true,
+    "sar": false
+   },
+   "HHF-005": {
+    "verdict": "fraud",
+    "p": 0.75,
+    "pattern": "card_not_present_fraud",
+    "block": true,
+    "sar": false
+   },
+   "HHF-003": {
+    "verdict": "fraud",
+    "p": 0.75,
+    "pattern": "card_not_present_fraud",
+    "block": true,
+    "sar": true
+   }
+  },
+  "verdicts": {
+   "legitimate": 10,
+   "fraud": 7,
+   "uncertain": 1
+  },
+  "blocks": 7,
+  "sars": 1,
+  "changed_vs_full": {}
+ },
+ "-drift": {
+  "cases": {
+   "HHF-017": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-016": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-014": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-018": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-010": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-012": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-007": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_testing",
+    "block": true,
+    "sar": false
+   },
+   "HHF-001": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-002": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-011": {
+    "verdict": "uncertain",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-008": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-015": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-013": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-004": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-009": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-006": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-005": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   },
+   "HHF-003": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "undocumented",
+    "block": true,
+    "sar": true
+   }
+  },
+  "verdicts": {
+   "legitimate": 10,
+   "fraud": 7,
+   "uncertain": 1
+  },
+  "blocks": 7,
+  "sars": 6,
+  "changed_vs_full": {}
+ },
+ "-both": {
+  "cases": {
+   "HHF-017": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-016": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-014": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-018": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-010": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-012": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-007": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_testing",
+    "block": true,
+    "sar": false
+   },
+   "HHF-001": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_not_present_new_device",
+    "block": true,
+    "sar": false
+   },
+   "HHF-002": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-011": {
+    "verdict": "uncertain",
+    "p": 0.03,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-008": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-015": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-013": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-004": {
+    "verdict": "uncertain",
+    "p": 0.23,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-009": {
+    "verdict": "legitimate",
+    "p": 0.05,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-006": {
+    "verdict": "fraud",
+    "p": 0.97,
+    "pattern": "card_not_present_fraud",
+    "block": true,
+    "sar": false
+   },
+   "HHF-005": {
+    "verdict": "uncertain",
+    "p": 0.23,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   },
+   "HHF-003": {
+    "verdict": "uncertain",
+    "p": 0.23,
+    "pattern": "none",
+    "block": false,
+    "sar": false
+   }
+  },
+  "verdicts": {
+   "legitimate": 11,
+   "fraud": 3,
+   "uncertain": 4
+  },
+  "blocks": 3,
+  "sars": 0,
+  "changed_vs_full": {
+   "HHF-002": "legitimate -> fraud",
+   "HHF-004": "uncertain -> fraud",
+   "HHF-005": "uncertain -> fraud",
+   "HHF-003": "uncertain -> fraud"
+  }
+ }
+}

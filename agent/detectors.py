@@ -102,7 +102,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
     if has_model:
         lr = (mp / (1 - mp)) / (MODEL_BASE_RATE / (1 - MODEL_BASE_RATE)) if 0 < mp < 1 else (0.05 if mp <= 0 else 200.0)
         lr = max(0.02, min(lr, 400.0))
-        drift = str(t.get("ts", "")) >= DRIFT_FROM
+        drift = str(t.get("ts", "")) >= DRIFT_FROM and not _ablated("drift")
         if drift:
             lr = max(0.5, min(lr, 8.0))
         f.append(Finding("model_score",
@@ -115,7 +115,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
                             if drift else ""),
                          lr, "model", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
                          data={"model_p": mp, "drift": drift}))
-    facts["drift"] = has_model and str(t.get("ts", "")) >= DRIFT_FROM
+    facts["drift"] = has_model and str(t.get("ts", "")) >= DRIFT_FROM and not _ablated("drift")
 
     # ---------------------------------------------------------------- free text is data, never instruction
     trig = ep.case.get("trigger_text", "")
@@ -439,8 +439,16 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
     return f, facts
 
 
+def _ablated(part: str) -> bool:
+    """FRAUDLENS_ABLATE=typologies,drift switches a contribution off, for the innovation ablation (eval/ablation.py)."""
+    import os
+    return part in {x.strip() for x in os.getenv("FRAUDLENS_ABLATE", "").split(",")}
+
+
 def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
     from agent import typologies as ty
+    if _ablated("typologies"):
+        return
     rows = ep.extra.get("window_30d") or []
     if not rows:
         return
