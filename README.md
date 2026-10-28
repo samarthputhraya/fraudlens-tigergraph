@@ -201,6 +201,26 @@ The history is also selection-biased: every cleared case was a high-score model 
 
 ## Run it
 
+### Final Round, from a clean clone
+
+The dataset isn't in the repo. Put Round 1's files in `data/raw/` and the Final Round folder in `data/raw_r2/share/`. `FRAUDLENS_ROUND` defaults to `r2`.
+
+```bash
+python -m venv .venv && .venv/Scripts/activate      # Windows; use source .venv/bin/activate elsewhere
+pip install -r requirements.txt
+cp .env.example .env                                # TigerGraph host + secret, GCP project, FRAUDLENS_APPROVER_TOKENS, FRAUDLENS_AUDIT_KEY
+python graph/prep.py                                # July-January into data/prep/hhgoa_r2.duckdb; checks the card_id rule
+python graph/export.py --since 2017-01-01           # the January delta for TigerGraph -> data/prep/load_r2/
+python -m ml.train                                  # model on July-October labels, scores November-January
+python rag/embed_cases.py                           # case-memory embeddings for all 5,585 closed cases
+# TigerGraph: graph/setup.py load / queries / describe / scores / vectors (docs/MORNING_RUNBOOK.md, steps 1-5)
+python run_cases.py HHF-007                         # one case; no argument runs all 18 -> cases_r2/
+python run_cases.py --mirror --no-write HHF-007     # the same, on the offline mirror (labelled not official)
+python -m pytest tests -q                           # 140 tests: fail-closed, approvals, injection, policy, answers
+```
+
+### Round 1
+
 ```bash
 python -m venv .venv && .venv/Scripts/activate      # Windows; use source .venv/bin/activate elsewhere
 pip install -r requirements.txt
