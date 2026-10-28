@@ -344,8 +344,11 @@ class MirrorGraph:
                        HAVING count(*) >= ? AND count(DISTINCT strftime(t.ts_dt, '%Y-%m-%d')) >= 3)
             SELECT w.card_id, w.customer_id, w.n, w.days,
                    (SELECT count(*) FROM txn b WHERE b.card_id = w.card_id AND b.ts_dt > CAST(? AS TIMESTAMP)
-                      AND b.ts_dt <= CAST(? AS TIMESTAMP) AND b.channel = 'online' AND b.amt < ?) AS prior_n
-            FROM w ORDER BY w.card_id""", [s, e, micro_max, min_micro, b, s, micro_max])
+                      AND b.ts_dt <= CAST(? AS TIMESTAMP) AND b.channel = 'online' AND b.amt < ?) AS prior_n,
+                   (SELECT list(m.TransactionID || '|' || strftime(m.ts_dt, '%Y-%m-%d %H:%M:%S') || '|' || CAST(m.amt AS VARCHAR)
+                                ORDER BY m.ts_dt) FROM txn m WHERE m.card_id = w.card_id AND m.ts_dt > CAST(? AS TIMESTAMP)
+                      AND m.ts_dt <= CAST(? AS TIMESTAMP) AND m.channel = 'online' AND m.amt < ?) AS txns
+            FROM w ORDER BY w.card_id""", [s, e, micro_max, min_micro, b, s, micro_max, s, e, micro_max])
         new_dev = self._rows(f"""
             SELECT t.TransactionID AS id, t.card_id, strftime(t.ts_dt, '%Y-%m-%d %H:%M:%S') AS ts, t.amt, t.ProductCD AS product,
                    t.channel, coalesce(t.R_emaildomain, '') AS r_email, i.device_profile AS device, i.id_15 AS is_new,
@@ -365,7 +368,7 @@ class MirrorGraph:
                                     "min_micro": min_micro, "ramp_min": ramp_min}, len(micro) + len(new_dev) + len(ramp), t0, agent)
         return {"micro": micro, "new_device_txns": new_dev, "ramp_txns": ramp}
 
-    def recipient_activity(self, domain: str, start, end, base_start, agent: str | None = None) -> dict:
+    def recipient_activity(self, domain: str, start, end, base_start, max_detail: int = 200, agent: str | None = None) -> dict:
         """Mirror of graph/queries/20_recipient_activity.gsql."""
         import time
         t0 = time.time()
@@ -375,9 +378,15 @@ class MirrorGraph:
         monthly = self._rows("""SELECT strftime(ts_dt, '%Y-%m') AS m, count(DISTINCT card_id) AS n FROM txn
                                 WHERE R_emaildomain = ? AND channel = 'online' AND ts_dt > CAST(? AS TIMESTAMP)
                                 AND ts_dt <= CAST(? AS TIMESTAMP) GROUP BY 1 ORDER BY 1""", [domain, b, s])
-        self._log("recipient_activity", {"dom": domain, "start_ts": s, "end_ts": e, "base_start": b},
+        detail = []
+        if len(win) <= max_detail:
+            detail = self._rows("""SELECT TransactionID AS id, card_id, strftime(ts_dt, '%Y-%m-%d %H:%M:%S') AS ts, amt FROM txn
+                                   WHERE R_emaildomain = ? AND channel = 'online' AND ts_dt > CAST(? AS TIMESTAMP)
+                                   AND ts_dt <= CAST(? AS TIMESTAMP) ORDER BY ts_dt""", [domain, s, e])
+        self._log("recipient_activity", {"dom": domain, "start_ts": s, "end_ts": e, "base_start": b, "max_detail": max_detail},
                   len(win) + len(monthly), t0, agent)
-        return {"cards_window": [r["card_id"] for r in win], "monthly_cards": {r["m"]: r["n"] for r in monthly}}
+        return {"cards_window": [r["card_id"] for r in win], "monthly_cards": {r["m"]: r["n"] for r in monthly},
+                "window_txns": detail}
 
     def describe_queries(self, agent: str = "lead") -> dict:
         import time

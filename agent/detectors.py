@@ -477,6 +477,22 @@ def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
         facts["typology"] = best
         facts["typology_txns"] = sorted(set().union(*(set(x.txns) for x in involving)))
         facts["connected_cards"] |= set(ring[:25])
+        if ring:
+            # containment planner (challenge 7): which ring cards to block, on each card's own evidence
+            from agent import containment as ct
+            st = next((s for s in (ep.extra.get("recipient") or {}).values() if best.shared and s["domain"] == best.shared[1]), None)
+            per = ty.ring_exposures(best.key, scan, st)
+            members = [ct.Member(card, best.total, 0.95, f"this case: {best.claim[:120]}", best.txns)]
+            for c in ring:
+                d = per.get(c)
+                if d:
+                    members.append(ct.Member(c, d["exposure"], d["conf"], d["why"], d["txns"]))
+            if len(members) >= 2:
+                cp = ct.plan(members)
+                facts["containment"] = cp
+                f.append(Finding("containment_plan", ct.describe(cp), 1.0, "integrity",
+                                 ref=ep.refs.get(f"recipient:{best.shared[1]}", "") if best.shared else ep.refs.get("typology_scan", ""),
+                                 entity_ids=[b["card"] for b in cp["block"]][:15], data={"plan": cp}))
         if best.shared:
             facts["shared_links"].append(best.shared)
         facts["pattern_signals"]["undocumented:" + best.key] += 4

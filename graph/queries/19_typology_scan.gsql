@@ -9,19 +9,21 @@ CREATE OR REPLACE QUERY typology_scan(DATETIME start_ts, DATETIME end_ts, DATETI
      Python applies the signature rules (agent/typologies.py); this query only reads the graph. */
   SumAccum<INT> @n_micro, @n_base, @n_online, @n_days;
   SetAccum<STRING> @days;
+  ListAccum<STRING> @micro_txns;
   MaxAccum<DOUBLE> @max_amt;
   SumAccum<STRING> @dev, @new_flag, @proxy_type;
   All = {Transaction.*};
   T = SELECT t FROM All:t WHERE t.ts > start_ts AND t.ts <= end_ts AND t.channel == "online";
 
   M = SELECT c FROM T:t -(rev_MADE:e)-> Card:c WHERE t.amt < micro_max
-      ACCUM c.@n_micro += 1, c.@days += datetime_format(t.ts, "%Y-%m-%d");
+      ACCUM c.@n_micro += 1, c.@days += datetime_format(t.ts, "%Y-%m-%d"),
+            c.@micro_txns += (t.id + "|" + datetime_format(t.ts, "%Y-%m-%d %H:%M:%S") + "|" + to_string(t.amt));
   M = SELECT c FROM M:c WHERE c.@n_micro >= min_micro AND c.@days.size() >= 3
       POST-ACCUM c.@n_days = c.@days.size();
   B = SELECT c FROM M:c -(MADE:e)-> Transaction:t
       WHERE t.ts > base_start AND t.ts <= start_ts AND t.channel == "online" AND t.amt < micro_max
       ACCUM c.@n_base += 1;
-  PRINT M[M.id, M.customer_id, M.@n_micro, M.@n_days, M.@n_base] AS micro;
+  PRINT M[M.id, M.customer_id, M.@n_micro, M.@n_days, M.@n_base, M.@micro_txns] AS micro;
 
   D = SELECT d FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
       WHERE e.dev_new == "New" AND d.is_generic == FALSE

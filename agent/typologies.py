@@ -233,5 +233,42 @@ def ring_members(kind: str, scan: dict, card: str) -> list[str]:
     return sorted(out)
 
 
+def ring_exposures(kind: str, scan: dict, recipient: dict | None = None) -> dict[str, dict]:
+    """Per ring card: the transactions of its own signature, their total, and how strong that evidence is.
+
+    conf is P(this card is compromised | its own signature), set from the signature's precision on July-October, the
+    months whose labels are complete (eval/typology_backtest.json): micro-charge runs and escalating ramps are only
+    about 1 in 3 confirmed there, so a ring member carrying one is monitored, never blocked, on that alone. Spoofed
+    fingerprints never occur in July-December background; a card paying a surging recipient twice or more matches the
+    September-October surges, which were 17 of 27 confirmed."""
+    out: dict[str, dict] = {}
+    if kind == "micro_run":
+        for c in scan.get("micro", []):
+            if c["n"] >= MICRO_MIN_N and c["days"] >= MICRO_MIN_DAYS and c["prior_n"] <= MICRO_MAX_PRIOR:
+                txns = [x.split("|") for x in c.get("txns") or []]
+                out[c["card_id"]] = {"txns": [t[0] for t in txns], "exposure": round(sum(float(t[2]) for t in txns), 2),
+                                     "conf": 0.5, "why": f"its own sudden run of {c['n']} sub-$10 online charges on {c['days']} days"}
+    elif kind in ("spoofed_device", "escalating_ramp"):
+        rows_key = "new_device_txns" if kind == "spoofed_device" else "ramp_txns"
+        by_card: dict[str, list[dict]] = {}
+        for r in scan.get(rows_key, []):
+            by_card.setdefault(r["card_id"], []).append(r)
+        fn = spoofed_device if kind == "spoofed_device" else escalating_ramp
+        for c, rs in by_card.items():
+            typ = fn(rs, datetime.max)
+            if typ is not None:
+                out[c] = {"txns": typ.txns, "exposure": typ.total, "conf": 0.85 if kind == "spoofed_device" else 0.5,
+                          "why": f"its own {typ.name} ({len(typ.txns)} purchase(s))"}
+    elif kind == "recipient_surge" and recipient:
+        by_card = {}
+        for r in recipient.get("window_txns") or []:
+            by_card.setdefault(r["card_id"], []).append(r)
+        for c, rs in by_card.items():
+            out[c] = {"txns": [r["id"] for r in rs], "exposure": round(sum(float(r["amt"]) for r in rs), 2),
+                      "conf": 0.8 if len(rs) >= 2 else 0.6,
+                      "why": f"{len(rs)} payment(s) to {recipient.get('domain')} in the window"}
+    return out
+
+
 def window(end: datetime, days: int = LOOKBACK_D) -> tuple[datetime, datetime]:
     return end - timedelta(days=days), end

@@ -1,0 +1,453 @@
+{
+ "rings": [
+  {
+   "case": "CC-2649",
+   "card": "C03528-K1",
+   "opened_at": "2016-08-27 04:53:00",
+   "shared_devices": 1,
+   "connected": 23,
+   "compromised": 7,
+   "labelled_fraud_usd": 28420.96,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28420.96,
+     "innocent_blocked": 16,
+     "net_usd": 26820.96
+    },
+    "block_any_shared_use@100": {
+     "blocked": 19,
+     "fraud_stopped_usd": 28280.01,
+     "innocent_blocked": 13,
+     "net_usd": 26980.01
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28420.96,
+     "innocent_blocked": 16,
+     "net_usd": 24420.96
+    },
+    "block_any_shared_use@250": {
+     "blocked": 19,
+     "fraud_stopped_usd": 28280.01,
+     "innocent_blocked": 13,
+     "net_usd": 25030.01
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28420.96,
+     "innocent_blocked": 16,
+     "net_usd": 20420.96
+    },
+    "block_any_shared_use@500": {
+     "blocked": 19,
+     "fraud_stopped_usd": 28280.01,
+     "innocent_blocked": 13,
+     "net_usd": 21780.01
+    }
+   }
+  },
+  {
+   "case": "CC-2971",
+   "card": "C09998-K1",
+   "opened_at": "2016-09-03 03:25:00",
+   "shared_devices": 1,
+   "connected": 23,
+   "compromised": 8,
+   "labelled_fraud_usd": 28884.76,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28884.76,
+     "innocent_blocked": 15,
+     "net_usd": 27384.76
+    },
+    "block_any_shared_use@100": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28743.81,
+     "innocent_blocked": 15,
+     "net_usd": 27243.81
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28884.76,
+     "innocent_blocked": 15,
+     "net_usd": 25134.76
+    },
+    "block_any_shared_use@250": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28743.81,
+     "innocent_blocked": 15,
+     "net_usd": 24993.81
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28884.76,
+     "innocent_blocked": 15,
+     "net_usd": 21384.76
+    },
+    "block_any_shared_use@500": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28743.81,
+     "innocent_blocked": 15,
+     "net_usd": 21243.81
+    }
+   }
+  },
+  {
+   "case": "CC-2985",
+   "card": "C06617-K1",
+   "opened_at": "2016-09-03 10:20:00",
+   "shared_devices": 1,
+   "connected": 23,
+   "compromised": 8,
+   "labelled_fraud_usd": 28711.77,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28711.77,
+     "innocent_blocked": 15,
+     "net_usd": 27211.77
+    },
+    "block_any_shared_use@100": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28570.82,
+     "innocent_blocked": 15,
+     "net_usd": 27070.82
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28711.77,
+     "innocent_blocked": 15,
+     "net_usd": 24961.77
+    },
+    "block_any_shared_use@250": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28570.82,
+     "innocent_blocked": 15,
+     "net_usd": 24820.82
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28711.77,
+     "innocent_blocked": 15,
+     "net_usd": 21211.77
+    },
+    "block_any_shared_use@500": {
+     "blocked": 22,
+     "fraud_stopped_usd": 28570.82,
+     "innocent_blocked": 15,
+     "net_usd": 21070.82
+    }
+   }
+  },
+  {
+   "case": "CC-3035",
+   "card": "C09733-K1",
+   "opened_at": "2016-09-04 12:44:00",
+   "shared_devices": 1,
+   "connected": 23,
+   "compromised": 8,
+   "labelled_fraud_usd": 28983.66,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 27483.66
+    },
+    "block_any_shared_use@100": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 27483.66
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 25233.66
+    },
+    "block_any_shared_use@250": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 25233.66
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 21483.66
+    },
+    "block_any_shared_use@500": {
+     "blocked": 23,
+     "fraud_stopped_usd": 28983.66,
+     "innocent_blocked": 15,
+     "net_usd": 21483.66
+    }
+   }
+  },
+  {
+   "case": "CC-5571",
+   "card": "C07297-K1",
+   "opened_at": "2016-11-22 02:30:00",
+   "shared_devices": 2,
+   "connected": 11,
+   "compromised": 1,
+   "labelled_fraud_usd": 160.42,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 11,
+     "fraud_stopped_usd": 160.42,
+     "innocent_blocked": 10,
+     "net_usd": -839.58
+    },
+    "block_any_shared_use@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 11,
+     "fraud_stopped_usd": 160.42,
+     "innocent_blocked": 10,
+     "net_usd": -2339.58
+    },
+    "block_any_shared_use@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 11,
+     "fraud_stopped_usd": 160.42,
+     "innocent_blocked": 10,
+     "net_usd": -4839.58
+    },
+    "block_any_shared_use@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    }
+   }
+  },
+  {
+   "case": "CC-5579",
+   "card": "C13487-K1",
+   "opened_at": "2016-11-22 20:11:00",
+   "shared_devices": 1,
+   "connected": 27,
+   "compromised": 5,
+   "labelled_fraud_usd": 4224.13,
+   "strategies": {
+    "planner@100": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@100": {
+     "blocked": 27,
+     "fraud_stopped_usd": 4224.13,
+     "innocent_blocked": 22,
+     "net_usd": 2024.13
+    },
+    "block_any_shared_use@100": {
+     "blocked": 19,
+     "fraud_stopped_usd": 4207.02,
+     "innocent_blocked": 15,
+     "net_usd": 2707.02
+    },
+    "planner@250": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@250": {
+     "blocked": 27,
+     "fraud_stopped_usd": 4224.13,
+     "innocent_blocked": 22,
+     "net_usd": -1275.87
+    },
+    "block_any_shared_use@250": {
+     "blocked": 19,
+     "fraud_stopped_usd": 4207.02,
+     "innocent_blocked": 15,
+     "net_usd": 457.02
+    },
+    "planner@500": {
+     "blocked": 0,
+     "fraud_stopped_usd": 0,
+     "innocent_blocked": 0,
+     "net_usd": 0.0
+    },
+    "block_every_ring_card@500": {
+     "blocked": 27,
+     "fraud_stopped_usd": 4224.13,
+     "innocent_blocked": 22,
+     "net_usd": -6775.87
+    },
+    "block_any_shared_use@500": {
+     "blocked": 19,
+     "fraud_stopped_usd": 4207.02,
+     "innocent_blocked": 15,
+     "net_usd": -3292.98
+    }
+   }
+  }
+ ],
+ "totals": {
+  "planner@100": {
+   "blocked": 0,
+   "fraud_stopped_usd": 0.0,
+   "innocent_blocked": 0,
+   "net_usd": 0.0
+  },
+  "block_every_ring_card@100": {
+   "blocked": 130,
+   "fraud_stopped_usd": 119385.7,
+   "innocent_blocked": 93,
+   "net_usd": 110085.7
+  },
+  "block_any_shared_use@100": {
+   "blocked": 105,
+   "fraud_stopped_usd": 118785.32,
+   "innocent_blocked": 73,
+   "net_usd": 111485.32
+  },
+  "planner@250": {
+   "blocked": 0,
+   "fraud_stopped_usd": 0.0,
+   "innocent_blocked": 0,
+   "net_usd": 0.0
+  },
+  "block_every_ring_card@250": {
+   "blocked": 130,
+   "fraud_stopped_usd": 119385.7,
+   "innocent_blocked": 93,
+   "net_usd": 96135.7
+  },
+  "block_any_shared_use@250": {
+   "blocked": 105,
+   "fraud_stopped_usd": 118785.32,
+   "innocent_blocked": 73,
+   "net_usd": 100535.32
+  },
+  "planner@500": {
+   "blocked": 0,
+   "fraud_stopped_usd": 0.0,
+   "innocent_blocked": 0,
+   "net_usd": 0.0
+  },
+  "block_every_ring_card@500": {
+   "blocked": 130,
+   "fraud_stopped_usd": 119385.7,
+   "innocent_blocked": 93,
+   "net_usd": 72885.7
+  },
+  "block_any_shared_use@500": {
+   "blocked": 105,
+   "fraud_stopped_usd": 118785.32,
+   "innocent_blocked": 73,
+   "net_usd": 82285.32
+  }
+ },
+ "labelled_fraud_usd": 119385.7,
+ "connected_cards": 130,
+ "compromised_cards": 37
+}

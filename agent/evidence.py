@@ -135,7 +135,8 @@ def typology_evidence(ep: EvidencePack, g: Any, an: dict | None = None) -> None:
         n = len(g.trace.calls)
         st = g.recipient_activity(d, lo, hi, hi - timedelta(days=210), agent=an.get("network", "network"))
         ep.extra["recipient"][d] = {"domain": d, "cards_window": st["cards_window"],
-                                    "monthly_cards": list(st["monthly_cards"].values())}
+                                    "monthly_cards": list(st["monthly_cards"].values()),
+                                    "window_txns": st.get("window_txns") or []}
         ep.refs[f"recipient:{d}"] = _ref(g, n)
     candidates = [ep.extra.get("micro_prior_n") is not None, ty.spoofed_device(rows, hi), ty.escalating_ramp(rows, hi)]
     if any(candidates):

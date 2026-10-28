@@ -320,15 +320,21 @@ class GraphClient:
         out = self.run("typology_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "base_start": fmt_ts(base_start),
                                          "micro_max": micro_max, "min_micro": min_micro, "ramp_min": ramp_min}, **kw)
         micro = [{"card_id": r.get("id"), "customer_id": r.get("customer_id"), "n": int(r.get("n_micro") or 0),
-                  "days": int(r.get("n_days") or 0), "prior_n": int(r.get("n_base") or 0)} for r in out.get("micro", [])]
+                  "days": int(r.get("n_days") or 0), "prior_n": int(r.get("n_base") or 0),
+                  "txns": sorted(r.get("micro_txns") or [], key=lambda x: x.split("|")[1])} for r in out.get("micro", [])]
         new_dev = [{**r, "device": r.get("dev", ""), "proxy": r.get("proxy", "")} for r in out.get("new_device_txns", [])]
         return {"micro": micro, "new_device_txns": sorted(new_dev, key=lambda r: r["ts"]),
                 "ramp_txns": sorted(out.get("ramp_txns", []), key=lambda r: (r["card_id"], r["ts"]))}
 
-    def recipient_activity(self, domain: str, start, end, base_start, **kw) -> dict:
+    def recipient_activity(self, domain: str, start, end, base_start, max_detail: int = 200, **kw) -> dict:
         out = self.run("recipient_activity", {"dom": domain, "start_ts": fmt_ts(start), "end_ts": fmt_ts(end),
-                                              "base_start": fmt_ts(base_start)}, **kw)
-        return {"cards_window": sorted(out.get("cards_window") or []), "monthly_cards": dict(out.get("monthly_cards") or {})}
+                                              "base_start": fmt_ts(base_start), "max_detail": max_detail}, **kw)
+        detail = []
+        for x in out.get("window_txns") or []:
+            tid, card, ts, amt = x.split("|")
+            detail.append({"id": tid, "card_id": card, "ts": ts, "amt": float(amt)})
+        return {"cards_window": sorted(out.get("cards_window") or []), "monthly_cards": dict(out.get("monthly_cards") or {}),
+                "window_txns": sorted(detail, key=lambda r: r["ts"])}
 
     def ring_components(self, **kw) -> dict:
         return self.run("ring_components", {}, **kw)

@@ -382,6 +382,8 @@ class Investigator:
                 self.emit("warning", {"msg": f"graph write failed: {rec['detail']}"})
         if self._failures:
             self._mark_incomplete(ans)
+        if r["verdict"] == "fraud" and r["facts"].get("containment"):
+            ans["containment"] = r["facts"]["containment"]  # challenge 7: recommendation for the ring's other cards
         ans["run"] = self._run_meta(s)
         ans["tool_calls"] = len(self.g.trace.calls) - s["calls0"]
         ans["tokens"] = Usage.tokens()

@@ -53,7 +53,8 @@ def similar_prior_cases(r: dict) -> list[str]:
 
 # Findings that move no probability but must be on the record: what the agent refused to follow, which claims it
 # overrode with the bank's record, and concerns it handed to an analyst.
-ALWAYS_SHOWN = {"known_device", "hostile_text", "trigger_mismatch", "card_record_mismatch", "card_other_typology"}
+ALWAYS_SHOWN = {"known_device", "hostile_text", "trigger_mismatch", "card_record_mismatch", "card_other_typology",
+                "containment_plan"}
 
 
 def evidence_list(r: dict, knowledge_refs: list[dict]) -> list[dict]:
