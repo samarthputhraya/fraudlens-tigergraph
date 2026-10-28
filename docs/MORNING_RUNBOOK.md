@@ -79,12 +79,14 @@ mkdir -p runs/grade/official/fraudlens && cp cases_r2/HHF-*.json runs/grade/offi
 .venv/Scripts/python data/raw_r2/share/grader/grade.py --teams-dir runs/grade/official --case-pack data/raw_r2/share/cases/case_pack_final.csv --transactions data/raw_r2/share/transactions_2017q1.csv --out runs/grade/official.json
 .venv/Scripts/python eval/attest_check.py cases_r2 --graph
 .venv/Scripts/python eval/attack_suite.py
+.venv/Scripts/python eval/drills.py --official
 .venv/Scripts/python -m pytest tests -q
 ```
 **Expected:**
 - grader: 18/18 clean, 0 hard, 0 policy;
 - attestation: 0 mismatched;
 - attacks: 0 decisions changed;
+- drills: all pass (13 with `--official`);
 - every test passes.
 
 ## 8. Freeze
@@ -106,7 +108,7 @@ git push origin round2
 
 1. Run the case live: `python run_cases.py <case>`, or click Run in the Command Center (`uvicorn api.main:app --port 8000`).
 2. Walk through the trace: the alert → the evidence queries → the finding that decided it → the policy rule → the actions and their routes.
-3. Show one drill live: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case>` gives STOPPED and exit 2.
+3. Show one drill live: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case>` gives STOPPED and exit 2. If they ask for more, `python eval/drills.py` runs all 12 in about 80 seconds.
 4. **Weakest point, said plainly:**
    - The typology thresholds were set from July–December background. Spoofed fingerprints and recipient surges are clean, but micro-charge runs and ramps are only about 1 in 3 confirmed there, so we monitor ring members rather than block them.
    - The isotonic calibration is fitted on the July–September model and applied to the July–October one.

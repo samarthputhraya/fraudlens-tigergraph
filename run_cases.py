@@ -5,6 +5,7 @@ file per case.
   python run_cases.py                    # every case in the pack
   python run_cases.py --mirror --no-write --out runs/dev   # offline DuckDB mirror, labelled not official
   python run_cases.py --rest HHF-007     # TigerGraph over REST instead of MCP: an explicit, recorded choice
+  python run_cases.py --pack drills.csv  # a different case pack, e.g. the resilience drills (eval/drills.py)
 
 Fail closed: if the graph, the tool layer or the case itself fails, that case stops, no answer is presented for it
 (an earlier answer for the same case is moved to <out>/stale/), the failure is printed, recorded and audited, and the
@@ -68,11 +69,18 @@ def main() -> int:
         OUT = OUT if OUT.is_absolute() else ROOT / OUT
         TRACE = OUT / "traces"
         sys.argv.pop(sys.argv.index("--out") + 1)
+    pack = CASE_PACK_CSV
+    if "--pack" in sys.argv:
+        pack = Path(sys.argv[sys.argv.index("--pack") + 1])
+        sys.argv.pop(sys.argv.index("--pack") + 1)
+        if not pack.is_file():
+            print(f"error: no case pack at {pack}", file=sys.stderr)
+            return 1
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    cases = list(csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8")))
+    cases = list(csv.DictReader(pack.open(encoding="utf-8")))
     unknown = [a for a in args if a not in {c["case_id"] for c in cases}]
     if unknown:
-        print(f"error: not in {CASE_PACK_CSV.name}: {', '.join(unknown)}", file=sys.stderr)
+        print(f"error: not in {pack.name}: {', '.join(unknown)}", file=sys.stderr)
         return 1
 
     try:

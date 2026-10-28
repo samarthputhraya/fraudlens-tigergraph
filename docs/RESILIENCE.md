@@ -68,7 +68,24 @@ Every failure is printed, written to a hash-chained audit log, and never present
 
 ## How to reproduce each drill
 
-`FRAUDLENS_FAULT` injects a failure at a named step, for example:
+**All of them, one command:** `python eval/drills.py` causes each failure above for real, in a separate process, and checks the outcome against this statement. It uses its own output folders and its own audit log under `runs/drills/`, so real answers are never touched. Add `--official` for the drill where TigerGraph is unreachable at start. Results go to `eval/drills.json`.
+
+| Drill | What it checks |
+|---|---|
+| Graph fails mid-run | The case stops, no answer is written, a FAILED record is kept, exit 2 |
+| Stopped re-run | The earlier answer is moved to `stale/`, not left looking current |
+| Model times out / returns garbage | The same decision, marked incomplete and escalated (R8), exit 3 |
+| Transaction missing, case opened before its transaction, malformed row | Stops as invalid input, nothing invented, exit 2 |
+| The case names another customer's card | Uncertain, no block, escalated |
+| Hostile alert text | The same decision as without it, and the attempt is recorded as evidence |
+| The same case twice | An identical decision |
+| Approvals | Wrong role 403, a second decision 409, a failed write isn't recorded |
+| Audit log | The intact log verifies. A fraud verdict rewritten as "legitimate" is detected |
+| TigerGraph unreachable (`--official`) | Nothing is answered, and there's no switch to the mirror |
+
+On the mirror tonight: **12 of 12 pass in 78 seconds.**
+
+One drill at a time: `FRAUDLENS_FAULT` injects a failure at a named step, for example:
 
 ```bash
 FRAUDLENS_FAULT=graph:card_window python run_cases.py HHF-009       # dependency failing mid-run -> STOPPED, exit 2

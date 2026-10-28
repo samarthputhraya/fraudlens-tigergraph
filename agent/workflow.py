@@ -362,6 +362,11 @@ class Investigator:
             if missing:
                 texts["sar_narrative"] = texts["sar_narrative"].rstrip() + " Affected transactions: " + "; ".join(
                     f"{i} on {rows[i]['ts'][:10]} for ${float(rows[i]['amt']):,.2f}" for i in r["episode"] if i in rows) + "."
+        if r["evidence_requests"] and texts.get("summary") and not re.search(r"simulat|assum", texts["summary"], re.I):
+            # the brief allows simulated replies only when stated as assumptions: one must never read as a real reply
+            who = {"step_up_auth": "step-up authentication result", "analyst_info": "analyst's reply"}.get(
+                r["evidence_requests"][0]["type"], "customer's reply")
+            texts["summary"] = texts["summary"].rstrip() + f" The {who} is simulated; the assumption is stated in evidence_requests."
         if not r["evidence_requests"]:
             texts["what_changed"] = "nothing"
         return {"texts": texts}

@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from agent.evidence import known_device  # noqa: E402
+from agent.paths import DB  # noqa: E402
 from agent.workflow import Investigator, _asserts, _unfence  # noqa: E402
 
 LEGIT = {"verdict": "legitimate", "final": [{"action": "ALLOW_TRANSACTION"}, {"action": "CLOSE_NO_FRAUD"}]}
@@ -61,3 +62,19 @@ def test_blank_device_profile_is_no_device():
     assert known_device(" |  |  | ") == ""
     assert known_device(None) == ""
     assert known_device("Windows |  | chrome 63.0 | ") == "Windows |  | chrome 63.0 | "
+
+
+@pytest.mark.skipif(not DB.exists(), reason="Round 2 DuckDB not built")
+def test_simulated_reply_is_never_presented_as_real(monkeypatch, tmp_path):
+    """HHF-009 is settled by a customer reply. The brief allows that only as a stated assumption, so the summary must
+    say the reply is simulated, whoever wrote it."""
+    import csv
+    from agent import safety
+    from agent.mirror import MirrorGraph
+    from agent.paths import CASE_PACK_CSV
+    from agent.workflow import Investigator
+    monkeypatch.setattr(safety, "AUDIT_DIR", tmp_path / "audit")
+    row = next(r for r in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8")) if r["case_id"] == "HHF-009")
+    ans = Investigator(MirrorGraph(), write_graph=False, use_llm=False).run(row)["answer"]
+    assert ans["evidence_requests"]
+    assert "simulated" in ans["case"]["summary"].lower() or "assum" in ans["case"]["summary"].lower()
