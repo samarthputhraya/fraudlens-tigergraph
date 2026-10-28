@@ -362,6 +362,7 @@ class MirrorGraph:
             WHERE {win} AND i.id_15 = 'New'
               AND ((CASE WHEN i.DeviceInfo IS NULL THEN 1 ELSE 0 END) + (CASE WHEN i.id_30 IS NULL THEN 1 ELSE 0 END)
                    + (CASE WHEN i.id_33 IS NULL THEN 1 ELSE 0 END)) < 2
+              AND coalesce(i.DeviceInfo, '') NOT IN ('', 'iOS Device', 'Windows', 'MacOS', 'Trident/7.0', 'Linux')
             ORDER BY t.ts_dt""", [s, e])
         ramp = self._rows(f"""
             WITH c AS (SELECT t.card_id FROM txn t WHERE {win} AND t.amt >= 20 GROUP BY t.card_id

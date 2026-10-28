@@ -48,6 +48,7 @@ class Situation:
     legit_explanation: str = ""
     integrity_conflict: bool = False   # the case record and the bank's own record disagree (data quality)
     side_concern: str = ""             # other charges on the card match a fraud typology (not the flagged one)
+    signature: str = ""                # connected cards show the same typology signature but share nothing (R9, not R6)
 
 
 def sar_required(s: Situation, verdict: str) -> bool:
@@ -61,7 +62,7 @@ def sar_reason(s: Situation) -> str:
     if s.shared:
         parts.append(f"activity connects to {s.shared_desc or 'a shared device profile / another customer'}")
     if s.pattern == "undocumented":
-        parts.append("the pattern is coordinated and undocumented (R9)")
+        parts.append(f"the pattern is undocumented{' and coordinated across ' + str(len(s.connected_cards) + 1) + ' cards' if s.connected_cards else ''} (R9)")
     return "; ".join(parts)
 
 
@@ -82,10 +83,12 @@ def fraud_actions(s: Situation, basis: str) -> list[dict]:
         rule = "R6" if s.shared else ("R9" if s.pattern == "undocumented" else "R2")
         out.append(act("FILE_REPORT", f"{rule} / section 3a: {sar_reason(s)}", e))
     if s.connected_cards:
-        out.append(act("MONITOR_CONNECTED_CARDS",
-                       f"R6: {len(s.connected_cards)} other card(s) share {s.shared_desc or 'the same origin'}", e))
+        why = (f"R6: {len(s.connected_cards)} other card(s) share {s.shared_desc or 'a link with this card'}" if s.shared else
+               f"R9: {len(s.connected_cards)} other card(s) show the same {s.signature or 'signature'} in the same 30 days")
+        out.append(act("MONITOR_CONNECTED_CARDS", why, e))
     if s.pattern == "undocumented":
-        out.append(act("ESCALATE_TO_ANALYST", "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence", e))
+        out.append(act("ESCALATE_TO_ANALYST", f"R9: {'coordinated ' if s.connected_cards else ''}activity that fits no "
+                                              f"documented pattern; hand to an analyst with the evidence", e))
     return out
 
 
@@ -96,11 +99,11 @@ def with_side_concern(actions: list[dict], s: Situation) -> list[dict]:
         return actions
     out = list(actions)
     if not any(a["action"] == "MONITOR_CARD" for a in out):
-        out.append(act("MONITOR_CARD", f"R6 / R9: other charges on this card match a fraud typology ({s.side_concern}); "
+        out.append(act("MONITOR_CARD", f"R6: other charges on this card share an element with a fraud ring ({s.side_concern}); "
                                        f"raise monitoring for 72 hours", s.exposure))
     if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in out):
-        out.append(act("ESCALATE_TO_ANALYST", "R8: the card carries other suspicious charges outside this alert; hand them "
-                                              "to an analyst with the evidence", s.exposure))
+        out.append(act("ESCALATE_TO_ANALYST", "R8: the evidence conflicts - the flagged purchase is clean but other charges "
+                                              "on the card are suspicious; hand those to an analyst with the evidence", s.exposure))
     return out
 
 

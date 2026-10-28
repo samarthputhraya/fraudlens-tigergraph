@@ -17,7 +17,8 @@ sys.path.insert(0, str(ROOT))
 
 
 def main(case_id: str, folder: Path, rerun: bool) -> None:
-    trace = json.loads((folder / "traces" / f"{case_id}.json").read_text(encoding="utf-8"))
+    traces = folder / "traces" if (folder / "traces").is_dir() else ROOT / "runs" / "traces"  # official runs: runs/traces
+    trace = json.loads((traces / f"{case_id}.json").read_text(encoding="utf-8"))
     ans = json.loads((folder / f"{case_id}.json").read_text(encoding="utf-8"))
     print(f"REPLAY {case_id}  (graph: {ans['run']['graph']}, run at {ans['run']['started_at']}, "
           f"{'complete' if ans['run']['complete'] else 'INCOMPLETE'})\n")

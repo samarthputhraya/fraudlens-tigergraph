@@ -50,6 +50,16 @@ def _model_meta() -> tuple[float, str]:
 MODEL_BASE_RATE, MODEL_AUC = _model_meta()
 
 
+def _clip(text: str, n: int) -> str:
+    """Quote at most n characters, ending on a whole sentence (or word) instead of mid-word."""
+    text = " ".join(str(text or "").split())
+    if len(text) <= n:
+        return text
+    cut = text[:n]
+    end = cut.rfind(". ")
+    return cut[:end + 1] if end >= n // 2 else cut[:cut.rfind(" ")].rstrip(",;:") + " ..."
+
+
 def _mp(x: dict) -> float:
     try:
         return float(x.get("model_p", -1))
@@ -107,8 +117,9 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         if drift:
             lr = max(0.5, min(lr, 8.0))
         f.append(Finding("model_score",
-                         f"The transaction model trained on the bank's own closed cases (July-October; October hold-out AUC "
-                         f"{MODEL_AUC}) scores this transaction {mp:.3f}, against a {MODEL_BASE_RATE:.1%} base rate. It reads the "
+                         f"The transaction model, trained on the bank's own closed cases from July to October (its "
+                         f"July-September version scored AUC {MODEL_AUC} on October), scores this transaction {mp:.3f}, "
+                         f"against a {MODEL_BASE_RATE:.1%} base rate. It reads the "
                          f"unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the "
                          f"graph's memory of earlier closed cases, all as known at transaction time"
                          + (". January activity is newer than anything the model learned from and carries patterns it has never "
@@ -384,7 +395,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             home_active = [w for w in win if w["addr1"] == home_reg and abs((P(w["ts"]) - ts).total_seconds()) <= 24 * 3600]
             if len(days) >= 3:
                 f.append(Finding("region_trip",
-                                 f"Card-present purchases in billing region {region_label(reg)} on {len(days)} different days: a sustained stay, "
+                                 f"Purchases billed to region {region_label(reg)} on {len(days)} different days: a sustained stay, "
                                  f"more consistent with a trip than a cloned card", 0.5, "region", ref=ep.refs.get("window", ""),
                                  entity_ids=[w["id"] for w in recent_new[:4]]))
                 facts["trip"] = True
@@ -400,7 +411,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
                 facts["new_region"] = reg
         elif n_here >= 3:
             f.append(Finding("region_known",
-                             f"This card has {n_here} earlier card-present purchases in billing region {region_label(reg)} (first on {str(first)[:10]})",
+                             f"This card has {n_here} earlier purchases billed to region {region_label(reg)} (first on {str(first)[:10]})",
                              0.65, "region", ref=ep.refs.get("profile", ""), entity_ids=[t["id"]], in_model=has_model))
 
     # ---------------------------------------------------------------- mixed channel / account takeover signals
@@ -422,7 +433,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
         notes = cleared_card[-1].get("analyst_notes", "")
         f.append(Finding("card_prior_cleared",
                          f"This card has {len(cleared_card)} earlier alert(s) that were cleared as false alarms "
-                         f"({', '.join(c['id'] for c in cleared_card[-3:])}; latest note: \"{notes[:140]}\")",
+                         f"({', '.join(c['id'] for c in cleared_card[-3:])}; latest note: \"{_clip(notes, 160)}\")",
                          0.8, "memory", ref=ep.refs.get("prior", ""), entity_ids=[c["id"] for c in cleared_card[-3:]],
                          in_model=has_model))
     for cx in pc.get("connected_cases", []):
@@ -500,6 +511,9 @@ def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
             from agent import containment as ct
             st = next((s for s in (ep.extra.get("recipient") or {}).values() if best.shared and s["domain"] == best.shared[1]), None)
             per = ty.ring_exposures(best.key, scan, st)
+            # ring cards whose own evidence is weak (micro-charge runs and ramps are ~1 in 3 confirmed) are monitored
+            # and never named as subjects of a regulator report
+            facts["weak_ring_cards"] = sorted(c for c in ring if (per.get(c) or {}).get("conf", 0.0) < ct.MIN_BLOCK_CONF)
             members = [ct.Member(card, best.total, 0.95, f"this case: {best.claim[:120]}", best.txns)]
             for c in ring:
                 d = per.get(c)

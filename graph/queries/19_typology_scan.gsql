@@ -27,6 +27,10 @@ CREATE OR REPLACE QUERY typology_scan(DATETIME start_ts, DATETIME end_ts, DATETI
 
   D = SELECT d FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
       WHERE e.dev_new == "New" AND d.is_generic == FALSE
+        /* only a named handset model can contradict its own OS: generic values are skipped here, not in Python,
+           to keep the result small over MCP (the same list is in agent/mirror.py and agent/typologies.py) */
+        AND d.device_info != "" AND d.device_info != "iOS Device" AND d.device_info != "Windows"
+        AND d.device_info != "MacOS" AND d.device_info != "Trident/7.0" AND d.device_info != "Linux"
       ACCUM t.@dev = d.id, t.@new_flag = e.dev_new, t.@proxy_type = e.proxy_type;
   DT = SELECT t FROM T:t WHERE t.@dev != "";
   PRINT DT[DT.id, DT.card_id, DT.ts, DT.amt, DT.product, DT.channel, DT.r_email, DT.@dev, DT.@new_flag, DT.@proxy_type] AS new_device_txns;

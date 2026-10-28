@@ -11,6 +11,7 @@ Everything below was prepared overnight on the offline mirror. **TigerGraph Sava
    FRAUDLENS_APPROVER_TOKENS=team_lead:<random 24+ chars>,fraud_manager:<random 24+ chars>
    FRAUDLENS_AUDIT_KEY=<random 32+ chars>
    ```
+   Tonight's audit log was written without a key. The first entry written after you set it archives that log as `runs/audit/audit.unkeyed-<time>.jsonl` (its hash is recorded) and starts a keyed chain, so `/api/audit/verify` passes from then on. Until the first case runs, it reports the old log as unkeyed: that is expected.
 4. **Ask Devanshu:**
    - When are the freeze, Stage 1 and the demo slots?
    - Do the drills run on our laptop or against a deployed endpoint?
@@ -63,7 +64,7 @@ Keep the Round 1 `InvestigationCase` memory; **don't run `reset_memory`**. The b
 ```bash
 .venv/Scripts/python run_cases.py                 # writes cases_r2/*.json, runs/traces/*, audit entries; case memory to TigerGraph
 ```
-- **Expected verdicts:** they should match the mirror run in `runs/v4/last_run.txt`:
+- **Expected verdicts:** they should match the mirror run in `runs/v8/` (`runs/v8_run.log`):
   - fraud: HHF-001 to HHF-007
   - uncertain: HHF-011
   - legitimate: the other 10
@@ -92,7 +93,8 @@ mkdir -p runs/grade/official/fraudlens && cp cases_r2/HHF-*.json runs/grade/offi
 ## 8. Freeze
 
 ```bash
-git add cases_r2 docs eval agent api graph ml rag tests run_cases.py README.md
+git add cases_r2/HHF-0[01][0-9].json docs eval agent api graph ml rag tests run_cases.py README.md
+git add runs/traces/HHF-0[01][0-9].json    # the official traces; not the FAILED records
 git commit -m "Final Round freeze: official answers from TigerGraph"
 git rev-parse HEAD      # the hash you hand in
 git push origin round2
@@ -108,7 +110,7 @@ git push origin round2
 
 1. Run the case live: `python run_cases.py <case>`, or click Run in the Command Center (`uvicorn api.main:app --port 8000`).
 2. Walk through the trace: the alert → the evidence queries → the finding that decided it → the policy rule → the actions and their routes.
-3. Show one drill live: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case>` gives STOPPED and exit 2. If they ask for more, `python eval/drills.py` runs all 12 in about 80 seconds.
+3. Show one drill live: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case> --out runs/drills --no-write` gives STOPPED and exit 2. Never drop `--out`: without it the drill moves the official answer into `cases_r2/stale/`. If they ask for more, `python eval/drills.py` runs all 12 in about 80 seconds.
 4. **Weakest point, said plainly:**
    - The typology thresholds were set from July–December background. Spoofed fingerprints and recipient surges are clean, but micro-charge runs and ramps are only about 1 in 3 confirmed there, so we monitor ring members rather than block them.
    - The isotonic calibration is fitted on the July–September model and applied to the July–October one.

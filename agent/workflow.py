@@ -258,7 +258,8 @@ class Investigator:
             reqs.append({"type": rtype, "asked_after_step": steps_so_far, "assumed_response": text})
             final = pl["branches"][reply]
             if reply == "confirm":
-                p_final, verdict, pattern, desc = 0.05, "legitimate", "none", ""
+                # a confirmation can only lower the fraud probability, never raise it
+                p_final, verdict, pattern, desc = round(min(0.05, led["p"]), 2), "legitimate", "none", ""
             elif reply == "deny":
                 p_final, verdict = round(min(0.97, max(0.88, led["p"] + 0.3)), 2), "fraud"
             else:
@@ -580,8 +581,10 @@ class Investigator:
             stop = ("Section 6: the verification response settled the question - the cardholder confirmed the transaction, "
                     "so further investigation would not change the decision.")
             what = (f"The assumed {'step-up' if r['evidence_requests'][0]['type'] == 'step_up_auth' else 'customer'} response "
-                    f"(\"{r['evidence_requests'][0]['assumed_response']}\") settled the alert: probability fell from {p0:.2f} to "
-                    f"{r['p_final']:.2f} and the recommendation moved from verification to {final_names} (R3"
+                    f"(\"{r['evidence_requests'][0]['assumed_response']}\") settled the alert: "
+                    + (f"probability fell from {p0:.2f} to {r['p_final']:.2f}" if r['p_final'] < p0 else
+                       f"probability stayed at {r['p_final']:.2f}")
+                    + f" and the recommendation moved from verification to {final_names} (R3"
                     f"{', R7' if r['facts'].get('recurring') else ''}).")
         elif reply == "deny":
             stop = ("Section 6: the cardholder's denial settled the question and, with the graph evidence, supports a "
@@ -600,7 +603,15 @@ class Investigator:
                     f"decision at probability {r['p_final']:.2f}; further queries would not change the actions.")
             what = "nothing"
         elif r["verdict"] == "uncertain":
-            stop = "The graph evidence conflicts with the customer's report, so the case goes to an analyst under R8 instead of being guessed."
+            sit = r["situation"]
+            if sit.integrity_conflict:
+                stop = (f"On the bank's own record the activity scores a fraud probability of {r['p_final']:.2f}, but the case "
+                        f"record names a different card or customer than the bank's record, so the case goes to an analyst "
+                        f"under R8 instead of being guessed.")
+            elif sit.conflict:
+                stop = "The graph evidence conflicts with the customer's report, so the case goes to an analyst under R8 instead of being guessed."
+            else:
+                stop = "The evidence does not settle the case either way, so it goes to an analyst under R8 instead of being guessed."
             what = "nothing"
         elif r["verdict"] == "fraud":
             stop = (f"Section 6: fraud probability {r['p_final']:.2f} >= 0.85 on independent evidence ({fams}); "
@@ -621,9 +632,10 @@ class Investigator:
             rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or []) + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [t]}
             items = [rows[i] for i in r["episode"] if i in rows]
             listing = "; ".join(f"{x['id']} on {x['ts'][:16]} for ${float(x['amt']):,.2f} ({x.get('channel', '').replace('_', '-')})" for x in items[:8])
-            conn = sorted(r["facts"].get("connected_cards") or [])
+            weak = set(r["facts"].get("weak_ring_cards") or [])
+            conn = sorted(set(r["facts"].get("connected_cards") or []) - weak)
             devs = sorted(r["facts"].get("connected_devices") or [])
-            why = " ".join(f.claim.split(";")[0] + "." for f in sorted(r["findings"], key=lambda f: -f.weight)[:3] if f.lr > 1)
+            why = " ".join(_lead_clause(f.claim) for f in sorted(r["findings"], key=lambda f: -f.weight)[:3] if f.lr > 1)
             who = "The cardholder denied making the transactions." if (r.get("reply") == "deny" or case["trigger_type"] == "customer_report") else \
                   "The activity was identified by the bank's investigation before any customer report."
             narrative = (
@@ -633,8 +645,8 @@ class Investigator:
                 f"The activity was classified as {r['pattern'].replace('_', ' ')}. {why} "
                 + (f"The same device profile ({devs[0]}) links this card to {len(conn)} other card(s), including "
                    f"{', '.join(conn[:6])}, indicating a common actor across cardholders. " if conn and devs else "")
-                + f"{who} The bank recommends {', '.join(a['action'] for a in r['final'])}; the card block and this "
-                f"filing await human approval under the bank's routing policy.")
+                + f"{who} The bank recommends {', '.join(a['action'] for a in r['final'])}; the actions routed L1 or L2, "
+                f"including this filing, await human approval under the bank's routing policy.")
         return {"summary": summary, "stop_reason": stop, "sar_reason": sar_reason_txt,
                 "what_changed": what, "sar_narrative": narrative, "pattern_description": r["pattern_description"]}
 

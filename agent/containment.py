@@ -50,12 +50,21 @@ def plan(members: list[Member], innocent_cost: float = INNOCENT_COST) -> dict:
 
 
 def describe(p: dict) -> str:
-    """One evidence-grade sentence for the case file."""
+    """One evidence-grade sentence for the case file. The plan is a recommendation for the analyst: this case's own
+    actions block at most this case's card."""
     pl, al = p["plan"], p["block_everything"]
     weak = p["customers_touched_on_weak_evidence"]
-    return (f"Containment plan for the {p['ring_size']}-card ring (${p['ring_exposure_usd']:,.2f} at risk): block "
-            f"{pl['cards_blocked']} card(s) ({', '.join(b['card'] for b in p['block'][:8])}{', ...' if pl['cards_blocked'] > 8 else ''}) "
-            f"to cut {pl['exposure_cut_pct']}% of the exposure, and monitor the other {len(p['monitor'])}; blocking every "
-            f"ring card would cut {al['exposure_cut_pct']}% but act against about {al['expected_innocent_blocked']:.1f} "
-            f"customer(s) on weak evidence, against {pl['expected_innocent_blocked']:.1f} for this plan"
-            + (f". Blocked on weaker evidence, named for review: {', '.join(w['card'] for w in weak)}" if weak else ""))
+    blocked = ", ".join(b["card"] for b in p["block"][:8]) + (", ..." if pl["cards_blocked"] > 8 else "")
+    if pl["cards_blocked"] == p["ring_size"]:
+        tail = (f"Every ring card has strong evidence of its own, so the plan blocks all {p['ring_size']} "
+                f"({blocked}), cutting 100% of it; an expected {pl['expected_innocent_blocked']:.1f} of them could still "
+                f"belong to customers who are not compromised")
+    else:
+        tail = ((f"Blocking {pl['cards_blocked']} card(s) ({blocked}) would cut {pl['exposure_cut_pct']}% of it"
+                 if pl["cards_blocked"] else "No ring card has strong enough evidence of its own to block")
+                + f", and the other {len(p['monitor'])} would be monitored. Blocking every ring card would cut "
+                f"{al['exposure_cut_pct']}% but is expected to block {al['expected_innocent_blocked']:.1f} customer(s) "
+                f"who are not compromised, against {pl['expected_innocent_blocked']:.1f} for this plan")
+    return (f"Containment plan for the analyst (this case's own actions cover only its card): the {p['ring_size']}-card "
+            f"ring has ${p['ring_exposure_usd']:,.2f} at risk. " + tail
+            + (f". Blocked on weaker evidence, named for review: {', '.join(w['card'] for w in weak)}" if weak else "") + ".")

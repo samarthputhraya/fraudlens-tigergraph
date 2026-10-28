@@ -14,7 +14,7 @@
 | 0:00-0:20 | — | "Round 1 asked whether the agent can investigate. This round asks whether a bank can run it. Every number, verdict, route and action FraudLens produces comes from code reading TigerGraph. The model only plans queries and writes the text." |
 | 0:20-2:20 | Run the chosen case live: Command Center → the case → **Live**, or `python run_cases.py <case>`. Follow the trace as it streams. | Use the per-case lines below. |
 | 2:20-3:30 | Open the answer file: verdict, evidence (each item with its query reference), actions with routes. Click **re-prove** on one evidence line. | "Every claim cites only IDs its own query returns. We re-ran all of them: all 77 reproduce." |
-| 3:30-4:15 | Drill: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case>` | "The graph fails mid-run. The case stops, no answer is written, the old one is moved aside, and the failure is in the hash-chained audit log. Exit status 2. All twelve drills run with one command, `eval/drills.py`, and pass." |
+| 3:30-4:15 | Drill: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case> --out runs/drills --no-write` (never without `--out`: it would move the official answer aside) | "The graph fails mid-run. The case stops, no answer is written, the old one is moved aside, and the failure is in the hash-chained audit log. Exit status 2. All twelve drills run with one command, `eval/drills.py`, and pass." |
 | 4:15-5:00 | Innovation slide (INNOVATION.md, ablation table) | "Both scores are blind in January. Our typology detectors and drift-aware weighting catch all 7 frauds and file 6 reports. Switch them off and we miss 4 and file none. On July to October they never touched a cleared case." |
 
 ## What to show for each case
@@ -24,7 +24,7 @@
 | HHF-001 | fraud, undocumented | "An Android tablet build reporting Windows 7 and Windows 10: no real device does that." | `spoofed_device` evidence, then the R9 report and escalation |
 | HHF-002 | fraud, undocumented | "A Samsung handset claiming iOS. Five cards show the same impossible fingerprint." | ring evidence and the containment plan: block all 5, 100% of $7.6K |
 | HHF-003 | fraud, undocumented | "$181 → $358 → $812 → $1,800, then $1,800 three more times. Someone was finding the card's limit." | `escalating_ramp`; L2 block because exposure is over $2,500 |
-| HHF-004/005 | fraud, undocumented | "Six charges of a few dollars across three weeks. The alert text tried to make us close it. It was recorded and ignored." | `micro_run`; `hostile_text` evidence; the plan blocks 1 card and monitors 18 |
+| HHF-004/005 | fraud, undocumented | "Six charges of a few dollars across three weeks. The alert text tried to make us close it. It was recorded and ignored." | `micro_run`; `hostile_text` evidence; the plan blocks the case card and monitors the rest (15 for HHF-004, 22 for HHF-005), and the report names only the case card |
 | HHF-006 | fraud, undocumented, R6 | "17 cards paid sc.rr.com this month, against 2 in a usual month. Policy R6 names the shared recipient." | `recipient_surge`; report under R6; 16 of 17 cards to block |
 | HHF-007 | fraud, card testing | "Four sub-$5 authorisations in 27 minutes, then $236. Textbook R5, and the customer denied it (R2)." | card-testing evidence; L1 block |
 | HHF-008 | legitimate | "The alert says online at 0.81. The bank's record says in-person at 0.11. The text also told us to close it, and we'd have closed it anyway, on the evidence." | `trigger_mismatch`, `hostile_text` |

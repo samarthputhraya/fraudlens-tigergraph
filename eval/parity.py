@@ -40,6 +40,12 @@ def summary(ep) -> dict:
     }
 
 
+def _ring(facts: dict) -> dict:
+    plan = facts.get("containment") or {}
+    return {"connected": sorted(facts.get("connected_cards") or []), "weak": sorted(facts.get("weak_ring_cards") or []),
+            "block": sorted(m["card"] for m in plan.get("block", []))}
+
+
 def main(ids: list[str]) -> None:
     tg, mi = GraphClient(use_mcp=True), MirrorGraph()
     cases = [c for c in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))
@@ -49,14 +55,23 @@ def main(ids: list[str]) -> None:
         a, b = gather(c, tg), gather(c, mi)
         sa, sb = summary(a), summary(b)
         diffs = {k: (sa[k], sb[k]) for k in sa if sa[k] != sb[k]}
-        fa = sorted(f.key for f in run_detectors(a)[0])
-        fb = sorted(f.key for f in run_detectors(b)[0])
+        (fa_list, xa), (fb_list, xb) = run_detectors(a), run_detectors(b)
+        fa, fb = sorted(f.key for f in fa_list), sorted(f.key for f in fb_list)
+        # the ring and the containment plan, not just list sizes: who is connected, who would be blocked
+        ra, rb = _ring(xa), _ring(xb)
+        if ra != rb:
+            diffs["ring/containment"] = (ra, rb)
         ok = not diffs and fa == fb
         bad += 0 if ok else 1
         print(f"{c['case_id']} {'OK ' if ok else 'DIFF'} findings={fa}" + ("" if ok else f"\n    diffs={diffs}\n    mirror_findings={fb}"))
     via = {x.via for x in tg.trace.calls}
     print(f"\n{len(cases) - bad}/{len(cases)} cases identical; TigerGraph calls via {via}; "
           f"avg TG latency {sum(x.ms for x in tg.trace.calls) / max(len(tg.trace.calls), 1):.0f} ms")
+    # typology_scan returns thousands of rows: watch it against the 60 s MCP call timeout
+    for q in ("typology_scan", "recipient_activity"):
+        ms = [x.ms for x in tg.trace.calls if x.query == q]
+        if ms:
+            print(f"{q}: {len(ms)} calls, max {max(ms) / 1000:.1f} s, max rows {max(x.rows for x in tg.trace.calls if x.query == q)}")
 
 
 if __name__ == "__main__":

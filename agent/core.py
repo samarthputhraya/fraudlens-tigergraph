@@ -32,6 +32,8 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
     elif facts["shared_links"]:
         kind, val = facts["shared_links"][0]
         shared_desc = f"{kind} {val}"
+    # cards linked only by showing the same signature share no device, region or recipient: that is R9, not R6
+    signature = facts["typology"].name if facts.get("typology") and facts["connected_cards"] and not facts["shared_links"] else ""
     explanation = ""
     if not facts["online"]:
         explanation = f"cardholder confirmed they made the purchase in billing region {region_label(t.get('addr1'))} (travel / local purchase)"
@@ -49,7 +51,7 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
         ct_cleared_over_100=bool(facts.get("card_testing_cleared_over_100")),
         strong_families=fraud_fams + (1 if led["strong"] else 0), legit_families=legit_fams,
         single_signal=fraud_fams <= 1 and not led["strong"], conflict=conflict, legit_explanation=explanation,
-        integrity_conflict=bool(facts.get("card_mismatch")),
+        integrity_conflict=bool(facts.get("card_mismatch")), signature=signature,
         side_concern="; ".join(f"{x.name} on {', '.join(x.txns[:4])}" for x in facts.get("side_typologies", [])))
 
 

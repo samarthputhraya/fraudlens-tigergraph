@@ -21,9 +21,15 @@ sys.path.insert(0, str(ROOT))
 
 from agent.attest import ids_in  # noqa: E402
 
+RERUNNABLE = {"txn_context", "card_window", "card_profile", "recurring_match", "device_neighbors", "region_activity",
+              "prior_cases", "account_history", "typology_scan", "recipient_activity"}
+
 
 def rerun(g, name: str, p: dict):
-    """Re-run one recorded tool call by name and parameters. Returns the raw result, or None if not re-runnable."""
+    """Re-run one recorded tool call by name and parameters. Returns the raw result, or None if not re-runnable
+    (vector searches: their query vector is not kept in the trace)."""
+    if name not in RERUNNABLE:
+        return None
     if hasattr(g, "run") and not hasattr(g, "QUERIES"):          # TigerGraph: the installed query itself
         return g.run(name, p, agent="attest")
     fns = {
@@ -52,9 +58,12 @@ def main(folder: Path, official: bool) -> dict:
         g = MirrorGraph()
     totals = {"claims": 0, "attested": 0, "mismatched": 0, "not_a_query": 0, "not_rerunnable": 0}
     per_case, failures = {}, []
+    # run_cases.py writes traces to <out>/traces with --out, and to runs/traces for the official cases_r2 answers
+    traces = folder / "traces" if (folder / "traces").is_dir() else ROOT / "runs" / "traces"
+    print(f"answers: {folder}  traces: {traces}")
     for f in sorted(folder.glob("HHF-*.json")):
         ans = json.loads(f.read_text(encoding="utf-8"))
-        trace_p = folder / "traces" / f.name
+        trace_p = traces / f.name
         calls = {c["ref"]: c for c in json.loads(trace_p.read_text(encoding="utf-8"))["tool_calls"]} if trace_p.exists() else {}
         counts = {k: 0 for k in totals}
         for ev in ans["case"]["evidence"]:
@@ -92,4 +101,9 @@ def main(folder: Path, official: bool) -> dict:
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    main(ROOT / (args[0] if args else "cases_r2"), "--graph" in sys.argv)
+    res = main(ROOT / (args[0] if args else "cases_r2"), "--graph" in sys.argv)
+    t = res["totals"]
+    if t["mismatched"] or not t["attested"]:
+        # "0 mismatched" with nothing attested proves nothing (e.g. the traces were not found)
+        print("FAIL: " + ("mismatched claims" if t["mismatched"] else "no claim could be re-run; check the traces folder"))
+        sys.exit(1)

@@ -3,7 +3,7 @@
   "cases": {
    "HHF-017": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.04,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -24,7 +24,7 @@
    },
    "HHF-018": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.04,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -73,7 +73,7 @@
    },
    "HHF-008": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -140,7 +140,7 @@
   "cases": {
    "HHF-017": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.04,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -161,7 +161,7 @@
    },
    "HHF-018": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.04,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -210,7 +210,7 @@
    },
    "HHF-008": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -278,42 +278,42 @@
   "cases": {
    "HHF-017": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-016": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-014": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-018": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-010": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-012": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -348,21 +348,21 @@
    },
    "HHF-008": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-015": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-013": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -376,7 +376,7 @@
    },
    "HHF-009": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -416,42 +416,42 @@
   "cases": {
    "HHF-017": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-016": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-014": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-018": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-010": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-012": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -486,21 +486,21 @@
    },
    "HHF-008": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-015": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
    },
    "HHF-013": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false
@@ -514,7 +514,7 @@
    },
    "HHF-009": {
     "verdict": "legitimate",
-    "p": 0.05,
+    "p": 0.03,
     "pattern": "none",
     "block": false,
     "sar": false

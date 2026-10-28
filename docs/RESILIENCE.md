@@ -6,7 +6,7 @@ TigerGraph × Hacker House Goa 2026, Final Round.
 
 | Dependency | Used for | How we reach it |
 |---|---|---|
-| **TigerGraph Savanna** (graph `Fraud`) | All evidence. That covers the 20 installed GSQL queries, TigerVector similarity search over case memory, and the WCC ring components. It also stores our own cases back into the graph as memory. | **Reads:** the TigerGraph MCP server (`tigergraph-mcp` 1.0.3, stdio). Its tool allowlist permits running installed queries and reading descriptions, nothing more. **Writes:** only `agent/case_writer.py`, over pyTigerGraph REST. |
+| **TigerGraph Savanna** (graph `Fraud`) | All evidence. That covers the 20 installed GSQL queries, TigerVector similarity search over case memory, and the WCC ring components. It also stores our own cases back into the graph as memory. | **Reads:** the TigerGraph MCP server (`tigergraph-mcp` 1.0.3, stdio). Its tool allowlist permits running installed queries and read-only tools (query descriptions, schema, vertex and neighbour lookups, counts, vector search). It has no tool that writes. **Writes:** only `agent/case_writer.py`, over pyTigerGraph REST. |
 | **Gemini on Vertex AI** (`LLM_MODEL_PRO`, `LLM_MODEL_FLASH`, `text-embedding-005`) | The planner, four specialist analysts, the compliance reviewer, the case and SAR writer, and embeddings for case memory. **It never sets a verdict, probability, ID, amount, route or action.** | `google-genai`, authenticated with the service's own Google Cloud identity. There is no API key in the repo. |
 | **Local files** | The case pack, traces, audit logs and answers | Repo folders. Secrets live only in `.env`, which is gitignored. |
 | **Offline DuckDB mirror** | Development and backtests only | Used only when `--mirror` or `FRAUDLENS_MIRROR=1` is passed. Every answer it produces says `"graph": "offline-mirror", "official": false`. |
@@ -85,12 +85,12 @@ Every failure is printed, written to a hash-chained audit log, and never present
 
 On the mirror tonight: **12 of 12 pass in 78 seconds.**
 
-One drill at a time: `FRAUDLENS_FAULT` injects a failure at a named step, for example:
+One drill at a time: `FRAUDLENS_FAULT` injects a failure at a named step. Always pass `--out runs/drills --no-write`, so a drill never moves or replaces an official answer in `cases_r2/` or writes case memory to TigerGraph:
 
 ```bash
-FRAUDLENS_FAULT=graph:card_window python run_cases.py HHF-009       # dependency failing mid-run -> STOPPED, exit 2
-FRAUDLENS_FAULT=llm_timeout:* python run_cases.py HHF-009           # model times out -> incomplete + escalated, exit 3
-FRAUDLENS_FAULT=llm_garbage:writer python run_cases.py HHF-009      # model returns garbage -> same
-python run_cases.py HHF-009 && python run_cases.py HHF-009          # same case twice -> identical decision
+FRAUDLENS_FAULT=graph:card_window python run_cases.py HHF-009 --out runs/drills --no-write    # graph fails mid-run -> STOPPED, exit 2
+FRAUDLENS_FAULT=llm_timeout:* python run_cases.py HHF-009 --out runs/drills --no-write        # model times out -> incomplete + escalated, exit 3
+FRAUDLENS_FAULT=llm_garbage:writer python run_cases.py HHF-009 --out runs/drills --no-write   # model returns garbage -> same
+python run_cases.py HHF-009 --out runs/drills --no-write   # run twice: identical decision
 python -m pytest tests/test_failclosed.py tests/test_approvals.py tests/test_injection.py
 ```

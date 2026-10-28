@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 
 MICRO_MAX = 10.0
 MICRO_MIN_N, MICRO_MIN_DAYS, MICRO_MAX_PRIOR = 4, 3, 1
+MICRO_SAME_MAX = 2              # 3+ small charges of one amount is a subscription, not a micro-charge run
 SURGE_MIN_CARDS, SURGE_RATIO = 5, 3.0
 RAMP_MIN_N, RAMP_WINDOW_D, RAMP_MIN_TOP, RAMP_MIN_GROWTH = 4, 14, 500.0, 3.0
 LOOKBACK_D, BASELINE_D = 30, 90
@@ -89,10 +90,18 @@ def _money(x: float) -> str:
 
 # ---- single-card signatures ----------------------------------------------------------------------------------------
 
+def subscription(amounts: list[float]) -> bool:
+    """Small charges that repeat one exact amount (four $7.42 charges a week apart) are a recurring charge."""
+    rounded = [round(float(a), 2) for a in amounts]
+    return bool(rounded) and max(rounded.count(a) for a in set(rounded)) > MICRO_SAME_MAX
+
+
 def micro_run(rows30: list[dict], end: datetime, prior_micro_n: int) -> Typology | None:
     micro = [r for r in _online(rows30, end) if float(r["amt"]) < MICRO_MAX]
     days = sorted({r["ts"][:10] for r in micro})
     if len(micro) < MICRO_MIN_N or len(days) < MICRO_MIN_DAYS or prior_micro_n > MICRO_MAX_PRIOR:
+        return None
+    if subscription([r["amt"] for r in micro]):
         return None
     amts = {r["id"]: float(r["amt"]) for r in micro}
     return Typology(
@@ -137,7 +146,8 @@ def spoofed_device(rows30: list[dict], end: datetime) -> Typology | None:
     return Typology(
         "spoofed_device", "spoofed device fingerprint", [r["id"] for r in rs],
         f"{len(rs)} online purchase(s) ({', '.join(_money(a) for a in amts.values())}) from a device that reports itself as "
-        f"'{info}', a {hardware_family(info)} handset, but with operating system(s) {', '.join(oses)}: a fingerprint no real "
+        f"'{info}', an {'iOS' if hardware_family(info) == 'ios' else 'Android'} handset, but with "
+        f"operating system(s) {', '.join(oses)}: a fingerprint no real "
         f"device produces, marked New for this account{f', {proxied} behind an anonymising proxy' if proxied else ''}",
         "Spoofed-fingerprint purchases: high-value online purchases from a brand-new device whose fingerprint is internally "
         "impossible (one handset model reporting operating systems from different families), usually behind an anonymising "
@@ -197,7 +207,8 @@ def recipient_surge(rows30: list[dict], end: datetime, domain_stats: dict) -> Ty
     return Typology(
         "recipient_surge", "recipient surge", [r["id"] for r in mine],
         f"This card's online purchase(s) ({', '.join(_money(a) for a in amts.values())}) went to recipient e-mail domain "
-        f"{dom}, which {n} different cards paid in the 30 days before this case against a usual {usual:.0f} per month: "
+        f"{dom}, which {n} different cards paid in the 30 days before this case, against a median of {usual:.0f} card(s) "
+        f"a month in the earlier months it was paid at all: "
         f"many cards paying one recipient",
         f"Recipient surge: many unrelated cards suddenly paying the same recipient (e-mail domain {dom}), in modest online "
         f"amounts and without any shared device, so device- and region-based ring checks see nothing. The agent found it by "
@@ -209,12 +220,18 @@ def recipient_surge(rows30: list[dict], end: datetime, domain_stats: dict) -> Ty
 
 # ---- ring context from the window scan ------------------------------------------------------------------------------
 
+def _micro_member(c: dict) -> bool:
+    """One typology_scan micro row: the same thresholds as micro_run, and not a subscription."""
+    return (c["n"] >= MICRO_MIN_N and c["days"] >= MICRO_MIN_DAYS and c["prior_n"] <= MICRO_MAX_PRIOR
+            and not subscription([x.split("|")[2] for x in c.get("txns") or []]))
+
+
 def ring_members(kind: str, scan: dict, card: str) -> list[str]:
     """Other cards showing the same signature in the same window (from the typology_scan graph query)."""
     out: set[str] = set()
     if kind == "micro_run":
         for c in scan.get("micro", []):
-            if c["card_id"] != card and c["n"] >= MICRO_MIN_N and c["days"] >= MICRO_MIN_DAYS and c["prior_n"] <= MICRO_MAX_PRIOR:
+            if c["card_id"] != card and _micro_member(c):
                 out.add(c["card_id"])
     elif kind == "spoofed_device":
         by_card: dict[str, list[dict]] = {}
@@ -244,7 +261,7 @@ def ring_exposures(kind: str, scan: dict, recipient: dict | None = None) -> dict
     out: dict[str, dict] = {}
     if kind == "micro_run":
         for c in scan.get("micro", []):
-            if c["n"] >= MICRO_MIN_N and c["days"] >= MICRO_MIN_DAYS and c["prior_n"] <= MICRO_MAX_PRIOR:
+            if _micro_member(c):
                 txns = [x.split("|") for x in c.get("txns") or []]
                 out[c["card_id"]] = {"txns": [t[0] for t in txns], "exposure": round(sum(float(t[2]) for t in txns), 2),
                                      "conf": 0.5, "why": f"its own sudden run of {c['n']} sub-$10 online charges on {c['days']} days"}

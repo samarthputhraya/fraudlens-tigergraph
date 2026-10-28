@@ -65,6 +65,21 @@ def test_audit_chain_detects_a_removed_entry():
     assert not safety.verify_audit("t")[0]
 
 
+def test_setting_a_key_starts_a_keyed_chain(monkeypatch):
+    """A log written before FRAUDLENS_AUDIT_KEY was set is archived on the first keyed append, so it never fails
+    verification just because the key arrived later."""
+    monkeypatch.delenv("FRAUDLENS_AUDIT_KEY", raising=False)
+    for i in range(2):
+        safety.audit("event", {"i": i}, log="t")
+    monkeypatch.setenv("FRAUDLENS_AUDIT_KEY", "k" * 32)
+    assert not safety.verify_audit("t")[0]          # an unkeyed chain can't prove it was written by this server
+    safety.audit("event", {"i": 2}, log="t")
+    entries = safety.read_audit("t")
+    assert entries[0]["event"] == "log_rotated" and "without FRAUDLENS_AUDIT_KEY" in entries[0]["data"]["reason"]
+    assert safety.verify_audit("t")[0] is True
+    assert list(safety.AUDIT_DIR.glob("t.unkeyed-*.jsonl"))
+
+
 def test_redaction():
     text = safety.redact("TG_SECRET=abcd1234efgh5678 token: zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz https://tg-1.i.tgcloud.io/x")
     assert "abcd1234efgh5678" not in text and "zzzz" not in text and "tgcloud" not in text

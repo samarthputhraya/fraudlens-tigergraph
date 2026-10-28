@@ -145,21 +145,40 @@ def _read_head(head: Path) -> dict | None:
         return None
 
 
+def _last_entry_keyed(path: Path) -> bool:
+    """True if the log's last entry carries a MAC (the chain was written with a key)."""
+    with path.open("rb") as f:
+        f.seek(0, os.SEEK_END)
+        f.seek(max(0, f.tell() - 65536))
+        lines = [x for x in f.read().splitlines() if x.strip()]
+    try:
+        return bool(lines) and "mac" in json.loads(lines[-1])
+    except ValueError:
+        return False
+
+
 def audit(event: str, data: dict[str, Any], log: str = "audit") -> dict:
-    """Append one entry under a process-wide and an OS file lock; refuses to extend a chain that no longer verifies."""
+    """Append one entry under a process-wide and an OS file lock. A log that can't be extended safely (no head anchor,
+    or written without a key now that FRAUDLENS_AUDIT_KEY is set) is archived untouched and a new chain starts."""
     AUDIT_DIR.mkdir(parents=True, exist_ok=True)
     path, head = _paths(log)
     with _audit_lock, _FileLock(path):
         h = _read_head(head)
         rotated = None
-        if h is None and path.exists() and path.stat().st_size > 0:
-            # a log with no anchor (written by an older version, or its head was removed) is never extended: it is
-            # archived as-is and the new chain's first entry records that, with the archive's hash and size
+        reason = tag = ""
+        if path.exists() and path.stat().st_size > 0:
+            if h is None:
+                reason, tag = "the log had no head anchor", "unanchored"
+            elif _key() and not _last_entry_keyed(path):
+                reason, tag = "the log was written without FRAUDLENS_AUDIT_KEY; a keyed chain starts here", "unkeyed"
+        if reason:
+            # never extended: archived as-is, and the new chain's first entry records it with the archive's hash and size
             raw = path.read_bytes()
-            archive = path.with_name(f"{log}.unanchored-{time.strftime('%Y%m%d-%H%M%S')}.jsonl")
+            archive = path.with_name(f"{log}.{tag}-{time.strftime('%Y%m%d-%H%M%S')}.jsonl")
             os.replace(path, archive)
             rotated = {"archived_as": archive.name, "archive_sha256": hashlib.sha256(raw).hexdigest(),
-                       "lines": raw.count(b"\n"), "reason": "the log had no head anchor"}
+                       "lines": raw.count(b"\n"), "reason": reason}
+            h = None
         prev, count = (h["hash"], int(h["count"])) if h else (GENESIS, 0)
         if rotated:
             first = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "event": "log_rotated", "data": rotated,

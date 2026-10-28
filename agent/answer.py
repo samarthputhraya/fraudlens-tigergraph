@@ -104,7 +104,9 @@ def build_answer(case: dict, r: dict, texts: dict, meta: dict) -> dict:
     sar_file = any(a["action"] == "FILE_REPORT" for a in r["final"])
     subjects = []
     if sar_file:
-        subjects = [case["customer_id"], case["card_id"]] + connected_cards[:20] + connected_devices[:3]
+        # a regulator filing names only cards with strong evidence of their own; weak ring members are monitored
+        weak = set(r["facts"].get("weak_ring_cards") or [])
+        subjects = [case["customer_id"], case["card_id"]] + [c for c in connected_cards if c not in weak][:25] + connected_devices[:3]
     initial = [dict(a) for a in r["initial"]]
     final = [dict(a) for a in r["final"]]
     for a in initial + final:
