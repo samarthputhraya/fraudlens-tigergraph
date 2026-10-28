@@ -44,6 +44,7 @@ class Usage:
     def reset(cls) -> None:
         cls._local.tokens = 0
         cls._local.calls = 0
+        Breaker.reset()
 
     @classmethod
     def add(cls, n: int) -> None:
@@ -53,6 +54,43 @@ class Usage:
     @classmethod
     def tokens(cls) -> int:
         return getattr(cls._local, "tokens", 0)
+
+
+class Breaker:
+    """Per investigation: after one model failure, later model calls fail at once instead of each waiting out its own
+    timeout twice (a hung endpoint would otherwise cost minutes per case). Reset when a new investigation starts."""
+
+    _open = threading.local()
+
+    @classmethod
+    def reset(cls) -> None:
+        cls._open.reason = None
+
+    @classmethod
+    def trip(cls, reason: str) -> None:
+        cls._open.reason = reason
+
+    @classmethod
+    def check(cls, role: str) -> None:
+        reason = getattr(cls._open, "reason", None)
+        if reason:
+            raise DependencyFailure("llm", role, f"not attempted: the model already failed in this investigation ({reason})")
+
+
+def _valid_json(text: str, schema: dict | None) -> dict | None:
+    if not schema:
+        return None
+    try:
+        out = json.loads(text)
+    except json.JSONDecodeError:
+        start, end = text.find("{"), text.rfind("}")
+        try:
+            out = json.loads(text[start:end + 1]) if start >= 0 and end > start else None
+        except json.JSONDecodeError:
+            out = None
+    if not isinstance(out, dict) or any(k not in out for k in schema.get("required", [])):
+        return None
+    return out
 
 
 def client() -> genai.Client:
@@ -73,7 +111,9 @@ def generate(prompt: str, system: str = "", model: str | None = None, json_schem
              temperature: float = 0.2, cache: bool = True, usage_sink: list | None = None, role: str = "llm") -> str:
     """Generate text (or JSON when json_schema is given). Cached on disk by (model, system, prompt, schema)."""
     model = model or PRO
+    Breaker.check(role)
     if fault("llm", role) or fault("llm_timeout", role):
+        Breaker.trip(f"{role} failed")
         raise DependencyFailure("llm", role, "fault drill: the model call timed out" if fault("llm_timeout", role)
                                 else "fault drill: the model is unavailable")
     if fault("llm_garbage", role):
@@ -102,32 +142,31 @@ def generate(prompt: str, system: str = "", model: str | None = None, json_schem
             Usage.add(tokens)
             if usage_sink is not None:
                 usage_sink.append(tokens)
+            if json_schema and _valid_json(text, json_schema) is None:
+                raise ValueError("output does not match the requested JSON schema")  # retried, and never cached
             path.write_text(json.dumps({"text": text, "tokens": tokens, "model": model}), encoding="utf-8")
             return text
         except Exception as e:  # noqa: BLE001 - one retry on transient API errors, then fail closed
             last = e
             if attempt + 1 < ATTEMPTS:
                 time.sleep(2)
+    Breaker.trip(f"{role}: {type(last).__name__}")
     raise DependencyFailure("llm", role, f"{type(last).__name__}: {last}")
 
 
 def generate_json(prompt: str, schema: dict, system: str = "", model: str | None = None, role: str = "llm", **kw) -> dict:
     text = generate(prompt, system=system, model=model, json_schema=schema, role=role, **kw)
-    try:
-        out = json.loads(text)
-    except json.JSONDecodeError:
-        start, end = text.find("{"), text.rfind("}")
-        try:
-            out = json.loads(text[start:end + 1]) if start >= 0 and end > start else None
-        except json.JSONDecodeError:
-            out = None
-    if not isinstance(out, dict) or any(k not in out for k in schema.get("required", [])):
+    out = _valid_json(text, schema)
+    if out is None:
+        Breaker.trip(f"{role}: invalid output")
         raise DependencyFailure("llm", role, "the model returned output that does not match the requested JSON schema")
     return out
 
 
 def embed(texts: list[str], task: str = "RETRIEVAL_DOCUMENT", batch: int = 30) -> list[list[float]]:
     """Embed texts with Vertex text-embedding (768-d). Cached per text."""
+    if fault("llm", "embed") or fault("llm_timeout", "embed"):
+        raise DependencyFailure("llm", "embed", "fault drill: the embedding model is unavailable")
     out: list[list[float] | None] = [None] * len(texts)
     todo = []
     for i, t in enumerate(texts):
@@ -138,8 +177,6 @@ def embed(texts: list[str], task: str = "RETRIEVAL_DOCUMENT", batch: int = 30) -
             todo.append(i)
     for s in range(0, len(todo), batch):
         idx = todo[s:s + batch]
-        if fault("llm", "embed"):
-            raise DependencyFailure("llm", "embed", "fault drill: the embedding model is unavailable")
         for attempt in range(ATTEMPTS):
             try:
                 resp = client().models.embed_content(

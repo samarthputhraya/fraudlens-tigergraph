@@ -66,6 +66,11 @@ def _mirror_mode() -> bool:
     return os.getenv("FRAUDLENS_MIRROR", "0") == "1"
 
 
+_decide_lock = threading.Lock()
+READ_QUERIES = {"txn_context", "card_window", "card_profile", "recurring_match", "device_neighbors", "region_activity",
+                "prior_cases", "account_history", "typology_scan", "recipient_activity", "ids_exist", "case_graph"}
+
+
 @app.exception_handler(DependencyFailure)
 async def _dependency_failure(_, exc: DependencyFailure):
     # fail closed, out loud: the caller sees which dependency failed; nothing is presented as complete
@@ -178,8 +183,9 @@ async def run_case(case_id: str):
             except DependencyFailure as e:
                 audit("case_stopped", {"case_id": case_id, **e.as_dict()})
                 q.put(("stopped", {"msg": f"Investigation stopped: {e}. No answer was produced.", **e.as_dict()}))
-            except Exception as e:  # noqa: BLE001
-                q.put(("warning", {"msg": f"investigation failed: {type(e).__name__}"}))
+            except Exception as e:  # noqa: BLE001 - never presented as an answer; recorded and reported
+                audit("case_stopped", {"case_id": case_id, "dependency": "agent", "step": "unexpected", "detail": type(e).__name__})
+                q.put(("stopped", {"msg": f"Investigation stopped on an unexpected {type(e).__name__}. No answer was produced."}))
             finally:
                 g.trace.listeners.remove(on_call)
                 q.put(("done", {}))
@@ -254,12 +260,30 @@ def _role_for(authorization: str | None) -> str:
 
 
 def _decisions() -> dict[str, dict]:
-    return {e["data"]["action_id"]: e for e in read_audit("approvals") if e["event"] == "approval_decision"}
+    ok, msg = verify_audit("approvals")
+    if not ok:
+        # never decide (or show decisions) off a log that no longer verifies
+        raise HTTPException(503, f"The approval log failed verification ({msg}); approvals are suspended until it is restored.")
+    return {e["data"]["action_id"]: e for e in read_audit("approvals") if e.get("event") == "approval_decision"}
+
+
+def _answer_sha(case_id: str) -> str | None:
+    import hashlib
+    p = _answer_path(case_id)
+    return hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
+
+
+def _written_sha(case_id: str) -> str | None:
+    """The hash the runner recorded when it wrote this case's answer (audit log 'case_answered')."""
+    shas = [e["data"].get("answer_sha256") for e in read_audit("audit")
+            if e.get("event") == "case_answered" and e["data"].get("case_id") == case_id]
+    return shas[-1] if shas else None
 
 
 @app.get("/api/approvals")
 def approvals():
-    from agent.case_writer import graph_case_id
+    from agent.case_writer import action_id, graph_case_id
+    from agent.policy import route as policy_route
     decided = _decisions()
     out = []
     for r in _pack():
@@ -270,12 +294,17 @@ def approvals():
         for i, act in enumerate(a["next_best_actions"]["final"], 1):
             if act["route"] == "auto":
                 continue
-            aid = f"{gid}-F{i}"
+            aid = action_id(gid, "final", i, act["action"])
             d = decided.get(aid)
-            status = d["data"]["status"] if d else ("pending_approval_team_lead" if act["route"] == "L1" else "pending_approval_fraud_manager")
-            out.append({"action_id": aid, "case_id": r["case_id"], "action": act["action"], "route": act["route"],
-                        "reason": act["reason"], "status": status, "exposure_usd": a["case"]["exposure_usd"],
-                        "decided_at": d["ts"] if d else None})
+            try:
+                policy = policy_route(act["action"], float(a["case"]["exposure_usd"]))
+            except (ValueError, KeyError, TypeError):
+                policy = "unknown"
+            status = d["data"]["status"] if d else ("pending_approval_team_lead" if policy == "L1" else "pending_approval_fraud_manager")
+            out.append({"action_id": aid, "case_id": r["case_id"], "action": act["action"], "route": policy,
+                        "route_in_answer": act["route"], "reason": act["reason"], "status": status,
+                        "exposure_usd": a["case"]["exposure_usd"], "decided_at": d["ts"] if d else None,
+                        "answer_complete": (a.get("run") or {}).get("complete", True)})
     return out
 
 
@@ -287,9 +316,24 @@ class Decision(BaseModel):
 @app.post("/api/approvals/{action_id}")
 def decide(action_id: str, body: Decision, authorization: str | None = Header(default=None)):
     role = _role_for(authorization)  # 401/503 before anything else is revealed
+    with _decide_lock:  # one decision per action, even under concurrent requests (the audit append is file-locked too)
+        return _decide(action_id, body, role)
+
+
+def _decide(action_id: str, body: Decision, role: str):
     item = next((x for x in approvals() if x["action_id"] == action_id), None)
     if not item:
         raise HTTPException(404, "unknown action")
+    if item["route"] not in ALLOWED_ROLES or item["route"] != item["route_in_answer"]:
+        raise HTTPException(409, f"The answer routes {item['action']} as {item['route_in_answer']}, but policy section 2 "
+                                 f"requires {item['route']}; the answer must be regenerated before anyone decides it.")
+    if not item["answer_complete"]:
+        raise HTTPException(409, "This answer is marked incomplete (a dependency failed while it was produced); "
+                                 "re-run the case before deciding its actions.")
+    sha = _answer_sha(item["case_id"])
+    if sha != _written_sha(item["case_id"]):
+        raise HTTPException(409, "The answer file differs from the one the agent wrote (or the agent never recorded "
+                                 "writing it); decisions are refused on an answer that may have been edited.")
     if role not in ALLOWED_ROLES[item["route"]]:
         audit("approval_refused", {"action_id": action_id, "role": role, "route": item["route"], "action": item["action"]},
               log="approvals")
@@ -311,7 +355,7 @@ def decide(action_id: str, body: Decision, authorization: str | None = Header(de
             raise HTTPException(502, "The graph update failed, so the decision was NOT recorded. Try again.") from None
     entry = audit("approval_decision", {"action_id": action_id, "case_id": item["case_id"], "action": item["action"],
                                         "route": item["route"], "role": role, "approve": body.approve,
-                                        "status": status, "note": body.note[:500]}, log="approvals")
+                                        "status": status, "note": body.note[:500], "answer_sha256": sha}, log="approvals")
     return {"ok": True, "status": status, "decided_at": entry["ts"], "audit_hash": entry["hash"]}
 
 
@@ -339,8 +383,9 @@ def _find_params(ref: str) -> dict | None:
                 t = json.loads(f.read_text(encoding="utf-8"))
             except Exception:  # noqa: BLE001
                 continue
-            for c in t.get("tool_calls", []):
-                if c.get("ref") == ref and "params" in c:
+            calls = t.get("tool_calls") if isinstance(t, dict) else None
+            for c in calls if isinstance(calls, list) else []:
+                if isinstance(c, dict) and c.get("ref") == ref and isinstance(c.get("params"), dict):
                     return c["params"]
     return None
 
@@ -351,6 +396,8 @@ def reprove(body: Reprove):
     if not m:
         return {"ok": False, "error": "not a replayable query reference"}
     name = m.group(1)
+    if name not in READ_QUERIES:
+        return {"ok": False, "error": f"{name} is not a read-only investigation query; re-prove only replays reads"}
     params = _find_params(body.ref)
     if params is None:
         params = {}
@@ -470,7 +517,12 @@ if STATIC.exists():
 
     @app.get("/{path:path}")
     def spa(path: str):
-        f = STATIC / path
-        if path and f.exists() and f.is_file():
+        # serve only files inside api/static: a decoded "../" or an absolute path must never reach the rest of the disk
+        root = STATIC.resolve()
+        try:
+            f = (root / path).resolve()
+        except (OSError, ValueError):
+            f = root
+        if path and f.is_file() and f.is_relative_to(root):
             return FileResponse(f)
-        return FileResponse(STATIC / "index.html")
+        return FileResponse(root / "index.html")

@@ -126,11 +126,12 @@ class Investigator:
         ep = s["ep"]
         t = {k: ep.txn.get(k) for k in ("id", "ts", "amt", "product", "channel", "addr1", "risk_score", "device", "is_new", "proxy", "p_email", "r_email")}
         t["addr1"] = region_label(t["addr1"])
-        if not hasattr(self, "_catalog"):
-            try:
-                self._catalog = self.g.describe_queries(agent="lead")
-            except Exception:  # noqa: BLE001
-                self._catalog = {}
+        try:
+            self._catalog = self.g.describe_queries(agent="lead")
+        except DependencyFailure:
+            raise
+        except Exception:  # noqa: BLE001 - discovery only shapes the planner's menu; the call is in the trace
+            self._catalog = {}
         try:
             lead = roles.lead_plan(s["case"], t, s["first_findings"], self._catalog)
         except Exception as e:  # noqa: BLE001
@@ -309,16 +310,23 @@ class Investigator:
             try:
                 out = roles.writer(draft, guidance, sar, want_desc)
                 allowed = self._allowed_ids(s)
+                rejected = []
                 for k in ("summary", "sar_narrative", "pattern_description"):
                     v = out.get(k)
                     if not v:
+                        if k == "summary" or (k == "sar_narrative" and sar) or (k == "pattern_description" and want_desc):
+                            rejected.append(f"{k}: empty")
                         continue
                     bad = roles.unknown_ids(v, allowed)
-                    contradiction = self._contradicts(v, r, sar, k)
-                    if bad or contradiction:
-                        self.emit("warning", {"msg": f"writer text '{k}' rejected ({'unknown IDs ' + ','.join(bad[:3]) if bad else contradiction}); kept template"})
+                    problem = ("unknown IDs " + ",".join(bad[:3])) if bad else (self._contradicts(v, r, sar, k)
+                                                                              or self._not_case_text(v, s, k))
+                    if problem:
+                        rejected.append(f"{k}: {problem}")
                         continue
                     texts[k] = v
+                if rejected:
+                    # the template is used for those fields, and the answer says so (incomplete, escalated, labelled)
+                    self._model_failed("writer", RuntimeError("writer text rejected - " + "; ".join(rejected)))
             except Exception as e:  # noqa: BLE001
                 self._model_failed("writer", e)
         if not r["evidence_requests"]:
@@ -326,10 +334,28 @@ class Investigator:
         return {"texts": texts}
 
     @staticmethod
+    def _not_case_text(text: str, s: State, key: str) -> str:
+        """Guard against well-formed nonsense: case text must be long enough and name this case's transaction, card or
+        customer."""
+        words = len(text.split())
+        need = {"summary": 12, "sar_narrative": 60, "pattern_description": 15}.get(key, 8)
+        if words < need:
+            return f"too short to be case text ({words} words)"
+        anchors = {s["case"]["flagged_txn_id"], s["case"]["card_id"], s["case"]["customer_id"]}
+        if key != "pattern_description" and not any(a and a in text for a in anchors):
+            return "names none of this case's transaction, card or customer"
+        return ""
+
+    @staticmethod
     def _contradicts(text: str, r: dict, sar: bool, key: str) -> str:
         """Guard: narrative text must agree with the deterministic decision."""
         low = text.lower()
         final = {a["action"] for a in r["final"]}
+        if key == "sar_narrative":
+            if not sar:
+                return "a report narrative for a case that files no report"
+            if any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate", "not suspicious")):
+                return "the narrative describes the activity as legitimate"
         if key == "summary":
             if not sar and any(w in low for w in ("suspicious activity report", " sar ", "sar.", "file a report", "files a report", "filing a report", "file a sar", "will file")):
                 return "mentions a SAR that is not being filed"
@@ -366,6 +392,11 @@ class Investigator:
         # drop anything the validator cannot find in the graph (never cite a made-up ID)
         ans["case"]["similar_prior_cases"] = [x for x in ans["case"]["similar_prior_cases"] if x in exists["closed_cases"]]
         ans["case"]["connected_card_ids"] = [x for x in ans["case"]["connected_card_ids"] if x in exists["cards"]]
+        if self._failures:
+            self._mark_incomplete(ans)
+        if r["verdict"] == "fraud" and r["facts"].get("containment"):
+            ans["containment"] = r["facts"]["containment"]  # challenge 7: recommendation for the ring's other cards
+        ans["run"] = self._run_meta(s)
         written = {"ok": False}
         if self.write_graph:
             try:
@@ -380,11 +411,8 @@ class Investigator:
                 self._failures.append(rec)
                 audit("dependency_failure", {**rec, "case_id": case["case_id"]})
                 self.emit("warning", {"msg": f"graph write failed: {rec['detail']}"})
-        if self._failures:
-            self._mark_incomplete(ans)
-        if r["verdict"] == "fraud" and r["facts"].get("containment"):
-            ans["containment"] = r["facts"]["containment"]  # challenge 7: recommendation for the ring's other cards
-        ans["run"] = self._run_meta(s)
+                self._mark_incomplete(ans)
+                ans["run"] = self._run_meta(s)
         ans["tool_calls"] = len(self.g.trace.calls) - s["calls0"]
         ans["tokens"] = Usage.tokens()
         ans["latency_s"] = round(time.time() - s["t0"], 1)
@@ -395,22 +423,28 @@ class Investigator:
     # ------------------------------------------------------------------ helpers
     def _mark_incomplete(self, ans: dict) -> None:
         """Make a partial run impossible to mistake for a complete one: escalate, say why, label template text."""
+        import re as _re
+        esc = "R8 / fail closed: "
         steps = ", ".join(sorted({f"{f['dependency']}:{f['step']}" for f in self._failures}))
         note = f"a dependency failed during this investigation ({steps})"
         nba = ans["next_best_actions"]
-        nba["final"] = list(nba["final"])  # never mutate `initial` through a shared list
+        # safe to call twice (after a late graph-write failure): earlier marks are replaced, never stacked
+        nba["final"] = [a for a in nba["final"] if not a["reason"].startswith(esc)]  # also unshares `initial`
         if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in nba["final"]):
             nba["final"].append({"action": "ESCALATE_TO_ANALYST", "route": "auto",
-                                 "reason": f"Fail closed: {note}; an analyst must review before anything is acted on"})
-        prior = nba.get("what_changed") or ""
+                                 "reason": f"{esc}{note}; an analyst must review before anything is acted on"})
+        prior = _re.sub(r"\s*Escalated to an analyst because a dependency failed.*$", "", nba.get("what_changed") or "")
         nba["what_changed"] = ((prior + " ") if prior and prior != "nothing" else "") + \
             f"Escalated to an analyst because {note}."
         ans["case"]["status"] = "escalated"
-        ans["stop_reason"] = f"Stopped incomplete: {note}. " + (ans.get("stop_reason") or "")
+        stop = _re.sub(r"^Stopped incomplete: a dependency failed during this investigation \([^)]*\)\. ", "",
+                       ans.get("stop_reason") or "")
+        ans["stop_reason"] = f"Stopped incomplete: {note}. " + stop
         if any(f["step"] == "writer" for f in self._failures):
             tag = "[Template text: the model was unavailable, so this was not drafted by the writer; analyst review required.] "
-            ans["case"]["summary"] = tag + ans["case"]["summary"]
-            if ans["sar"].get("narrative"):
+            if not ans["case"]["summary"].startswith(tag):
+                ans["case"]["summary"] = tag + ans["case"]["summary"]
+            if ans["sar"].get("narrative") and not ans["sar"]["narrative"].startswith(tag):
                 ans["sar"]["narrative"] = tag + ans["sar"]["narrative"]
 
     def _run_meta(self, s: State) -> dict:
@@ -474,10 +508,11 @@ class Investigator:
         rules = sorted({m for a in r["final"] + r["initial"] for m in __import__("re").findall(r"\b(R\d+)\b", a["reason"])},
                        key=lambda x: int(x[1:]))
         refs = []
-        if rules:
-            refs.append({"claim": f"Fraud Policy rules applied to this case: {', '.join(rules)} (retrieved from the policy "
-                                  f"knowledge graph via GraphRAG)", "ref": "document:Fraud Policy v1.0 section 3 " + "/".join(rules)})
         chunks = (s["ep"].knowledge or {}).get("chunks", [])
+        if rules:
+            how = " (retrieved from the policy knowledge graph via GraphRAG)" if chunks else ""
+            refs.append({"claim": f"Fraud Policy rules applied to this case: {', '.join(rules)}{how}",
+                         "ref": "document:Fraud Policy v1.0 section 3 " + "/".join(rules)})
         fin = [c for c in chunks if "FinCEN" in c.get("source", "")]
         if fin and any(a["action"] == "FILE_REPORT" for a in r["final"]):
             refs.append({"claim": "The SAR narrative follows FinCEN narrative guidance (who, what, when, where, how, why)",

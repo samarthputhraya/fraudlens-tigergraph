@@ -122,13 +122,15 @@ def main(limit: int = 16) -> None:
     global OUT
     if "--out" in sys.argv:
         OUT = ROOT / sys.argv[sys.argv.index("--out") + 1]
-    use_mirror = "--mirror" in sys.argv or not os.getenv("TG_HOST")
+    use_mirror = "--mirror" in sys.argv
+    if not use_mirror and not os.getenv("TG_HOST"):
+        sys.exit("TG_HOST is not set: set it, or pass --mirror for the offline development mirror (never chosen silently)")
     if use_mirror:
         from agent.mirror import MirrorGraph
         g = MirrorGraph()
     else:
         from agent.graph_client import GraphClient
-        g = GraphClient()
+        g = GraphClient(allow_write=True)  # the monitor builds RING_LINK edges: the one batch job allowed to write
     bench = {r["flagged_txn_id"] for r in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))}
     bench_cards = {r["card_id"] for r in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))}
     hits = [h for h in scan(g) if h["flagged"] not in bench and h["card_id"] not in bench_cards]

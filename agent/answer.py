@@ -58,12 +58,18 @@ ALWAYS_SHOWN = {"known_device", "hostile_text", "trigger_mismatch", "card_record
 
 
 def evidence_list(r: dict, knowledge_refs: list[dict]) -> list[dict]:
+    from agent.attest import ids_in, ref_results
+    results = ref_results(r["ep"])
     ev = []
     for f in sorted(r["findings"], key=lambda x: -abs(x.weight)):
         if abs(f.weight) < 0.05 and f.key not in ALWAYS_SHOWN:
             continue
-        ev.append({"claim": f.claim, "source": f.source, "ref": f.ref or "query:unknown",
-                   "entity_ids": [str(e) for e in f.entity_ids]})
+        ids = [str(e) for e in f.entity_ids]
+        if f.ref in results:
+            # attestation: cite only IDs this query's own result contains, so a re-run shows every one of them
+            found = ids_in(results[f.ref])
+            ids = [i for i in ids if i in found]
+        ev.append({"claim": f.claim, "source": f.source, "ref": f.ref or "query:unknown", "entity_ids": ids})
     mem = r["ep"].memory or {}
     hits = similar_prior_cases(r)
     if hits:

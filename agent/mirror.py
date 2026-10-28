@@ -121,6 +121,11 @@ class MirrorGraph:
         return rows
 
     def card_profile(self, card_id: str, before, recent_days: int = 30, agent: str | None = None) -> dict:
+        out = self._card_profile(card_id, before, recent_days, agent)
+        out["card"] = card_id  # same as the GSQL query's PRINT card: the card this baseline describes
+        return out
+
+    def _card_profile(self, card_id: str, before, recent_days: int = 30, agent: str | None = None) -> dict:
         import time
         t0 = time.time()
         b = fmt_ts(before)
@@ -248,7 +253,7 @@ class MirrorGraph:
             r["closed_cases"] = [r["closed_cases"][i] for i in keep]
         n = self._rows("SELECT count(*) n FROM acct WHERE account_id = ?", [aid])[0]["n"]
         self._log("account_history", {"txn": txn_id, "lookback_days": lookback_days}, len(rows), t0, agent)
-        return {"account": {"id": aid, "n_txn": n}, "history": rows}
+        return {"account": {"id": aid, "card_id": aid.split("|")[0], "n_txn": n}, "history": rows}
 
     def similar_cases(self, qv, devices, cards, k: int = 8, pattern: str = "", before=None, agent: str | None = None) -> dict:
         import time

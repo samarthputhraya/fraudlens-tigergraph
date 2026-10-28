@@ -96,7 +96,7 @@ def write_case(ans: dict, r: dict, opened_at: str, dry: bool = False) -> dict:
     acts = []
     for stage in ("initial", "final"):
         for i, a in enumerate(ans["next_best_actions"][stage], 1):
-            aid = f"{gid}-{stage[0].upper()}{i}"
+            aid = action_id(gid, stage, i, a["action"])
             status = "executed_simulated" if a["route"] == "auto" else PENDING[a["route"]]
             if stage == "initial" and ans["evidence_requests"]:
                 status = "superseded" if a["route"] != "auto" else status
@@ -104,9 +104,20 @@ def write_case(ans: dict, r: dict, opened_at: str, dry: bool = False) -> dict:
                                "status": status, "approver_role": {"auto": "agent", "L1": "team_lead", "L2": "fraud_manager"}[a["route"]],
                                "decided_at": now}))
     if acts:
+        # a human decision already stored in the graph is never reset by re-running the case
+        existing = retry(lambda: cx.getVerticesById("ActionRecord", [aid for aid, _ in acts])) or []
+        decided = {v["v_id"] for v in existing if not str(v["attributes"].get("status", "")).startswith(("pending", "executed", "superseded"))}
+        acts = [(aid, a) for aid, a in acts if aid not in decided]
+    if acts:
         nv += retry(lambda: cx.upsertVertices("ActionRecord", acts))
         ne += retry(lambda: cx.upsertEdges("InvestigationCase", "CASE_ACTION", "ActionRecord", [(gid, aid, {}) for aid, _ in acts]))
     return {"ok": True, "graph_case_id": gid, "n_vertices": nv, "n_edges": ne}
+
+
+def action_id(gid: str, stage: str, i: int, action: str) -> str:
+    """Stable per action: the position AND the action name, so a re-ordered answer can't move a decision onto another
+    action."""
+    return f"{gid}-{stage[0].upper()}{i}-{action}"
 
 
 def decide_action(action_id: str, approve: bool, role: str) -> dict:
@@ -120,6 +131,8 @@ def decide_action(action_id: str, approve: bool, role: str) -> dict:
     need = {"L1": {"team_lead", "fraud_manager"}, "L2": {"fraud_manager"}, "auto": {"agent", "team_lead", "fraud_manager"}}[attrs["route"]]
     if role not in need:
         return {"ok": False, "error": f"role {role} may not approve a {attrs['route']} action"}
+    if not str(attrs.get("status", "")).startswith("pending"):
+        return {"ok": False, "error": f"already decided in the graph ({attrs.get('status')})"}
     status = ("approved_by_" if approve else "rejected_by_") + role
     retry(lambda: cx.upsertVertices("ActionRecord", [(action_id, {"status": status, "approver_role": role,
                                                                     "decided_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})]))

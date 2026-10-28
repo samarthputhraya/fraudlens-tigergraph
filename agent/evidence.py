@@ -59,12 +59,19 @@ def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
         raise InvalidInput("txn_context", f"flagged transaction {case['flagged_txn_id']} does not exist in the graph; "
                                           f"nothing was investigated or invented")
     ts = ep.ts
+    if opened < ts:
+        from agent.safety import InvalidInput
+        raise InvalidInput("case_row", f"the case is opened at {case['opened_at']}, before its flagged transaction "
+                                       f"({ep.txn['ts']}); the case record is inconsistent")
     # Data integrity: investigate the card that actually made the transaction. If the case record names another card,
     # say so (an analyst must reconcile it) instead of silently reading the wrong card's history.
     record_card = ep.txn.get("card_id") or case["card_id"]
-    if record_card != case["card_id"]:
-        ep.extra["card_mismatch"] = {"case_card": case["card_id"], "record_card": record_card}
-        ep.case = {**case, "card_id": record_card, "case_pack_card_id": case["card_id"]}
+    record_customer = ep.txn.get("customer_id") or case["customer_id"]
+    if record_card != case["card_id"] or record_customer != case["customer_id"]:
+        ep.extra["card_mismatch"] = {"case_card": case["card_id"], "record_card": record_card,
+                                     "case_customer": case["customer_id"], "record_customer": record_customer}
+        ep.case = {**case, "card_id": record_card, "customer_id": record_customer,
+                   "case_pack_card_id": case["card_id"], "case_pack_customer_id": case["customer_id"]}
     card_id = ep.case["card_id"]
 
     n = len(g.trace.calls)

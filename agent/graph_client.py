@@ -36,6 +36,9 @@ VERTEX_PARAMS = {"txn_context": ("txn",), "card_window": ("card",), "card_profil
                  "prior_cases": ("card",), "account_history": ("txn",), "case_graph": ("ic",),
                  "recipient_activity": ("dom",)}
 SET_VERTEX_PARAMS = {"similar_cases": ("devices", "cards")}
+# Installed queries that write to the graph. The investigating agent and the API never run them; batch jobs that need
+# them (monitor.py building ring links) construct GraphClient(allow_write=True) explicitly.
+WRITE_QUERIES = {"build_ring_links"}
 ALLOWED_MCP_TOOLS = ",".join([
     "run_installed_query", "get_query_description", "get_query_metadata", "is_query_installed", "show_query",
     "search_top_k_similarity", "get_graph_schema", "get_node", "get_nodes", "get_neighbors", "get_vertex_count",
@@ -170,7 +173,8 @@ class _MCPBridge:
 
 
 class GraphClient:
-    def __init__(self, use_mcp: bool = True) -> None:
+    def __init__(self, use_mcp: bool = True, allow_write: bool = False) -> None:
+        self.allow_write = allow_write
         self.trace = Trace()
         self.agent = "lead"
         self._mcp = None
@@ -199,6 +203,9 @@ class GraphClient:
 
     def run(self, query: str, params: dict | None = None, agent: str | None = None) -> dict:
         params = params or {}
+        if query in WRITE_QUERIES and not self.allow_write:
+            audit("refused_write_query", {"query": query, "agent": agent or self.agent})
+            raise DependencyFailure("graph", query, "this installed query writes to the graph; the agent's access is read-only")
         post = self._post_params(query, params)
         t0 = time.time()
         via = "mcp" if self._mcp else "rest"
@@ -229,6 +236,7 @@ class GraphClient:
         t0 = time.time()
         out: dict[str, str] = {}
         via = "mcp" if self._mcp else "local"
+        ok = True
         try:
             if self._mcp:
                 resp = self._mcp.call("tigergraph__get_query_description", {"query_name": "all"})
@@ -241,13 +249,15 @@ class GraphClient:
                             out[q["queryName"]] = q.get("description", "")
                 elif isinstance(items, dict):
                     out = {k: (v if isinstance(v, str) else json.dumps(v)[:300]) for k, v in items.items()}
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001 - tool discovery only feeds the planner's menu; recorded as a failed call
             out = {}
+            ok = False
         if not out:
+            # the planner's menu falls back to the descriptions in the repo; the trace says so (ok=False, via=...+local)
             out = local_query_descriptions()
             via = "local" if not self._mcp else "mcp+local"
         self.trace.add(ToolCall(agent, "tigergraph__get_query_description", "describe_queries", {"query_name": "all"},
-                                len(out), (time.time() - t0) * 1000, True, via))
+                                len(out), (time.time() - t0) * 1000, ok, via))
         return out
 
     # ---- typed wrappers (one per installed query) ---------------------------------------------

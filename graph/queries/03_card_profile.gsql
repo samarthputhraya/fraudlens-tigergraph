@@ -31,4 +31,5 @@ CREATE OR REPLACE QUERY card_profile(VERTEX<Card> card, DATETIME before_ts, INT 
   PRINT @@product_n AS product_n, @@channel_n AS channel_n, @@p_email_n AS p_email_n;
   PRINT @@device_n AS device_n, @@device_first AS device_first, @@device_last AS device_last;
   PRINT @@amts AS amts;
+  PRINT card AS card;   // the card this baseline describes (cited by attested claims)
 }

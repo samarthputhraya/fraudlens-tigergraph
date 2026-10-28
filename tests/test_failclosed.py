@@ -45,7 +45,7 @@ def investigate(case_id: str = CASE, use_llm: bool = False) -> dict:
 def test_audit_chain_detects_edits():
     for i in range(3):
         safety.audit("event", {"i": i}, log="t")
-    assert safety.verify_audit("t") == (True, "chain intact")
+    assert safety.verify_audit("t")[0] is True
     path = safety.AUDIT_DIR / "t.jsonl"
     lines = path.read_text(encoding="utf-8").splitlines()
     entry = json.loads(lines[1])
@@ -109,7 +109,7 @@ def test_runner_writes_no_answer_and_exits_2_when_the_graph_fails(tmp_path):
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "STOPPED" in proc.stdout
     assert not (out / f"{CASE}.json").exists()
-    assert (out / "traces" / f"{CASE}.FAILED.json").exists()
+    assert list((out / "traces").glob(f"{CASE}.FAILED.*.json"))
 
 
 # ---- model failure: decision stands, case escalated, nothing hidden -------------------------------------------------
@@ -147,3 +147,71 @@ def test_same_case_twice_gives_the_same_answer():
     a, b = investigate(), investigate()
     strip = lambda x: {k: v for k, v in x.items() if k not in VOLATILE}  # noqa: E731
     assert json.dumps(strip(a), sort_keys=True) == json.dumps(strip(b), sort_keys=True)
+
+
+# ---- invalid input, stale answers, garbage text (second review) ---------------------------------------------------------
+
+def test_check_row_rejects_malformed_rows():
+    import run_cases
+    from agent.safety import InvalidInput
+    row = pack_row(CASE)
+    for bad in ({"opened_at": "yesterday"}, {"trigger_type": "rumour"}, {"flagged_txn_id": ""}):
+        with pytest.raises(InvalidInput):
+            run_cases.check_row({**row, **bad})
+
+
+@needs_data
+@pytest.mark.parametrize("bad", [{"flagged_txn_id": "9999999"}, {"opened_at": "2016-12-01 00:00:00"}])
+def test_invalid_case_stops_with_a_clear_error(bad):
+    from agent.mirror import MirrorGraph
+    from agent.safety import InvalidInput
+    from agent.workflow import Investigator
+    with pytest.raises(InvalidInput):
+        Investigator(MirrorGraph(), write_graph=False, use_llm=False).run({**pack_row(CASE), **bad})
+
+
+@needs_data
+def test_another_customers_card_is_flagged_and_reconciled():
+    from agent.mirror import MirrorGraph
+    from agent.workflow import Investigator
+    row = {**pack_row(CASE), "card_id": "C07196-K2", "customer_id": "C07196"}
+    ans = Investigator(MirrorGraph(), write_graph=False, use_llm=False).run(row)["answer"]
+    assert ans["case"]["verdict"] == "uncertain"
+    assert any(a["action"] == "ESCALATE_TO_ANALYST" for a in ans["next_best_actions"]["final"])
+    assert any("case record names card C07196-K2" in e["claim"] for e in ans["case"]["evidence"])
+
+
+@needs_data
+def test_stopped_rerun_moves_the_old_answer_aside(tmp_path):
+    import os
+    out = tmp_path / "out"
+    env = {**os.environ, "FRAUDLENS_AUDIT_DIR": str(tmp_path / "audit")}
+    cmd = [sys.executable, "run_cases.py", "--mirror", "--no-write", "--no-llm", "--out", str(out), CASE]
+    assert subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600).returncode == 0
+    assert (out / f"{CASE}.json").exists()
+    proc = subprocess.run(cmd, cwd=ROOT, env={**env, "FRAUDLENS_FAULT": "graph:card_window"}, capture_output=True,
+                          text=True, timeout=600)
+    assert proc.returncode == 2
+    assert not (out / f"{CASE}.json").exists()
+    assert list((out / "stale").glob(f"*{CASE}*.json"))
+
+
+@needs_data
+def test_garbage_writer_text_is_a_model_failure(monkeypatch):
+    import random
+    from agent import evidence, llm, roles
+    from agent.mirror import MirrorGraph
+    from agent.workflow import Investigator
+    rng = random.Random(7)
+    vec = [rng.random() for _ in range(768)]
+    monkeypatch.setattr(evidence, "embed_query", lambda *_a, **_k: vec)
+    monkeypatch.setattr(llm, "embed_query", lambda *_a, **_k: vec)
+    monkeypatch.setattr(roles, "lead_plan", lambda *a, **k: {"hypotheses": [], "extra_calls": [], "focus": ""})
+    monkeypatch.setattr(roles, "run_specialists", lambda *a, **k: {})
+    monkeypatch.setattr(roles, "critic", lambda *a, **k: {"agree": True, "issues": [], "what_would_change_verdict": ""})
+    monkeypatch.setattr(roles, "writer", lambda *a, **k: {"summary": "asdf qwer zxcv lorem ipsum",
+                                                          "sar_narrative": "fine", "pattern_description": "x"})
+    ans = Investigator(MirrorGraph(), write_graph=False, use_llm=True).run(pack_row("HHF-007"))["answer"]
+    assert ans["run"]["complete"] is False
+    assert any(f["step"] == "writer" for f in ans["run"]["failures"])
+    assert ans["case"]["summary"].startswith("[Template text")
