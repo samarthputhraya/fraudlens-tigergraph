@@ -80,6 +80,19 @@ def test_setting_a_key_starts_a_keyed_chain(monkeypatch):
     assert list(safety.AUDIT_DIR.glob("t.unkeyed-*.jsonl"))
 
 
+def test_unsigned_line_on_a_keyed_chain_is_caught_not_archived(monkeypatch):
+    monkeypatch.setenv("FRAUDLENS_AUDIT_KEY", "k" * 32)
+    for i in range(2):
+        safety.audit("event", {"i": i}, log="t")
+    path = safety.AUDIT_DIR / "t.jsonl"
+    forged = {"ts": "x", "event": "case_answered", "data": {"verdict": "legitimate"}, "prev": "0" * 64, "seq": 2, "hash": "f" * 64}
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(forged, sort_keys=True) + "\n")
+    safety.audit("event", {"i": 3}, log="t")
+    assert not list(safety.AUDIT_DIR.glob("t.unkeyed-*.jsonl"))
+    assert not safety.verify_audit("t")[0]
+
+
 def test_redaction():
     text = safety.redact("TG_SECRET=abcd1234efgh5678 token: zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz https://tg-1.i.tgcloud.io/x")
     assert "abcd1234efgh5678" not in text and "zzzz" not in text and "tgcloud" not in text

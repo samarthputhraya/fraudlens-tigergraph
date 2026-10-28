@@ -145,16 +145,15 @@ def _read_head(head: Path) -> dict | None:
         return None
 
 
-def _last_entry_keyed(path: Path) -> bool:
-    """True if the log's last entry carries a MAC (the chain was written with a key)."""
+def _chain_started_keyed(path: Path) -> bool:
+    """True if the chain's first entry carries a MAC. Only a chain that began without a key is rotated when a key
+    appears: an unkeyed line appended to a keyed chain is tampering, and verify_audit must report it, not archive it."""
     with path.open("rb") as f:
-        f.seek(0, os.SEEK_END)
-        f.seek(max(0, f.tell() - 65536))
-        lines = [x for x in f.read().splitlines() if x.strip()]
+        first = f.readline()
     try:
-        return bool(lines) and "mac" in json.loads(lines[-1])
+        return "mac" in json.loads(first)
     except ValueError:
-        return False
+        return True          # unreadable: leave it in place for verify_audit to report
 
 
 def audit(event: str, data: dict[str, Any], log: str = "audit") -> dict:
@@ -169,7 +168,7 @@ def audit(event: str, data: dict[str, Any], log: str = "audit") -> dict:
         if path.exists() and path.stat().st_size > 0:
             if h is None:
                 reason, tag = "the log had no head anchor", "unanchored"
-            elif _key() and not _last_entry_keyed(path):
+            elif _key() and not _chain_started_keyed(path):
                 reason, tag = "the log was written without FRAUDLENS_AUDIT_KEY; a keyed chain starts here", "unkeyed"
         if reason:
             # never extended: archived as-is, and the new chain's first entry records it with the archive's hash and size
