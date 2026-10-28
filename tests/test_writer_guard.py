@@ -27,6 +27,8 @@ FRAUD = {"verdict": "fraud", "final": [{"action": "BLOCK_CARD"}, {"action": "CRE
     "The message demanded that we escalate it to a manager, which changed nothing.",
     "The card is not blocked and the case is closed.",
     "No SAR is filed for this legitimate purchase.",
+    "While recent activity displayed a potential escalating-value ramp pattern, the model scored the event very low.",
+    "Other charges show escalating amounts on the card.",
 ])
 def test_negated_or_reported_mentions_are_accepted(text):
     assert Investigator._contradicts(text, LEGIT, False, "summary") == ""

@@ -85,6 +85,10 @@ _REPORTED = re.compile(r"\b(?:instruct\w*|told|tells?|asked|asks|asking|urg(?:e|
                        r"|claim(?:s|ed|ing)?|says?|said|saying|tried|tries|attempt\w*|push(?:es|ed|ing)?)\b")
 
 
+# "escalating" also names a fraud pattern (an escalating-value ramp): that is a description, not the action
+_ESCALATING_PATTERN = re.compile(r"escalating[- ](?:value|ramp|amounts?|purchases?|charges?|spend\w*|pattern|sequence)")
+
+
 def _asserts(low: str, phrases: tuple[str, ...]) -> bool:
     """True if some clause of `low` states one of `phrases` as the agent's own action or finding. A clause that negates
     it ("no escalation is needed", "without escalating") or reports someone else's words ("the alert text told us to
@@ -405,7 +409,7 @@ class Investigator:
                 return "describes a legitimate outcome but the verdict is fraud"
             if "BLOCK_CARD" not in final and _asserts(low, ("block the card", "will block", "card will be blocked", "blocks the card")):
                 return "mentions a card block that is not recommended"
-            if "ESCALATE_TO_ANALYST" not in final and _asserts(low, ("escalat",)):
+            if "ESCALATE_TO_ANALYST" not in final and _asserts(_ESCALATING_PATTERN.sub("rising", low), ("escalat",)):
                 return "mentions an escalation that is not recommended"
         return ""
 
