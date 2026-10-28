@@ -61,7 +61,9 @@ def evidence_list(r: dict, knowledge_refs: list[dict]) -> list[dict]:
     from agent.attest import ids_in, ref_results
     results = ref_results(r["ep"])
     ev = []
-    for f in sorted(r["findings"], key=lambda x: -abs(x.weight)):
+    # evidence that points the way the decision went comes first, strongest first
+    sign = -1 if r.get("verdict") == "legitimate" else 1
+    for f in sorted(r["findings"], key=lambda x: (0 if x.weight * sign > 0 else 1, -abs(x.weight))):
         if abs(f.weight) < 0.05 and f.key not in ALWAYS_SHOWN:
             continue
         ids = [str(e) for e in f.entity_ids]

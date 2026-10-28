@@ -531,11 +531,15 @@ class Investigator:
         r, case, ep = s["result"], s["case"], s["ep"]
         t = ep.txn
         acts = ", ".join(a["action"] for a in r["final"])
-        top = sorted(r["findings"], key=lambda f: -abs(f.weight))[:2]
+        # lead with the evidence that points the way the decision went, then say what settled it
+        sign = -1 if r["verdict"] == "legitimate" else 1
+        top = sorted((f for f in r["findings"] if f.weight * sign > 0), key=lambda f: -abs(f.weight))[:2]             or sorted(r["findings"], key=lambda f: -abs(f.weight))[:2]
         summary = (f"{case['trigger_type'].replace('_', ' ').capitalize()} on {t['ts'][:10]}: ${float(t['amt']):,.2f} "
                    f"{t['channel'].replace('_', '-')} transaction {t['id']} on card {case['card_id']}. "
                    f"Verdict: {r['verdict']} (probability {r['p_final']:.2f}), pattern {r['pattern']}. "
                    + (" ".join(_lead_clause(f.claim) for f in top) + " " if top else "")
+                   + ("The cardholder's confirmation (simulated; the assumption is stated in evidence_requests) settled "
+                      "the alert. " if r.get("reply") == "confirm" else "")
                    + f"Recommended: {acts}.")
         led, reply, p0 = r["ledger"], r.get("reply"), r["ledger"]["p"]
         fams = ", ".join(led["fraud_families"]) or "the pattern detector"
