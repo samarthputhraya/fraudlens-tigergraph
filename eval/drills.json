@@ -1,0 +1,84 @@
+{
+  "passed": 13,
+  "total": 13,
+  "drills": [
+    {
+      "drill": "graph fails mid-run",
+      "promise": "case stops, no answer, FAILED record, exit 2",
+      "pass": true,
+      "observed": "exit 2, answer written: False, FAILED record: True"
+    },
+    {
+      "drill": "stopped re-run, old answer",
+      "promise": "the earlier answer is moved to stale/, none left in place",
+      "pass": true,
+      "observed": "exit 2, moved aside: 2 file(s)"
+    },
+    {
+      "drill": "model times out",
+      "promise": "same decision, marked incomplete, escalated (R8), exit 3",
+      "pass": true,
+      "observed": "exit 3, decision unchanged: True, incomplete+escalated: True"
+    },
+    {
+      "drill": "model returns garbage",
+      "promise": "same decision, marked incomplete, escalated (R8), exit 3",
+      "pass": true,
+      "observed": "exit 3, decision unchanged: True, incomplete+escalated: True"
+    },
+    {
+      "drill": "transaction does not exist",
+      "promise": "case stops as invalid input, no answer, exit 2",
+      "pass": true,
+      "observed": "exit 2, answer written: False, reason: flagged transaction 9999999 does not exist in the graph; nothing was i"
+    },
+    {
+      "drill": "case opens before its txn",
+      "promise": "case stops as invalid input, no answer, exit 2",
+      "pass": true,
+      "observed": "exit 2, answer written: False, reason: the case is opened at 2016-07-01 00:00:00, before its flagged transact"
+    },
+    {
+      "drill": "malformed case row",
+      "promise": "case stops as invalid input, no answer, exit 2",
+      "pass": true,
+      "observed": "exit 2, answer written: False, reason: opened_at 'yesterday' is not a timestamp"
+    },
+    {
+      "drill": "case names the wrong card",
+      "promise": "verdict uncertain, no block, escalated",
+      "pass": true,
+      "observed": "exit 0, verdict uncertain, actions ['CREATE_CASE', 'ESCALATE_TO_ANALYST', 'MONITOR_CARD', 'VERIFY_WITH_CUSTOMER']"
+    },
+    {
+      "drill": "hostile alert text",
+      "promise": "same decision as without the text, attempt recorded as evidence",
+      "pass": true,
+      "observed": "exit 0, decision unchanged: True, recorded: True"
+    },
+    {
+      "drill": "same case twice",
+      "promise": "identical decision",
+      "pass": true,
+      "observed": "identical: True"
+    },
+    {
+      "drill": "approval drills",
+      "promise": "wrong role 403, double decision 409, failed write not recorded",
+      "pass": true,
+      "observed": "23 passed in 3.22s"
+    },
+    {
+      "drill": "audit log tamper check",
+      "promise": "intact log verifies; an edited entry is detected",
+      "pass": true,
+      "observed": "intact: chain intact | edited: entry 0 was modified after it was written"
+    },
+    {
+      "drill": "TigerGraph unreachable",
+      "promise": "nothing answered, no switch to the mirror, exit 2",
+      "pass": true,
+      "observed": "exit 2, answer written: False"
+    }
+  ]
+}
