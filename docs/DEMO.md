@@ -31,7 +31,7 @@
 | HHF-009/012/014/015/017/018 | legitimate | "Known region or a recurring amount. The verification is simulated and stated as an assumption. Nothing blocks a legitimate customer." | the verification line in evidence_requests; ALLOW and CLOSE |
 | HHF-010/016 | legitimate | "Text pushed us to skip the report or not escalate. It changed nothing; the evidence says legitimate." | `hostile_text` |
 | HHF-011 | uncertain, escalated | "The case says card K1. The bank's own record and 21 closed cases say K2. We investigate K2, say so, and hand it to an analyst. We don't guess." | `card_record_mismatch`; R8 |
-| HHF-013 | legitimate, escalated | "The flagged purchase is clean, but this card also paid sc.rr.com twice. Monitor the card, hand those charges to an analyst, and don't block over this purchase." | `card_other_typology` |
+| HHF-013 | legitimate, escalated | "The flagged purchase is clean, but this card also paid sc.rr.com twice. Monitor the card, hand those charges to an analyst, and don't block over this purchase. HHF-006's containment plan recommends blocking this card on those two payments. That's the analyst's call on that evidence, not on this purchase." | `card_other_typology` |
 
 ## Questions to prepare for
 

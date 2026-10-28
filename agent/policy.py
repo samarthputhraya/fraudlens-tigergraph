@@ -49,6 +49,7 @@ class Situation:
     integrity_conflict: bool = False   # the case record and the bank's own record disagree (data quality)
     side_concern: str = ""             # other charges on the card match a fraud typology (not the flagged one)
     signature: str = ""                # connected cards show the same typology signature but share nothing (R9, not R6)
+    side_shared: str = ""              # the element the card's other charges share with a ring (R6), if any
 
 
 def sar_required(s: Situation, verdict: str) -> bool:
@@ -99,8 +100,9 @@ def with_side_concern(actions: list[dict], s: Situation) -> list[dict]:
         return actions
     out = list(actions)
     if not any(a["action"] == "MONITOR_CARD" for a in out):
-        out.append(act("MONITOR_CARD", f"R6: other charges on this card share an element with a fraud ring ({s.side_concern}); "
-                                       f"raise monitoring for 72 hours", s.exposure))
+        why = (f"R6: other charges on this card went to {s.side_shared}, which a fraud ring shares ({s.side_concern})"
+               if s.side_shared else f"R9: other charges on this card match an undocumented fraud signature ({s.side_concern})")
+        out.append(act("MONITOR_CARD", f"{why}; raise monitoring for 72 hours", s.exposure))
     if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in out):
         out.append(act("ESCALATE_TO_ANALYST", "R8: the evidence conflicts - the flagged purchase is clean but other charges "
                                               "on the card are suspicious; hand those to an analyst with the evidence", s.exposure))

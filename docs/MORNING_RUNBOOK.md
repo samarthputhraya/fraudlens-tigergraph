@@ -66,7 +66,7 @@ Keep the Round 1 `InvestigationCase` memory; **don't run `reset_memory`**. The b
 ```bash
 .venv/Scripts/python run_cases.py                 # writes cases_r2/*.json, runs/traces/*, audit entries; case memory to TigerGraph
 ```
-- **Expected verdicts:** they should match the mirror run in `runs/v8/` (`runs/v8_run.log`):
+- **Expected verdicts:** they should match the mirror run in `runs/v10/` (`runs/v10_run.log`):
   - fraud: HHF-001 to HHF-007
   - uncertain: HHF-011
   - legitimate: the other 10
@@ -97,6 +97,7 @@ mkdir -p runs/grade/official/fraudlens && cp cases_r2/HHF-*.json runs/grade/offi
 ```bash
 git add cases_r2/HHF-0[01][0-9].json docs eval agent api graph ml rag tests run_cases.py README.md
 git add runs/traces/HHF-0[01][0-9].json    # the official traces; not the FAILED records
+git add -f runs/audit/audit.head            # anchors the audit chain (count + last hash) in git history
 git commit -m "Final Round freeze: official answers from TigerGraph"
 git rev-parse HEAD      # the hash you hand in
 git push origin round2

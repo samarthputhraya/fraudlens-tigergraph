@@ -79,23 +79,41 @@ def _lead_clause(text: str) -> str:
     return text.rstrip(" .") + "."
 
 
-_CLAUSE = re.compile(r"[.!?;:,()\"]|\s(?:but|and|while|whereas|so|which|although|though|because|since|after|until|unless)\s")
-_NEGATED = re.compile(r"\b(?:no|not|never|nothing|none|without|nor|neither|unnecessary|unwarranted|instead of|rather than)\b|n't\b")
+_CLAUSE = re.compile(r"[,;:()]|\s(?:but|and|while|whereas|so|which|although|though|because|since|after|until|unless)\s")
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+_NEGATED = re.compile(r"\b(?:no|not|never|nothing|none|without|nor|neither|instead|rather)\b|n't\b")
+_HEDGED = re.compile(r"\b(?:checked|looked|screened|tested|searched|whether|possible|possibility|potential|rule|ruled)\b")
+_NEGATED_AFTER = re.compile(r"^\w*\s*(?:is|are|was|were|will be|would be|has been|had been|be)?\s*(?:not|never|unnecessary|unwarranted)\b")
+_RULED_OUT = re.compile(r"\b(?:ruled out|rules out|no sign|found no|none of|neither)\b")
 _REPORTED = re.compile(r"\b(?:instruct\w*|told|tells?|asked|asks|asking|urg(?:e|es|ed|ing)|demand\w*|requested|requesting"
-                       r"|claim(?:s|ed|ing)?|says?|said|saying|tried|tries|attempt\w*|push(?:es|ed|ing)?)\b")
+                       r"|says?|said|saying|read|reads|wrote|writes|stated|states|tried|tries|attempt\w*|push(?:es|ed|ing)?)\b")
+_EARLIER = re.compile(r"\b(?:earlier|prior|previous|past|cleared|other)\b")
 
 
 # "escalating" also names a fraud pattern (an escalating-value ramp): that is a description, not the action
 _ESCALATING_PATTERN = re.compile(r"escalating[- ](?:value|ramp|amounts?|purchases?|charges?|spend\w*|pattern|sequence)")
 
 
-def _asserts(low: str, phrases: tuple[str, ...]) -> bool:
-    """True if some clause of `low` states one of `phrases` as the agent's own action or finding. A clause that negates
-    it ("no escalation is needed", "without escalating") or reports someone else's words ("the alert text told us to
-    escalate") does not count."""
-    for clause in _CLAUSE.split(f" {low} "):
-        clause = f" {clause} "
-        if any(p in clause for p in phrases) and not (_NEGATED.search(clause) or _REPORTED.search(clause)):
+def _asserts(low: str, pattern: str, negatable: bool = True, skip_before: re.Pattern | None = None) -> bool:
+    """True if `low` states `pattern` (a regex) as the agent's own action or finding.
+
+    A mention does not count when a negation governs it (one of the 4 words before it: "no escalation", "was not
+    escalated", "without escalating"; or right after it: "escalation is not required"), when it is hedged ("checked
+    for account takeover"), when the rest of its sentence rules it out ("...; the evidence ruled out both"), or when
+    its clause reports someone else's words ("the alert text told us to escalate"). A negation elsewhere in the
+    sentence does not cancel it ("the card is not blocked and the case is escalated" still states an escalation)."""
+    for sent in _SENTENCE.split(low):
+        for m in re.finditer(pattern, sent):
+            before = sent[:m.start()]
+            window = " ".join(before.split()[-4:])
+            clause_before = _CLAUSE.split(before)[-1]
+            if negatable and (_NEGATED.search(window) or _NEGATED_AFTER.match(sent[m.end():])
+                              or _RULED_OUT.search(sent[m.end():])):
+                continue
+            if _HEDGED.search(window) or _REPORTED.search(clause_before):
+                continue
+            if skip_before is not None and skip_before.search(" ".join(before.split()[-6:])):
+                continue
             return True
     return False
 
@@ -347,8 +365,13 @@ class Investigator:
                             rejected.append(f"{k}: empty")
                         continue
                     bad = roles.unknown_ids(v, allowed)
-                    problem = ("unknown IDs " + ",".join(bad[:3])) if bad else (self._contradicts(v, r, sar, k)
-                                                                              or self._not_case_text(v, s, k))
+                    weak = [c for c in (r["facts"].get("weak_ring_cards") or []) if c in v] if k == "sar_narrative" else []
+                    if bad:
+                        problem = "unknown IDs " + ",".join(bad[:3])
+                    elif weak:
+                        problem = f"names monitored ring card(s) {', '.join(weak[:3])}, which a report must not name"
+                    else:
+                        problem = self._contradicts(v, r, sar, k) or self._not_case_text(v, s, k)
                     if problem:
                         rejected.append(f"{k}: {problem}")
                         # kept in the trace so an analyst can see exactly what was refused and why
@@ -398,18 +421,21 @@ class Investigator:
         if key == "sar_narrative":
             if not sar:
                 return "a report narrative for a case that files no report"
-            if any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate", "not suspicious")):
+            if _asserts(low, r"legitimate purchase|\bno fraud\b|closed as legitimate|\bnot suspicious\b", negatable=False,
+                        skip_before=_EARLIER):
                 return "the narrative describes the activity as legitimate"
         if key == "summary":
-            if not sar and _asserts(low, ("suspicious activity report", " sar ", "file a report", "files a report", "filing a report", "file a sar", "will file")):
+            if not sar and _asserts(low, r"suspicious activity report|\bsar\b|\bfil(?:e|es|ing) a report|\bwill file\b"):
                 return "mentions a SAR that is not being filed"
-            if r["verdict"] == "legitimate" and _asserts(low, ("confirmed fraud", "is fraud", "fraud ring", "account takeover", "block the card", "blocked")):
+            if r["verdict"] == "legitimate" and _asserts(low, r"confirmed fraud|\bis fraud\b|fraud ring|account takeover"
+                                                             r"|block the card|\bblocked\b"):
                 return "describes fraud but the verdict is legitimate"
-            if r["verdict"] == "fraud" and any(w in low for w in ("legitimate purchase", "no fraud", "closed as legitimate")):
+            if r["verdict"] == "fraud" and _asserts(low, r"legitimate purchase|\bno fraud\b|closed as legitimate",
+                                                    negatable=False, skip_before=_EARLIER):
                 return "describes a legitimate outcome but the verdict is fraud"
-            if "BLOCK_CARD" not in final and _asserts(low, ("block the card", "will block", "card will be blocked", "blocks the card")):
+            if "BLOCK_CARD" not in final and _asserts(low, r"block the card|\bwill block\b|card will be blocked|blocks the card"):
                 return "mentions a card block that is not recommended"
-            if "ESCALATE_TO_ANALYST" not in final and _asserts(_ESCALATING_PATTERN.sub("rising", low), ("escalat",)):
+            if "ESCALATE_TO_ANALYST" not in final and _asserts(_ESCALATING_PATTERN.sub("rising", low), r"\bescalat"):
                 return "mentions an escalation that is not recommended"
         return ""
 
@@ -529,7 +555,10 @@ class Investigator:
             "verdict": r["verdict"], "fraud_probability": r["p_final"], "initial_probability": r["ledger"]["p"],
             "pattern": r["pattern"], "episode": [{k: (region_label(rows[i].get(k)) if k == "addr1" else rows[i].get(k))
                                                   for k in ("id", "ts", "amt", "channel", "addr1", "device")} for i in r["episode"] if i in rows],
-            "exposure_usd": r["exposure"], "connected_cards": sorted(r["facts"].get("connected_cards") or [])[:25],
+            "exposure_usd": r["exposure"],
+            # weak ring members are monitored, not named: the writer only sees how many there are
+            "connected_cards": sorted(set(r["facts"].get("connected_cards") or []) - set(r["facts"].get("weak_ring_cards") or []))[:25],
+            "monitored_ring_cards_not_named": len(r["facts"].get("weak_ring_cards") or []),
             "connected_devices": sorted(r["facts"].get("connected_devices") or []),
             "evidence": [{"claim": f.claim, "ref": f.ref} for f in r["findings"]],
             "evidence_request": r["evidence_requests"], "initial_actions": r["initial"], "final_actions": r["final"],

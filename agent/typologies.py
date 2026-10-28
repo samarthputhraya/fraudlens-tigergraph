@@ -1,7 +1,7 @@
 """Fraud patterns the policy's five documented patterns don't cover (Final Round challenge 1: new typologies).
 
-The bank's model was never retrained, and January carries activity it has never seen, so a low model score is not
-evidence of innocence. These detectors look for the shape of the abuse instead:
+The bank's model was never retrained, and January carries activity it has never seen, so a low model score is at
+best weak evidence of innocence. These detectors look for the shape of the abuse instead:
 
 - micro_run        charges too small to trip any threshold: >= 4 online charges under $10 on >= 3 different days within
                    30 days, on a card that had at most 1 such charge in the 90 days before (sudden onset)

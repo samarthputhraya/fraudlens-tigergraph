@@ -37,7 +37,7 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
   - escalating ramps.
 
   Each has a ring scan across cards (`graph/queries/19_typology_scan.gsql`, `20_recipient_activity.gsql`). On July to October, they never touched a cleared (legitimate) case.
-- **Drift-aware assessment.** For activity the model has never seen, a low score is not used as evidence of innocence. Ablation: without the detectors and this weighting, 4 of the 7 frauds are missed and 0 of the 6 reports are filed.
+- **Drift-aware assessment.** For activity the model has never seen, a low score counts at most as weak evidence of innocence (its likelihood ratio is bounded to between 0.5 and 8). Ablation: without the detectors and this weighting, 4 of the 7 frauds are missed and 0 of the 6 reports are filed.
 - **Containment planner (challenge 7).** It blocks a ring card only on that card's own evidence, with an explicit cost for every innocent customer, and names the customers a block would touch.
 - **Break the agent (challenge 10).** Free text is data:
   - instructions are detected (including zero-width and full-width disguises), recorded and removed before any model sees them;
@@ -217,7 +217,7 @@ python rag/embed_cases.py                           # case-memory embeddings for
 # TigerGraph: graph/setup.py load / queries / describe / scores / vectors (docs/MORNING_RUNBOOK.md, steps 1-5)
 python run_cases.py HHF-007                         # one case; no argument runs all 18 -> cases_r2/
 python run_cases.py --mirror --no-write HHF-007     # the same, on the offline mirror (labelled not official)
-python -m pytest tests -q                           # 156 tests: fail-closed, approvals, injection, writer guard, policy, answers
+python -m pytest tests -q                           # 177 tests: fail-closed, approvals, audit attacks, injection, writer guard, policy, answers
 ```
 
 ### Round 1

@@ -22,7 +22,7 @@ from agent.integrity import claims_vs_record, hostile_spans
 from agent.paths import R2
 
 # January 2017 is newer than every label the transaction model learned from, and the bank warns its January patterns
-# are unseen: from this date a low model score is not used as evidence of innocence.
+# are unseen: from this date a low model score counts at most as weak evidence of innocence (likelihood ratio >= 0.5).
 DRIFT_FROM = "2017-01-01" if R2 else "9999"
 TYPOLOGY_LR = {"micro_run": 25.0, "spoofed_device": 40.0, "escalating_ramp": 30.0, "recipient_surge": 30.0}
 HIGH_PRECISION = {"spoofed_device", "recipient_surge"}  # eval/typology_backtest.json: no innocent hits, clean background
@@ -123,7 +123,7 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
                          f"unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the "
                          f"graph's memory of earlier closed cases, all as known at transaction time"
                          + (". January activity is newer than anything the model learned from and carries patterns it has never "
-                            "seen, so a low score is not used as evidence of innocence: its weight is bounded to between 0.5 and 8"
+                            "seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8"
                             if drift else ""),
                          lr, "model", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
                          data={"model_p": mp, "drift": drift}))
@@ -497,23 +497,29 @@ def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
                              entity_ids=typ.txns[:12], pattern_hint="undocumented",
                              data={"txns": typ.txns, "ring": typ.ring[:25], "description": typ.description}))
         ring = sorted(set().union(*(set(x.ring) for x in involving)))
+        from agent import containment as ct
+        st = next((s for s in (ep.extra.get("recipient") or {}).values() if best.shared and s["domain"] == best.shared[1]), None)
+        per = ty.ring_exposures(best.key, scan, st) if ring else {}
+        # ring cards whose own evidence is weak (micro-charge runs and ramps are ~1 in 3 confirmed) are monitored and
+        # counted, but never named in evidence text or a regulator report
+        linked = set(facts["connected_cards"])          # already connected by a shared device: strong on that evidence
+        weak = sorted(c for c in ring if (per.get(c) or {}).get("conf", 0.0) < ct.MIN_BLOCK_CONF and c not in linked)
+        strong = [c for c in ring if c not in weak]
+        facts["weak_ring_cards"] = weak
         if len(ring) >= 2 and best.key != "recipient_surge":
+            named = (f" ({', '.join(strong[:6])}{', ...' if len(strong) > 6 else ''})" if strong else "")
+            unnamed = (f"; {'all' if not strong else len(weak)} of them on weaker evidence of their own, so they are "
+                       f"monitored and not named here" if weak else "")
             f.append(Finding("coordinated",
-                             f"The same {best.name} signature appears on {len(ring)} other card(s) in the same 30 days "
-                             f"({', '.join(ring[:6])}{', ...' if len(ring) > 6 else ''}): coordinated activity across customers, "
-                             f"not one cardholder's habit", 4.0, "network", ref=ep.refs.get("typology_scan", ""),
-                             entity_ids=ring[:15], pattern_hint="undocumented", data={"members": ring}))
+                             f"The same {best.name} signature appears on {len(ring)} other card(s) in the same 30 days"
+                             f"{named}: coordinated activity across customers, not one cardholder's habit{unnamed}", 4.0,
+                             "network", ref=ep.refs.get("typology_scan", ""), entity_ids=ring[:15],
+                             pattern_hint="undocumented", data={"members": ring, "weak": weak}))
         facts["typology"] = best
         facts["typology_txns"] = sorted(set().union(*(set(x.txns) for x in involving)))
         facts["connected_cards"] |= set(ring[:25])
         if ring:
             # containment planner (challenge 7): which ring cards to block, on each card's own evidence
-            from agent import containment as ct
-            st = next((s for s in (ep.extra.get("recipient") or {}).values() if best.shared and s["domain"] == best.shared[1]), None)
-            per = ty.ring_exposures(best.key, scan, st)
-            # ring cards whose own evidence is weak (micro-charge runs and ramps are ~1 in 3 confirmed) are monitored
-            # and never named as subjects of a regulator report
-            facts["weak_ring_cards"] = sorted(c for c in ring if (per.get(c) or {}).get("conf", 0.0) < ct.MIN_BLOCK_CONF)
             members = [ct.Member(card, best.total, 0.95, f"this case: {best.claim[:120]}", best.txns)]
             for c in ring:
                 d = per.get(c)

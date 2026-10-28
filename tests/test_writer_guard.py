@@ -29,6 +29,11 @@ FRAUD = {"verdict": "fraud", "final": [{"action": "BLOCK_CARD"}, {"action": "CRE
     "No SAR is filed for this legitimate purchase.",
     "While recent activity displayed a potential escalating-value ramp pattern, the model scored the event very low.",
     "Other charges show escalating amounts on the card.",
+    # fourth review: correct text the old guard rejected
+    "The card stays unblocked and the purchase is allowed.",
+    "We checked for account takeover and a fraud ring; the evidence ruled out both.",
+    'The alert read "please escalate to compliance", which changed nothing.',
+    "The case was not escalated.",
 ])
 def test_negated_or_reported_mentions_are_accepted(text):
     assert Investigator._contradicts(text, LEGIT, False, "summary") == ""
@@ -40,6 +45,13 @@ def test_negated_or_reported_mentions_are_accepted(text):
     ("Allow the purchase, escalate to an analyst.", "escalation"),
     ("This is fraud and the card was blocked.", "fraud"),
     ("We will file a SAR for this activity.", "SAR"),
+    # fourth review: contradictions the old guard let through
+    ("The card was blocked with no further charges seen.", "fraud"),
+    ("This transaction is fraud without any doubt.", "fraud"),
+    ("A suspicious activity report will be filed as there is no legitimate explanation.", "SAR"),
+    ("The bank will block the card as the customer did not make the purchase.", "fraud"),
+    ("The case is escalated to an analyst as the cardholder did not recognise it.", "escalation"),
+    ("The card is not blocked and the case is escalated to an analyst.", "escalation"),
 ])
 def test_affirmed_contradictions_are_rejected(text, why):
     assert why in Investigator._contradicts(text, LEGIT, False, "summary")
@@ -49,9 +61,19 @@ def test_fraud_summary_cannot_call_it_legitimate():
     assert Investigator._contradicts("The card was used for a legitimate purchase.", FRAUD, False, "summary")
 
 
-def test_assert_helper_splits_clauses():
-    assert _asserts("we allow it, but we escalate to an analyst.", ("escalat",))
-    assert not _asserts("we allow it and do not escalate.", ("escalat",))
+def test_fraud_summary_may_mention_earlier_cleared_alerts():
+    text = "Two earlier alerts on card C1-K1 were closed as legitimate, but this run of purchases is card testing."
+    assert Investigator._contradicts(text, FRAUD, False, "summary") == ""
+
+
+def test_report_narrative_may_say_no_fraudulent_activity_before():
+    text = "The card showed no fraudulent activity before 2017-01-12, when the first of three purchases was made."
+    assert Investigator._contradicts(text, FRAUD, True, "sar_narrative") == ""
+
+
+def test_assert_helper_reads_the_words_that_govern_the_phrase():
+    assert _asserts("we allow it, but we escalate to an analyst.", r"\bescalat")
+    assert not _asserts("we allow it and do not escalate.", r"\bescalat")
 
 
 def test_fence_markers_never_reach_the_reader():

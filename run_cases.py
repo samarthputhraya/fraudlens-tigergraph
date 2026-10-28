@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
 import shutil
 import sys
 import time
@@ -69,6 +70,10 @@ def main() -> int:
         OUT = OUT if OUT.is_absolute() else ROOT / OUT
         TRACE = OUT / "traces"
         sys.argv.pop(sys.argv.index("--out") + 1)
+        if not os.getenv("FRAUDLENS_AUDIT_DIR"):
+            # and their audit entries go with them: the real runs/audit log holds only official runs
+            from agent import safety
+            safety.AUDIT_DIR = OUT / "audit"
     pack = CASE_PACK_CSV
     if "--pack" in sys.argv:
         pack = Path(sys.argv[sys.argv.index("--pack") + 1])

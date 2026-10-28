@@ -52,7 +52,8 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
         strong_families=fraud_fams + (1 if led["strong"] else 0), legit_families=legit_fams,
         single_signal=fraud_fams <= 1 and not led["strong"], conflict=conflict, legit_explanation=explanation,
         integrity_conflict=bool(facts.get("card_mismatch")), signature=signature,
-        side_concern="; ".join(f"{x.name} on {', '.join(x.txns[:4])}" for x in facts.get("side_typologies", [])))
+        side_concern="; ".join(f"{x.name} on {', '.join(x.txns[:4])}" for x in facts.get("side_typologies", [])),
+        side_shared="; ".join(f"{x.shared[0]} {x.shared[1]}" for x in facts.get("side_typologies", []) if x.shared))
 
 
 def choose_reply(s: Situation) -> str:

@@ -2,7 +2,7 @@
 
 **The one idea we want judged:** January's fraud is new, so every score-based signal is blind to it. FraudLens finds it in the *shape* of the activity on the graph instead:
 - four new-typology detectors, each with a ring scan across cards;
-- a model whose weight is bounded on unseen data, so a low score never counts as innocence.
+- a model whose weight is bounded on unseen data, so a low score counts at most as weak evidence of innocence (a likelihood ratio no lower than 0.5).
 
 When a ring is found, a containment planner decides which cards to block on each card's own evidence. All numbers below come from code in this repo, run on the offline mirror of the same data. The backtests are mirror-only; the 18 answers are re-run on TigerGraph in the official run, and `eval/parity.py` checks that TigerGraph returns the same evidence as the mirror.
 

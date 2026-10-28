@@ -145,20 +145,13 @@ def _read_head(head: Path) -> dict | None:
         return None
 
 
-def _chain_started_keyed(path: Path) -> bool:
-    """True if the chain's first entry carries a MAC. Only a chain that began without a key is rotated when a key
-    appears: an unkeyed line appended to a keyed chain is tampering, and verify_audit must report it, not archive it."""
-    with path.open("rb") as f:
-        first = f.readline()
-    try:
-        return "mac" in json.loads(first)
-    except ValueError:
-        return True          # unreadable: leave it in place for verify_audit to report
-
-
 def audit(event: str, data: dict[str, Any], log: str = "audit") -> dict:
-    """Append one entry under a process-wide and an OS file lock. A log that can't be extended safely (no head anchor,
-    or written without a key now that FRAUDLENS_AUDIT_KEY is set) is archived untouched and a new chain starts."""
+    """Append one entry under a process-wide and an OS file lock.
+
+    A log that can't be extended (no head anchor, or a chain written entirely without a key now that
+    FRAUDLENS_AUDIT_KEY is set) is archived untouched and a new chain starts. The old chain is verified first and the
+    result is recorded in the new chain's first entry, so rotation never launders tampering: if the archived log did
+    not verify, or the archive is later changed or removed, verify_audit keeps failing."""
     AUDIT_DIR.mkdir(parents=True, exist_ok=True)
     path, head = _paths(log)
     with _audit_lock, _FileLock(path):
@@ -166,17 +159,22 @@ def audit(event: str, data: dict[str, Any], log: str = "audit") -> dict:
         rotated = None
         reason = tag = ""
         if path.exists() and path.stat().st_size > 0:
+            old = read_audit(log)
             if h is None:
                 reason, tag = "the log had no head anchor", "unanchored"
-            elif _key() and not _chain_started_keyed(path):
+            elif _key() and old and all("mac" not in e and "unreadable" not in e for e in old):
                 reason, tag = "the log was written without FRAUDLENS_AUDIT_KEY; a keyed chain starts here", "unkeyed"
+            # anything else (including one MAC stripped from a keyed chain) is appended to and fails verification
         if reason:
-            # never extended: archived as-is, and the new chain's first entry records it with the archive's hash and size
+            ok, problem, _ = _verify_entries(old, h, require_mac=False)
+            if h is None and any("mac" in e for e in old):
+                ok, problem = False, "the head anchor of a keyed log was missing"
             raw = path.read_bytes()
             archive = path.with_name(f"{log}.{tag}-{time.strftime('%Y%m%d-%H%M%S')}.jsonl")
             os.replace(path, archive)
             rotated = {"archived_as": archive.name, "archive_sha256": hashlib.sha256(raw).hexdigest(),
-                       "lines": raw.count(b"\n"), "reason": reason}
+                       "lines": raw.count(b"\n"), "reason": reason, "archive_verified": ok,
+                       "archive_problem": "" if ok else problem}
             h = None
         prev, count = (h["hash"], int(h["count"])) if h else (GENESIS, 0)
         if rotated:
@@ -214,14 +212,37 @@ def read_audit(log: str = "audit") -> list[dict]:
         if not line.strip():
             continue
         try:
-            out.append(json.loads(line))
+            entry = json.loads(line)
         except ValueError:
-            out.append({"unreadable": n})
+            entry = None
+        out.append(entry if isinstance(entry, dict) else {"unreadable": n})
     return out
 
 
+def _verify_entries(entries: list[dict], h: dict | None, require_mac: bool) -> tuple[bool, str, str]:
+    """Chain, hashes, MACs (when required) and, if a head is given, the head anchor. Returns (ok, problem, last hash)."""
+    prev = GENESIS
+    for i, entry in enumerate(entries):
+        if "unreadable" in entry:
+            return False, f"entry {i} is unreadable", prev
+        claimed = entry.get("hash")
+        body = {k: v for k, v in entry.items() if k not in ("hash", "mac")}
+        if body.get("prev") != prev or body.get("seq", i) != i:
+            return False, f"entry {i} does not follow entry {i - 1}", prev
+        if hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest() != claimed:
+            return False, f"entry {i} was modified after it was written", prev
+        if require_mac and entry.get("mac") != _mac(claimed):
+            return False, f"entry {i} has no valid MAC: it was not written by this server", prev
+        prev = claimed
+    if h is not None and (int(h.get("count", -1)) != len(entries) or h.get("hash") != prev):
+        return False, (f"the log has {len(entries)} entries but its head records {h.get('count')}: entries were removed "
+                       f"or added"), prev
+    return True, "", prev
+
+
 def verify_audit(log: str = "audit") -> tuple[bool, str]:
-    """Recompute the chain, the MACs and the head anchor. Returns (ok, message naming the first problem)."""
+    """Recompute the chain, the MACs and the head anchor, and check every log this chain archived. Returns (ok, message
+    naming the first problem)."""
     path, head = _paths(log)
     entries = read_audit(log)
     h = _read_head(head)
@@ -231,19 +252,17 @@ def verify_audit(log: str = "audit") -> tuple[bool, str]:
         return True, "empty"
     if h is None:
         return False, "the head anchor is missing"
-    prev = GENESIS
+    ok, problem, _ = _verify_entries(entries, h, require_mac=bool(_key()))
+    if not ok:
+        return False, problem
     for i, entry in enumerate(entries):
-        if "unreadable" in entry:
-            return False, f"entry {i} is unreadable"
-        claimed = entry.get("hash")
-        body = {k: v for k, v in entry.items() if k not in ("hash", "mac")}
-        if body.get("prev") != prev or body.get("seq", i) != i:
-            return False, f"entry {i} does not follow entry {i - 1}"
-        if hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest() != claimed:
-            return False, f"entry {i} was modified after it was written"
-        if _key() and entry.get("mac") != _mac(claimed):
-            return False, f"entry {i} has no valid MAC: it was not written by this server"
-        prev = claimed
-    if int(h.get("count", -1)) != len(entries) or h.get("hash") != prev:
-        return False, f"the log has {len(entries)} entries but its head records {h.get('count')}: entries were removed or added"
+        if entry.get("event") != "log_rotated":
+            continue
+        d = entry.get("data") or {}
+        if d.get("archive_verified") is False:
+            return False, (f"entry {i} archived a log that failed verification ({d.get('archive_problem')}); it is kept "
+                           f"as {d.get('archived_as')} for review")
+        arch = AUDIT_DIR / str(d.get("archived_as") or "")
+        if not d.get("archived_as") or not arch.is_file() or hashlib.sha256(arch.read_bytes()).hexdigest() != d.get("archive_sha256"):
+            return False, f"entry {i} archived {d.get('archived_as')}, which has since been changed or removed"
     return True, "chain intact" + ("" if _key() else " (unkeyed: set FRAUDLENS_AUDIT_KEY to make forgery detectable)")

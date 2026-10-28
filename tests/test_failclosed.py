@@ -93,6 +93,64 @@ def test_unsigned_line_on_a_keyed_chain_is_caught_not_archived(monkeypatch):
     assert not safety.verify_audit("t")[0]
 
 
+def _keyed_log_with_a_rewritten_verdict(monkeypatch) -> Path:
+    monkeypatch.setenv("FRAUDLENS_AUDIT_KEY", "k" * 32)
+    safety.audit("case_answered", {"verdict": "fraud"}, log="t")
+    safety.audit("case_answered", {"verdict": "fraud"}, log="t")
+    path = safety.AUDIT_DIR / "t.jsonl"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    lines[1] = lines[1].replace('"fraud"', '"legitimate"')
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_stripping_a_mac_does_not_get_the_log_archived(monkeypatch):
+    """Review attack 1: rewrite a verdict, then remove line 0's MAC so the chain looks unkeyed. It must not rotate."""
+    path = _keyed_log_with_a_rewritten_verdict(monkeypatch)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    first = json.loads(lines[0])
+    first.pop("mac")
+    lines[0] = json.dumps(first, sort_keys=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    safety.audit("event", {}, log="t")
+    assert not list(safety.AUDIT_DIR.glob("t.unkeyed-*.jsonl"))
+    assert not safety.verify_audit("t")[0]
+
+
+def test_deleting_the_head_archives_but_keeps_failing(monkeypatch):
+    """Review attack 2: tamper, then delete the head so the next append rotates the log. The rotation records that
+    the archived log did not verify, so verification keeps failing."""
+    _keyed_log_with_a_rewritten_verdict(monkeypatch)
+    (safety.AUDIT_DIR / "t.head").unlink()
+    safety.audit("event", {}, log="t")
+    rot = safety.read_audit("t")[0]
+    assert rot["event"] == "log_rotated" and rot["data"]["archive_verified"] is False
+    ok, msg = safety.verify_audit("t")
+    assert not ok and "failed verification" in msg
+
+
+def test_an_archive_changed_after_rotation_is_detected(monkeypatch):
+    monkeypatch.delenv("FRAUDLENS_AUDIT_KEY", raising=False)
+    safety.audit("event", {"i": 0}, log="t")
+    monkeypatch.setenv("FRAUDLENS_AUDIT_KEY", "k" * 32)
+    safety.audit("event", {"i": 1}, log="t")
+    assert safety.verify_audit("t")[0] is True
+    archive = next(safety.AUDIT_DIR.glob("t.unkeyed-*.jsonl"))
+    archive.write_text(archive.read_text(encoding="utf-8").replace('"i": 0', '"i": 9'), encoding="utf-8")
+    ok, msg = safety.verify_audit("t")
+    assert not ok and "changed or removed" in msg
+
+
+def test_a_non_object_line_never_crashes_the_logger(monkeypatch):
+    monkeypatch.setenv("FRAUDLENS_AUDIT_KEY", "k" * 32)
+    safety.audit("event", {}, log="t")
+    path = safety.AUDIT_DIR / "t.jsonl"
+    path.write_text("null\n" + path.read_text(encoding="utf-8"), encoding="utf-8")
+    safety.audit("event", {}, log="t")          # must not raise
+    ok, msg = safety.verify_audit("t")
+    assert not ok and "unreadable" in msg
+
+
 def test_redaction():
     text = safety.redact("TG_SECRET=abcd1234efgh5678 token: zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz https://tg-1.i.tgcloud.io/x")
     assert "abcd1234efgh5678" not in text and "zzzz" not in text and "tgcloud" not in text

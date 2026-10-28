@@ -53,9 +53,11 @@ Every failure is printed, written to a hash-chained audit log, and never present
 
 ## What is logged
 
-- **`runs/audit/audit.jsonl`** is append-only. It holds every answered case (verdict, actions, SHA-256 of the answer and of its trace), every stopped case, every dependency failure, and every refused write query.
+- **`runs/audit/audit.jsonl`** is append-only and holds official runs only. It records every answered case (verdict, actions, SHA-256 of the answer and of its trace), every stopped case, every dependency failure, and every refused write query. Development runs (`--out`), the drills and the tests write to their own logs.
 - **`runs/audit/approvals.jsonl`** holds every approval decision, refusal and failed write.
-- **Tamper evidence on both logs:** each entry chains the previous entry's hash and carries an HMAC keyed by `FRAUDLENS_AUDIT_KEY`. A head file anchors the entry count, so `GET /api/audit/verify` detects edits, forged entries, truncation and deletion. While a log fails verification, approvals are suspended (503).
+- **Tamper evidence on both logs:** each entry chains the previous entry's hash and carries an HMAC keyed by `FRAUDLENS_AUDIT_KEY`. A head file anchors the entry count, so `GET /api/audit/verify` detects edits, forged entries, truncation and deletion of entries. While a log fails verification, approvals are suspended (503).
+- **Rotation never hides tampering.** A log is archived and a new chain started only in two cases: its head file is missing, or it was written entirely without a key and a key has now been set. The old chain is verified first and the result is recorded in the new chain's first entry. Verification keeps failing if that archived log didn't verify, or if the archive is later changed or removed. Stripping one MAC from a keyed log doesn't trigger rotation: it fails verification.
+- **The limit:** if someone deletes both the log and its head, a fresh chain looks clean. That's why the freeze commit includes `runs/audit/audit.head`, which puts the count and last hash in git history.
 - **`runs/traces/<case>.json`** records every tool call with its parameters, row count, latency, path (MCP or REST) and success.
 - **MCP's own tool-call log** is switched on (`TG_LOG_TOOL_CALLS`).
 - **Redaction:** traces and audit entries pass through `agent/safety.redact`, which removes tokens, secrets, bearer credentials and the Savanna host.

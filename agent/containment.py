@@ -56,7 +56,7 @@ def describe(p: dict) -> str:
     weak = p["customers_touched_on_weak_evidence"]
     blocked = ", ".join(b["card"] for b in p["block"][:8]) + (", ..." if pl["cards_blocked"] > 8 else "")
     if pl["cards_blocked"] == p["ring_size"]:
-        tail = (f"Every ring card has strong evidence of its own, so the plan blocks all {p['ring_size']} "
+        tail = (f"Every ring card clears the {MIN_BLOCK_CONF} confidence bar on its own evidence, so the plan blocks all {p['ring_size']} "
                 f"({blocked}), cutting 100% of it; an expected {pl['expected_innocent_blocked']:.1f} of them could still "
                 f"belong to customers who are not compromised")
     else:
@@ -67,4 +67,4 @@ def describe(p: dict) -> str:
                 f"who are not compromised, against {pl['expected_innocent_blocked']:.1f} for this plan")
     return (f"Containment plan for the analyst (this case's own actions cover only its card): the {p['ring_size']}-card "
             f"ring has ${p['ring_exposure_usd']:,.2f} at risk. " + tail
-            + (f". Blocked on weaker evidence, named for review: {', '.join(w['card'] for w in weak)}" if weak else "") + ".")
+            + (f". Blocked at under 0.9 confidence, named for review: {', '.join(w['card'] for w in weak)}" if weak else "") + ".")
