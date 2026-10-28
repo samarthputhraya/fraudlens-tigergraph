@@ -16,6 +16,7 @@ from agent.detectors import run_detectors  # noqa: E402
 from agent.evidence import gather  # noqa: E402
 from agent.graph_client import GraphClient  # noqa: E402
 from agent.mirror import MirrorGraph  # noqa: E402
+from agent.paths import CASE_PACK_CSV  # noqa: E402
 
 
 def summary(ep) -> dict:
@@ -36,7 +37,7 @@ def summary(ep) -> dict:
 
 def main(ids: list[str]) -> None:
     tg, mi = GraphClient(use_mcp=True), MirrorGraph()
-    cases = [c for c in csv.DictReader((ROOT / "data" / "raw" / "case_pack.csv").open(encoding="utf-8"))
+    cases = [c for c in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))
              if not ids or c["case_id"] in ids]
     bad = 0
     for c in cases:

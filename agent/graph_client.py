@@ -1,7 +1,9 @@
 """Graph access for the agent.
 
-Primary path: the official TigerGraph MCP server (`tigergraph-mcp`, stdio) -> `tigergraph__run_installed_query`.
-Fallback path: pyTigerGraph REST (same installed queries) if the MCP process is unavailable.
+Official path: the TigerGraph MCP server (`tigergraph-mcp`, stdio) -> `tigergraph__run_installed_query`, limited to
+an allowlist of read tools. There is no silent fallback: if MCP is unavailable or a call fails, the investigation
+stops with a DependencyFailure (fail closed). pyTigerGraph REST is used only when the operator chooses it explicitly
+(`--rest`), and the answer records which path ran.
 Every call is recorded (tool, query, params, rows, latency) so the answer file's `tool_calls` is real and every
 evidence item can cite a replayable `query:<name>(...)` reference.
 """
@@ -20,6 +22,8 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+
+from agent.safety import DependencyFailure, audit, fault
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
@@ -149,7 +153,7 @@ class _MCPBridge:
         self.session = await self._session_ctx.__aenter__()
         await self.session.initialize()
 
-    def call(self, tool: str, args: dict, timeout: float = 180) -> dict:
+    def call(self, tool: str, args: dict, timeout: float = 60) -> dict:
         async def _go():
             res = await self.session.call_tool(tool, args)
             text = "".join(getattr(c, "text", "") for c in res.content)
@@ -170,12 +174,14 @@ class GraphClient:
         self.agent = "lead"
         self._mcp = None
         self.use_mcp = use_mcp and os.getenv("TG_USE_MCP", "1") == "1"
+        self.source = "tigergraph-mcp" if self.use_mcp else "tigergraph-rest"
         if self.use_mcp:
             try:
                 self._mcp = _MCPBridge()
             except Exception as e:  # noqa: BLE001
-                print(f"[graph] MCP unavailable ({e}); using pyTigerGraph REST")
-                self._mcp = None
+                # fail closed: never switch to another access path behind the operator's back
+                audit("dependency_failure", {"dependency": "mcp", "step": "connect", "detail": str(e)})
+                raise DependencyFailure("mcp", "connect", str(e)) from None
 
     # ---- core -------------------------------------------------------------------------------
     @staticmethod
@@ -195,8 +201,9 @@ class GraphClient:
         post = self._post_params(query, params)
         t0 = time.time()
         via = "mcp" if self._mcp else "rest"
-        ok = True
         try:
+            if fault("graph", query):
+                raise RuntimeError("fault drill: the graph is unavailable")
             if self._mcp:
                 resp = self._mcp.call("tigergraph__run_installed_query", {"query_name": query, "params": post})
                 if not resp.get("success", False):
@@ -205,19 +212,15 @@ class GraphClient:
             else:
                 from tg import run_query
                 raw = run_query(query, post)
-        except Exception as e:  # noqa: BLE001
-            if self._mcp:  # one REST retry keeps the investigation alive if the MCP call fails
-                from tg import run_query
-                via = "rest"
-                raw = run_query(query, post)
-                print(f"[graph] MCP call failed for {query}: {str(e)[:120]} -> REST ok")
-            else:
-                ok = False
-                raise
-        out = normalize(raw)
+            out = normalize(raw)
+        except Exception as e:  # noqa: BLE001 - fail closed: record the failed call, then stop the investigation
+            self.trace.add(ToolCall(agent or self.agent, "tigergraph__run_installed_query", query,
+                                    {k: v for k, v in params.items() if k != "qv"}, 0, (time.time() - t0) * 1000, False, via))
+            audit("dependency_failure", {"dependency": "graph", "step": query, "via": via, "detail": str(e)})
+            raise DependencyFailure("graph", query, str(e)) from None
         rows = sum(len(v) for v in out.values() if isinstance(v, list))
         self.trace.add(ToolCall(agent or self.agent, "tigergraph__run_installed_query", query,
-                                {k: v for k, v in params.items()}, rows, (time.time() - t0) * 1000, ok, via))
+                                {k: v for k, v in params.items()}, rows, (time.time() - t0) * 1000, True, via))
         return out
 
     def describe_queries(self, agent: str = "lead") -> dict[str, str]:

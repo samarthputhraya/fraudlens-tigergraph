@@ -52,7 +52,7 @@ def lead_plan(case: dict, txn: dict, first_findings: list[dict], catalog: dict |
               + "\n".join(f"- {k}: {v}" for k, v in TOOL_MENU.items()) +
               "\n\nList 2-4 competing hypotheses (fraud patterns or legitimate explanations) and choose at most 3 extra "
               "calls that would best discriminate between them. Choose none if the evidence is already decisive.")
-    return generate_json(prompt, schema, system=SYSTEM, model=FLASH)
+    return generate_json(prompt, schema, system=SYSTEM, model=FLASH, role="planner")
 
 
 SPECIALISTS = {
@@ -78,18 +78,26 @@ def specialist(name: str, case: dict, evidence: dict) -> dict:
               "Give a 2-3 sentence assessment, your risk view, 2-4 key points citing the IDs in the evidence, and what is "
               "still unknown. suggested_pattern is one of card_testing, card_not_present_fraud, card_not_present_new_device, "
               "out_of_region_use, account_takeover, undocumented, none.")
-    return generate_json(prompt, schema, system=SYSTEM, model=FLASH)
+    return generate_json(prompt, schema, system=SYSTEM, model=FLASH, role="specialists")
 
 
 def run_specialists(case: dict, slices: dict) -> dict:
     with ThreadPoolExecutor(max_workers=4) as pool:
         futs = {n: pool.submit(specialist, n, case, slices.get(n, {})) for n in SPECIALISTS}
         out = {}
+        failed = []
         for n, fu in futs.items():
             try:
                 out[n] = fu.result()
-            except Exception as e:  # noqa: BLE001 - a specialist failure must not stop the case
-                out[n] = {"assessment": f"(unavailable: {e})", "risk": "medium", "key_points": []}
+            except Exception as e:  # noqa: BLE001 - collected, then reported as one model failure
+                out[n] = {"assessment": "(model unavailable)", "risk": "unknown", "key_points": []}
+                failed.append(f"{n}: {e}")
+    if failed:
+        # the caller records this as an incomplete step; specialists inform the analyst view, never the decision
+        from agent.safety import DependencyFailure
+        err = DependencyFailure("llm", "specialists", "; ".join(failed))
+        err.partial = out  # type: ignore[attr-defined]
+        raise err
     return out
 
 
@@ -102,7 +110,7 @@ def critic(draft: dict, policy_chunks: list[str]) -> dict:
               "routes (auto/L1/L2) are right for the exposure; R1 (verify before blocking on a weak signal) and R10 are "
               "respected; the stop rule (section 6) is applied. Flag real problems only.\n\n"
               f"POLICY EXCERPTS:\n{chr(10).join(policy_chunks)[:6000]}\n\nDRAFT:\n{_compact(draft, 6000)}")
-    return generate_json(prompt, schema, system=SYSTEM, model=PRO)
+    return generate_json(prompt, schema, system=SYSTEM, model=PRO, role="critic")
 
 
 def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) -> dict:
@@ -131,7 +139,7 @@ def writer(draft: dict, guidance: list[str], want_sar: bool, want_desc: bool) ->
            "carried out, WHY it is suspicious, and the total amount. Follow the FinCEN narrative guidance below.\n" if want_sar else "")
         + ("- pattern_description: 2-3 sentences on what the undocumented pattern is, who it affects and how it was found.\n" if want_desc else "")
         + f"\nFINCEN / POLICY GUIDANCE:\n{chr(10).join(guidance)[:4000]}\n\nDRAFT:\n{_compact(draft, 9000)}")
-    return generate_json(prompt, schema, system=SYSTEM, model=PRO, temperature=0.2)
+    return generate_json(prompt, schema, system=SYSTEM, model=PRO, temperature=0.2, role="writer")
 
 
 ID_RE = re.compile(r"\b(CC-\d{4}|C\d{5}-K\d|C\d{5}|3\d{6})\b")

@@ -4,6 +4,10 @@ intake -> gather (core toolkit on TigerGraph) -> lead_plan (LLM picks extra grap
 parallel) -> decide (detectors, calibrated ledger, policy engine, simulated evidence request) -> recall (hybrid
 GraphRAG: case memory + policy/FinCEN knowledge) -> review (compliance red-team) -> write (summary + SAR) ->
 finalize (assemble, validate, write case memory to TigerGraph).
+
+Fail closed: a graph or tool failure (DependencyFailure from the graph client) propagates and stops the investigation;
+no answer is presented. A model failure can't change the decision, which is code, but it is never hidden: it is
+recorded, the case is escalated to an analyst, and template text says it is a template.
 """
 from __future__ import annotations
 
@@ -23,6 +27,7 @@ from agent.detectors import region_label, run_detectors
 from agent.evidence import P, gather, recall
 from agent.llm import Usage
 from agent.policy import plan, status_of
+from agent.safety import DependencyFailure, audit, redact
 
 ROOT = Path(__file__).resolve().parents[1]
 PATTERN_QUERY = {
@@ -82,9 +87,22 @@ class Investigator:
         self.app = self._build()
 
     # ------------------------------------------------------------------ nodes
+    def _model_failed(self, step: str, e: Exception) -> None:
+        """Record a model failure and carry on with the deterministic decision. Graph failures are re-raised: without
+        the graph there is no evidence, so the investigation stops."""
+        if isinstance(e, DependencyFailure) and e.dependency in ("graph", "mcp"):
+            raise e
+        rec = {"dependency": e.dependency if isinstance(e, DependencyFailure) else "llm", "step": step,
+               "detail": e.detail if isinstance(e, DependencyFailure) else redact(f"{type(e).__name__}: {e}")[:300]}
+        self._failures.append(rec)
+        audit("dependency_failure", {**rec, "case_id": self._case_id})
+        self.emit("warning", {"msg": f"{rec['dependency']} unavailable during {step}: {rec['detail']}"})
+
     def intake(self, s: State) -> State:
         Usage.reset()
         c = s["case"]
+        self._failures: list[dict] = []
+        self._case_id = c["case_id"]
         self.emit("trigger", {"case_id": c["case_id"], "trigger_type": c["trigger_type"], "text": c["trigger_text"],
                               "opened_at": c["opened_at"]})
         return {"t0": time.time(), "calls0": len(self.g.trace.calls)}
@@ -114,7 +132,8 @@ class Investigator:
         try:
             lead = roles.lead_plan(s["case"], t, s["first_findings"], self._catalog)
         except Exception as e:  # noqa: BLE001
-            lead = {"hypotheses": [], "extra_calls": [], "focus": f"(planner unavailable: {e})"}
+            self._model_failed("planner", e)
+            lead = {"hypotheses": [], "extra_calls": [], "focus": "(planner unavailable)"}
         self.emit("plan", {"agent": "lead", "hypotheses": lead.get("hypotheses", []), "calls": lead.get("extra_calls", [])})
         ts, opened = ep.ts, ep.opened_at
         for call in (lead.get("extra_calls") or [])[:3]:
@@ -138,8 +157,11 @@ class Investigator:
                 elif tool == "recurring_match":
                     tol = max(0.5, min(5.0, float(call.get("tol_pct") or 2))) / 100 * float(ep.txn["amt"])
                     ep.extra["recurring_wide"] = self.g.recurring_match(ep.case["card_id"], float(ep.txn["amt"]), round(tol, 2), ts, agent="transaction")
-            except Exception as e:  # noqa: BLE001
-                self.emit("warning", {"msg": f"extra call {tool} failed: {e}"})
+            except DependencyFailure as e:
+                self._model_failed(f"planner:{tool}", e)  # graph failures re-raise and stop the case
+            except (TypeError, ValueError) as e:
+                # the planner asked for a malformed parameter: the extra call is skipped, never guessed
+                self.emit("warning", {"msg": f"planner requested {tool} with an invalid parameter ({e}); skipped"})
         return {"lead": lead}
 
     def specialists(self, s: State) -> State:
@@ -166,7 +188,11 @@ class Investigator:
                           "memory_recall": self._early_recall(s)},
         }
         self.emit("stage", {"stage": "specialists", "agent": "lead", "msg": "Four specialist analysts reviewing their evidence in parallel"})
-        out = roles.run_specialists(s["case"], slices)
+        try:
+            out = roles.run_specialists(s["case"], slices)
+        except Exception as e:  # noqa: BLE001
+            self._model_failed("specialists", e)
+            out = getattr(e, "partial", {})
         for n, o in out.items():
             self.emit("specialist", {"agent": n, "risk": o.get("risk"), "assessment": o.get("assessment"),
                                      "key_points": o.get("key_points", [])})
@@ -233,15 +259,18 @@ class Investigator:
         r, ep = s["result"], s["ep"]
         hyp = PATTERN_QUERY.get(r["pattern"], "")
         devices = sorted(r["facts"].get("connected_devices") or ([] if not ep.txn.get("device") else [ep.txn["device"]]))
-        recall(ep, self.g, hyp, devices[:3], [ep.case["card_id"]] + sorted(r["facts"].get("connected_cards") or [])[:10], "",
-               agent="precedent")
-        if r["pattern"] == "undocumented":
-            # an undocumented pattern is only "matched" by earlier cases with the same signature: search the case memory
-            # restricted to undocumented cases, with the signature itself as the query
-            from agent.llm import embed_query
-            sig = SIGNATURE_QUERY["structuring" if r["facts"].get("structuring") else "device_ring"]
-            ep.extra["similar_undocumented"] = self.g.similar_cases(embed_query(sig), devices[:3], [ep.case["card_id"]], 8,
-                                                                     "undocumented", before=ep.opened_at, agent="precedent")
+        try:
+            recall(ep, self.g, hyp, devices[:3], [ep.case["card_id"]] + sorted(r["facts"].get("connected_cards") or [])[:10], "",
+                   agent="precedent")
+            if r["pattern"] == "undocumented":
+                # an undocumented pattern is only "matched" by earlier cases with the same signature: search the case
+                # memory restricted to undocumented cases, with the signature itself as the query
+                from agent.llm import embed_query
+                sig = SIGNATURE_QUERY["structuring" if r["facts"].get("structuring") else "device_ring"]
+                ep.extra["similar_undocumented"] = self.g.similar_cases(embed_query(sig), devices[:3], [ep.case["card_id"]], 8,
+                                                                         "undocumented", before=ep.opened_at, agent="precedent")
+        except DependencyFailure as e:
+            self._model_failed("memory_recall", e)  # graph failures re-raise and stop the case
         self.emit("memory", {"agent": "precedent", "similar": similar_prior_cases(r),
                              "knowledge": [c.get("section") for c in (ep.knowledge or {}).get("chunks", [])]})
         return {}
@@ -256,7 +285,8 @@ class Investigator:
         try:
             out = roles.critic(draft, [RULES_TEXT] + chunks[:3])
         except Exception as e:  # noqa: BLE001
-            out = {"agree": True, "issues": [f"(reviewer unavailable: {e})"], "what_would_change_verdict": ""}
+            self._model_failed("critic", e)
+            out = {"agree": None, "issues": ["(compliance review unavailable: the model failed)"], "what_would_change_verdict": ""}
         self.emit("review", {"agent": "compliance", **out})
         return {"critic": out}
 
@@ -282,7 +312,7 @@ class Investigator:
                         continue
                     texts[k] = v
             except Exception as e:  # noqa: BLE001
-                self.emit("warning", {"msg": f"writer unavailable: {e}"})
+                self._model_failed("writer", e)
         if not r["evidence_requests"]:
             texts["what_changed"] = "nothing"
         return {"texts": texts}
@@ -331,10 +361,17 @@ class Investigator:
                 written = write_case(ans, r, case["opened_at"])
                 ans["case"]["written_to_graph"] = bool(written.get("ok"))
                 ans["case"]["graph_case_id"] = written.get("graph_case_id", "")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:  # noqa: BLE001 - never report a write that didn't happen
                 ans["case"]["written_to_graph"] = False
                 ans["case"]["graph_case_id"] = ""
-                self.emit("warning", {"msg": f"graph write failed: {e}"})
+                rec = {"dependency": "graph_write", "step": "case_memory",
+                       "detail": e.detail if isinstance(e, DependencyFailure) else redact(f"{type(e).__name__}: {e}")[:300]}
+                self._failures.append(rec)
+                audit("dependency_failure", {**rec, "case_id": case["case_id"]})
+                self.emit("warning", {"msg": f"graph write failed: {rec['detail']}"})
+        if self._failures:
+            self._mark_incomplete(ans)
+        ans["run"] = self._run_meta(s)
         ans["tool_calls"] = len(self.g.trace.calls) - s["calls0"]
         ans["tokens"] = Usage.tokens()
         ans["latency_s"] = round(time.time() - s["t0"], 1)
@@ -343,6 +380,35 @@ class Investigator:
         return {"answer": ans, "problems": problems, "written": written}
 
     # ------------------------------------------------------------------ helpers
+    def _mark_incomplete(self, ans: dict) -> None:
+        """Make a partial run impossible to mistake for a complete one: escalate, say why, label template text."""
+        steps = ", ".join(sorted({f"{f['dependency']}:{f['step']}" for f in self._failures}))
+        note = f"a dependency failed during this investigation ({steps})"
+        nba = ans["next_best_actions"]
+        if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in nba["final"]):
+            nba["final"].append({"action": "ESCALATE_TO_ANALYST", "route": "auto",
+                                 "reason": f"Fail closed: {note}; an analyst must review before anything is acted on"})
+        prior = nba.get("what_changed") or ""
+        nba["what_changed"] = ((prior + " ") if prior and prior != "nothing" else "") + \
+            f"Escalated to an analyst because {note}."
+        ans["case"]["status"] = "escalated"
+        ans["stop_reason"] = f"Stopped incomplete: {note}. " + (ans.get("stop_reason") or "")
+        if any(f["step"] == "writer" for f in self._failures):
+            tag = "[Template text: the model was unavailable, so this was not drafted by the writer; analyst review required.] "
+            ans["case"]["summary"] = tag + ans["case"]["summary"]
+            if ans["sar"].get("narrative"):
+                ans["sar"]["narrative"] = tag + ans["sar"]["narrative"]
+
+    def _run_meta(self, s: State) -> dict:
+        """How and against what this answer was produced (part of every claim's attestation: the 'when' and the data)."""
+        from agent.llm import EMBED, FLASH, PRO
+        from agent.paths import ROUND
+        return {"graph": getattr(self.g, "source", "unknown"), "official": getattr(self.g, "source", "") == "tigergraph-mcp",
+                "data": "round 2: July 2016 - January 2017" if ROUND == "r2" else "round 1: July - December 2016",
+                "models": {"reasoning": PRO, "fast": FLASH, "embedding": EMBED} if self.use_llm else {},
+                "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime(s["t0"])),
+                "complete": not self._failures, "failures": list(self._failures)}
+
     def _early_recall(self, s: State) -> dict:
         """Graph-filtered memory search on the lead's hypotheses, so the Precedent Analyst has case memory to read."""
         ep = s["ep"]
@@ -357,7 +423,8 @@ class Investigator:
             return {"graph_filtered": slim(out.get("graph_hits")), "vector": slim(out.get("vector_hits"))[:4],
                     "earlier_investigations": out.get("investigation_hits", [])[:3]}
         except Exception as e:  # noqa: BLE001
-            return {"error": str(e)[:200]}
+            self._model_failed("early_recall", e)  # graph failures re-raise and stop the case
+            return {"error": "memory recall unavailable"}
 
     def _draft(self, s: State) -> dict:
         r, ep = s["result"], s["ep"]

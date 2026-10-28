@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv  # noqa: E402
+from agent.paths import CASE_PACK_CSV  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 OUT = ROOT / "cases_autonomous"
@@ -128,8 +129,8 @@ def main(limit: int = 16) -> None:
     else:
         from agent.graph_client import GraphClient
         g = GraphClient()
-    bench = {r["flagged_txn_id"] for r in csv.DictReader((ROOT / "data" / "raw" / "case_pack.csv").open(encoding="utf-8"))}
-    bench_cards = {r["card_id"] for r in csv.DictReader((ROOT / "data" / "raw" / "case_pack.csv").open(encoding="utf-8"))}
+    bench = {r["flagged_txn_id"] for r in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))}
+    bench_cards = {r["card_id"] for r in csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8"))}
     hits = [h for h in scan(g) if h["flagged"] not in bench and h["card_id"] not in bench_cards]
     by_kind = defaultdict(list)
     for h in hits:

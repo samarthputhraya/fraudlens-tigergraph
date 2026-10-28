@@ -1,0 +1,183 @@
+{
+ "bank_score": {
+  "auc_october_all": 0.866,
+  "auc_october_alerts_score_ge_0_5": 0.5981,
+  "note": "the bank's risk_score column alone, same validation-month transactions and labels"
+ },
+ "label": "transaction belongs to a confirmed-fraud closed case (closed_cases_history.csv)",
+ "protocol": "validate: jul-sep -> next month; production: jul-oct scores the following month; production labels only from cases closed before 2017-01-01",
+ "n_features": 469,
+ "validation": {
+  "model": "with the bank's risk score",
+  "best_iteration": 198,
+  "n_train": 316984,
+  "n_valid": 100420,
+  "fraud_rate_valid": 0.0327,
+  "auc_october_all": 0.9724,
+  "auc_october_alerts_score_ge_0_5": 0.9331,
+  "n_alerts_score_ge_0_5": 5335,
+  "auc_october_confirmed_vs_cleared": 0.8774,
+  "n_closed_case_txns": 3425,
+  "brier_october_raw": 0.01535,
+  "brier_october_calibrated_in_sample": 0.01486
+ },
+ "validation_without_risk_score": {
+  "model": "without the bank's risk score",
+  "best_iteration": 160,
+  "n_train": 316984,
+  "n_valid": 100420,
+  "fraud_rate_valid": 0.0327,
+  "auc_october_all": 0.9408,
+  "auc_october_alerts_score_ge_0_5": 0.8811,
+  "n_alerts_score_ge_0_5": 5335,
+  "auc_october_confirmed_vs_cleared": 0.897,
+  "n_closed_case_txns": 3425
+ },
+ "reliability_october_raw": [
+  {
+   "bin": "0.00-0.01",
+   "n": 78856,
+   "predicted": 0.0028,
+   "observed": 0.0015
+  },
+  {
+   "bin": "0.01-0.02",
+   "n": 8552,
+   "predicted": 0.014,
+   "observed": 0.0125
+  },
+  {
+   "bin": "0.02-0.05",
+   "n": 5774,
+   "predicted": 0.0308,
+   "observed": 0.0348
+  },
+  {
+   "bin": "0.05-0.10",
+   "n": 2233,
+   "predicted": 0.0698,
+   "observed": 0.0878
+  },
+  {
+   "bin": "0.10-0.20",
+   "n": 1261,
+   "predicted": 0.1402,
+   "observed": 0.1792
+  },
+  {
+   "bin": "0.20-0.30",
+   "n": 513,
+   "predicted": 0.2459,
+   "observed": 0.3158
+  },
+  {
+   "bin": "0.30-0.50",
+   "n": 622,
+   "predicted": 0.3906,
+   "observed": 0.455
+  },
+  {
+   "bin": "0.50-0.70",
+   "n": 500,
+   "predicted": 0.5976,
+   "observed": 0.65
+  },
+  {
+   "bin": "0.70-0.90",
+   "n": 790,
+   "predicted": 0.8126,
+   "observed": 0.7481
+  },
+  {
+   "bin": "0.90-1.00",
+   "n": 1319,
+   "predicted": 0.9594,
+   "observed": 0.8143
+  }
+ ],
+ "top_features": [
+  {
+   "feature": "risk_score",
+   "gain_share": 0.1474
+  },
+  {
+   "feature": "acct_days_since_fraud",
+   "gain_share": 0.0488
+  },
+  {
+   "feature": "acct_prior_fraud",
+   "gain_share": 0.0416
+  },
+  {
+   "feature": "V258",
+   "gain_share": 0.0384
+  },
+  {
+   "feature": "C1",
+   "gain_share": 0.0316
+  },
+  {
+   "feature": "C14",
+   "gain_share": 0.0311
+  },
+  {
+   "feature": "D2",
+   "gain_share": 0.0238
+  },
+  {
+   "feature": "TransactionAmt",
+   "gain_share": 0.0184
+  },
+  {
+   "feature": "V244",
+   "gain_share": 0.0177
+  },
+  {
+   "feature": "V257",
+   "gain_share": 0.0167
+  },
+  {
+   "feature": "C4",
+   "gain_share": 0.0166
+  },
+  {
+   "feature": "card2",
+   "gain_share": 0.0155
+  },
+  {
+   "feature": "C13",
+   "gain_share": 0.0145
+  },
+  {
+   "feature": "fq_P_emaildomain",
+   "gain_share": 0.0125
+  },
+  {
+   "feature": "V243",
+   "gain_share": 0.0121
+  },
+  {
+   "feature": "C8",
+   "gain_share": 0.0113
+  },
+  {
+   "feature": "V140",
+   "gain_share": 0.011
+  },
+  {
+   "feature": "fq_R_emaildomain",
+   "gain_share": 0.0109
+  },
+  {
+   "feature": "fq_card1",
+   "gain_share": 0.0107
+  },
+  {
+   "feature": "fq_addr1",
+   "gain_share": 0.0086
+  }
+ ],
+ "scored_mean_p_cal": 0.02,
+ "n_scored": 233534,
+ "seconds": 226.3
+}

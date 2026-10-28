@@ -25,3 +25,4 @@ video/voice/cache/
 video/music/clips/*.wav
 .claude/
 skills-lock.json
+data/raw_r2/

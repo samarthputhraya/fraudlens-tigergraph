@@ -2,15 +2,38 @@
 
 One CSV per loading job file. Transactions carry their own edges (MADE, BILLED_IN,
 PURCHASER_EMAIL, RECIPIENT_EMAIL) so the largest file is uploaded only once.
+
+  python graph/export.py                      # every row
+  python graph/export.py --since 2017-01-01   # only what a graph already holding July-December needs:
+                                              # January rows, aggregates they changed, all closed cases
 """
+import sys
 from pathlib import Path
 
 import duckdb
 
 ROOT = Path(__file__).resolve().parents[1]
-PREP = ROOT / "data" / "prep"
-OUT = PREP / "load"
+sys.path.insert(0, str(ROOT))
+from agent.paths import DB, LOAD_DIR as OUT  # noqa: E402
+
 OUT.mkdir(parents=True, exist_ok=True)
+SINCE = sys.argv[sys.argv.index("--since") + 1] if "--since" in sys.argv else None
+
+# Row filters for a delta export. Closed cases are always exported in full (the history was replaced).
+_NEW_TXN = "(SELECT TransactionID FROM txn WHERE ts_dt >= TIMESTAMP '{since}')"
+DELTA = {
+    "customers": "customer_id IN (SELECT customer_id FROM txn WHERE ts_dt >= TIMESTAMP '{since}')",
+    "cards": "last_ts >= '{since}'",
+    "accounts": "last_ts >= '{since}'",
+    "account_edges": "txn_id IN " + _NEW_TXN,
+    "transactions": "ts >= '{since}'",
+    "next_edges": "dst IN " + _NEW_TXN,
+    "devices": "id IN (SELECT i.device_profile FROM ident i JOIN txn t USING (TransactionID) "
+               "WHERE t.ts_dt >= TIMESTAMP '{since}')",
+    "device_edges": "txn_id IN " + _NEW_TXN,
+    "card_device": "last_ts >= '{since}'",
+    "card_region": "last_ts >= '{since}'",
+}
 
 
 def num(col: str) -> str:
@@ -18,6 +41,8 @@ def num(col: str) -> str:
 
 
 def copy(con: duckdb.DuckDBPyConnection, name: str, sql: str) -> None:
+    if SINCE and name in DELTA:
+        sql = f"SELECT * FROM ({sql}) WHERE {DELTA[name].format(since=SINCE)}"
     path = (OUT / f"{name}.csv").as_posix()
     con.execute(f"COPY ({sql}) TO '{path}' (HEADER, DELIMITER ',', QUOTE '\"')")
     n = con.execute(f"SELECT count(*) FROM ({sql})").fetchone()[0]
@@ -26,7 +51,7 @@ def copy(con: duckdb.DuckDBPyConnection, name: str, sql: str) -> None:
 
 
 def main() -> None:
-    con = duckdb.connect(str(PREP / "hhgoa.duckdb"))
+    con = duckdb.connect(str(DB))
 
     copy(con, "customers", "SELECT DISTINCT customer_id FROM txn ORDER BY 1")
 

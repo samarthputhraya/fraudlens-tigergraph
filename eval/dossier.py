@@ -11,11 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from agent.evidence import P, gather  # noqa: E402
 from agent.mirror import MirrorGraph  # noqa: E402
+from agent.paths import CASE_PACK_CSV  # noqa: E402
 
 
 def main(ids: list[str]) -> None:
     g = MirrorGraph()
-    cases = list(csv.DictReader((ROOT / "data" / "raw" / "case_pack.csv").open(encoding="utf-8")))
+    cases = list(csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8")))
     for c in cases:
         if ids and c["case_id"] not in ids:
             continue

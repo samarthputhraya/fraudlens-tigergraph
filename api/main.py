@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import hmac
 import json
 import os
 import queue
@@ -16,7 +17,7 @@ import time
 from datetime import timedelta
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -25,14 +26,15 @@ from sse_starlette.sse import EventSourceResponse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv  # noqa: E402
+from agent.paths import CASE_PACK_CSV, CASES_OUT  # noqa: E402
+from agent.safety import DependencyFailure, audit, read_audit, verify_audit  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 
-CASES = ROOT / "cases"
+CASES = CASES_OUT
 AUTO = ROOT / "cases_autonomous"
 ADHOC = ROOT / "runs" / "adhoc"
 TRACES = ROOT / "runs" / "traces"
-APPROVALS = ROOT / "runs" / "approvals.json"
 for d in (CASES, ADHOC, TRACES):
     d.mkdir(parents=True, exist_ok=True)
 
@@ -46,17 +48,32 @@ def graph():
     global _graph
     with _graph_lock:
         if _graph is None:
-            if os.getenv("TG_HOST") and os.getenv("FRAUDLENS_MIRROR", "0") != "1":
-                from agent.graph_client import GraphClient
-                _graph = GraphClient(use_mcp=os.getenv("TG_USE_MCP", "1") == "1")
-            else:
+            # The mirror is an explicit development choice (FRAUDLENS_MIRROR=1), never a silent fallback: without it,
+            # a missing TG_HOST is a startup error, and an unreachable graph raises DependencyFailure.
+            if _mirror_mode():
                 from agent.mirror import MirrorGraph
                 _graph = MirrorGraph()
+            elif not os.getenv("TG_HOST"):
+                raise DependencyFailure("graph", "startup", "TG_HOST is not set; set it, or set FRAUDLENS_MIRROR=1 "
+                                                            "for the offline development mirror")
+            else:
+                from agent.graph_client import GraphClient
+                _graph = GraphClient(use_mcp=os.getenv("TG_USE_MCP", "1") == "1")
     return _graph
 
 
+def _mirror_mode() -> bool:
+    return os.getenv("FRAUDLENS_MIRROR", "0") == "1"
+
+
+@app.exception_handler(DependencyFailure)
+async def _dependency_failure(_, exc: DependencyFailure):
+    # fail closed, out loud: the caller sees which dependency failed; nothing is presented as complete
+    return JSONResponse(status_code=503, content={"ok": False, "error": str(exc), "dependency": exc.dependency})
+
+
 def _pack() -> list[dict]:
-    rows = list(csv.DictReader((ROOT / "data" / "raw" / "case_pack.csv").open(encoding="utf-8")))
+    rows = list(csv.DictReader(CASE_PACK_CSV.open(encoding="utf-8")))
     for r in rows:
         r["source"] = "benchmark"
     for f in sorted(ADHOC.glob("*.case.json")):
@@ -96,10 +113,12 @@ def _row(r: dict) -> dict:
 
 @app.get("/api/health")
 def health():
-    tg = bool(os.getenv("TG_HOST")) and os.getenv("FRAUDLENS_MIRROR", "0") != "1"
-    return {"graph": "TigerGraph Savanna" if tg else "offline mirror", "host": os.getenv("TG_HOST", ""),
+    tg = bool(os.getenv("TG_HOST")) and not _mirror_mode()
+    ok, chain = verify_audit("approvals")
+    return {"graph": "TigerGraph Savanna" if tg else ("offline mirror (not official)" if _mirror_mode() else "not configured"),
             "graph_name": os.getenv("TG_GRAPHNAME", "Fraud"), "mcp": tg and os.getenv("TG_USE_MCP", "1") == "1",
-            "llm": f"{os.getenv('LLM_MODEL_PRO')} + {os.getenv('LLM_MODEL_FLASH')} (Vertex AI)"}
+            "llm": f"{os.getenv('LLM_MODEL_PRO')} + {os.getenv('LLM_MODEL_FLASH')} (Vertex AI)",
+            "approvals_configured": bool(_approver_tokens()), "approval_log": chain if ok else f"TAMPERED: {chain}"}
 
 
 @app.get("/api/cases")
@@ -141,7 +160,7 @@ async def run_case(case_id: str):
                 events.append({"t": round(time.time(), 2), "kind": kind, **{k: v for k, v in data.items() if k != "answer"}})
                 q.put((kind, data))
             try:
-                inv = Investigator(g, emit=emit, write_graph=os.getenv("TG_HOST", "") != "" and os.getenv("FRAUDLENS_MIRROR", "0") != "1")
+                inv = Investigator(g, emit=emit, write_graph=os.getenv("TG_HOST", "") != "" and not _mirror_mode())
                 out = inv.run(row)
                 ans = out["answer"]
                 dest = CASES if row.get("source", "benchmark") == "benchmark" else ADHOC
@@ -156,8 +175,11 @@ async def run_case(case_id: str):
                          "problems": out.get("problems"), "written": out.get("written")}
                 (ROOT / "runs" / "live").mkdir(parents=True, exist_ok=True)
                 (ROOT / "runs" / "live" / f"{case_id}.trace.json").write_text(json.dumps(trace, default=str, indent=1), encoding="utf-8")
+            except DependencyFailure as e:
+                audit("case_stopped", {"case_id": case_id, **e.as_dict()})
+                q.put(("stopped", {"msg": f"Investigation stopped: {e}. No answer was produced.", **e.as_dict()}))
             except Exception as e:  # noqa: BLE001
-                q.put(("warning", {"msg": f"investigation failed: {e}"}))
+                q.put(("warning", {"msg": f"investigation failed: {type(e).__name__}"}))
             finally:
                 g.trace.listeners.remove(on_call)
                 q.put(("done", {}))
@@ -200,14 +222,45 @@ def investigate(body: NewInvestigation):
     return _row(row)
 
 
-def _approval_store() -> dict:
-    return json.loads(APPROVALS.read_text()) if APPROVALS.exists() else {}
+# ---- approvals --------------------------------------------------------------------------------------------------
+# Policy section 2: L1 actions need a team lead (or a fraud manager), L2 actions need a fraud manager. The role is
+# decided on the server from the bearer token, never read from the request. Each action gets exactly one decision,
+# appended to a hash-chained log (runs/audit/approvals.jsonl), so a decision can't be edited or replaced afterwards.
+
+ALLOWED_ROLES = {"L1": {"team_lead", "fraud_manager"}, "L2": {"fraud_manager"}}
+
+
+def _approver_tokens() -> dict[str, str]:
+    """FRAUDLENS_APPROVER_TOKENS="team_lead:<token>,fraud_manager:<token>" (in .env). Returns token -> role."""
+    out = {}
+    for part in os.getenv("FRAUDLENS_APPROVER_TOKENS", "").split(","):
+        role, _, token = part.strip().partition(":")
+        if role in ("team_lead", "fraud_manager") and len(token) >= 16:
+            out[token] = role
+    return out
+
+
+def _role_for(authorization: str | None) -> str:
+    tokens = _approver_tokens()
+    if not tokens:
+        raise HTTPException(503, "Approvals are not configured on this server (FRAUDLENS_APPROVER_TOKENS).")
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "Sign in as an approver: send Authorization: Bearer <token>.")
+    given = authorization[7:].strip()
+    for token, role in tokens.items():
+        if hmac.compare_digest(given.encode(), token.encode()):
+            return role
+    raise HTTPException(401, "That approver token is not valid.")
+
+
+def _decisions() -> dict[str, dict]:
+    return {e["data"]["action_id"]: e for e in read_audit("approvals") if e["event"] == "approval_decision"}
 
 
 @app.get("/api/approvals")
 def approvals():
     from agent.case_writer import graph_case_id
-    store = _approval_store()
+    decided = _decisions()
     out = []
     for r in _pack():
         a = _answer(r["case_id"])
@@ -218,38 +271,58 @@ def approvals():
             if act["route"] == "auto":
                 continue
             aid = f"{gid}-F{i}"
-            status = store.get(aid, {}).get("status") or ("pending_approval_team_lead" if act["route"] == "L1" else "pending_approval_fraud_manager")
+            d = decided.get(aid)
+            status = d["data"]["status"] if d else ("pending_approval_team_lead" if act["route"] == "L1" else "pending_approval_fraud_manager")
             out.append({"action_id": aid, "case_id": r["case_id"], "action": act["action"], "route": act["route"],
-                        "reason": act["reason"], "status": status, "exposure_usd": a["case"]["exposure_usd"]})
+                        "reason": act["reason"], "status": status, "exposure_usd": a["case"]["exposure_usd"],
+                        "decided_at": d["ts"] if d else None})
     return out
 
 
 class Decision(BaseModel):
     approve: bool
-    role: str
+    note: str = ""
 
 
 @app.post("/api/approvals/{action_id}")
-def decide(action_id: str, body: Decision):
+def decide(action_id: str, body: Decision, authorization: str | None = Header(default=None)):
+    role = _role_for(authorization)  # 401/503 before anything else is revealed
     item = next((x for x in approvals() if x["action_id"] == action_id), None)
     if not item:
         raise HTTPException(404, "unknown action")
-    allowed = {"L1": {"team_lead", "fraud_manager"}, "L2": {"fraud_manager"}}[item["route"]]
-    if body.role not in allowed:
-        return {"ok": False, "status": item["status"],
-                "error": f"A {body.role.replace('_', ' ')} cannot approve an {item['route']} action ({item['action']}); "
-                         f"policy section 2 requires {'a fraud manager' if item['route'] == 'L2' else 'a team lead'}."}
-    status = ("approved_by_" if body.approve else "rejected_by_") + body.role
-    store = _approval_store()
-    store[action_id] = {"status": status, "at": time.strftime("%Y-%m-%d %H:%M:%S")}
-    APPROVALS.write_text(json.dumps(store, indent=1))
-    if os.getenv("TG_HOST") and os.getenv("FRAUDLENS_MIRROR", "0") != "1":
+    if role not in ALLOWED_ROLES[item["route"]]:
+        audit("approval_refused", {"action_id": action_id, "role": role, "route": item["route"], "action": item["action"]},
+              log="approvals")
+        raise HTTPException(403, f"A {role.replace('_', ' ')} cannot decide an {item['route']} action ({item['action']}); "
+                                 f"policy section 2 requires {'a fraud manager' if item['route'] == 'L2' else 'a team lead or fraud manager'}.")
+    earlier = _decisions().get(action_id)
+    if earlier:
+        raise HTTPException(409, f"This action was already decided ({earlier['data']['status']}) at {earlier['ts']}. "
+                                 f"Decisions are final and can't be changed.")
+    status = ("approved_by_" if body.approve else "rejected_by_") + role
+    if os.getenv("TG_HOST") and not _mirror_mode():
         try:
             from agent.case_writer import decide_action
-            decide_action(action_id, body.approve, body.role)
-        except Exception as e:  # noqa: BLE001
-            return {"ok": True, "status": status, "warning": f"graph update failed: {e}"}
-    return {"ok": True, "status": status}
+            res = decide_action(action_id, body.approve, role)
+            if not res.get("ok"):
+                raise RuntimeError(res.get("error") or "the graph rejected the decision")
+        except Exception as e:  # noqa: BLE001 - never report a decision as saved when the graph didn't take it
+            audit("approval_write_failed", {"action_id": action_id, "role": role, "detail": str(e)}, log="approvals")
+            raise HTTPException(502, "The graph update failed, so the decision was NOT recorded. Try again.") from None
+    entry = audit("approval_decision", {"action_id": action_id, "case_id": item["case_id"], "action": item["action"],
+                                        "route": item["route"], "role": role, "approve": body.approve,
+                                        "status": status, "note": body.note[:500]}, log="approvals")
+    return {"ok": True, "status": status, "decided_at": entry["ts"], "audit_hash": entry["hash"]}
+
+
+@app.get("/api/audit/verify")
+def audit_verify():
+    """Recompute both hash chains: any edited or removed entry is reported."""
+    out = {}
+    for log in ("audit", "approvals"):
+        ok, msg = verify_audit(log)
+        out[log] = {"ok": ok, "message": msg, "entries": len(read_audit(log))}
+    return out
 
 
 class Reprove(BaseModel):
@@ -360,7 +433,7 @@ def metrics():
     sar = 0
     exp = calls = toks = lat = 0.0
     n = 0
-    for f in CASES.glob("HHG-*.json"):
+    for f in CASES.glob("*.json"):
         a = json.loads(f.read_text(encoding="utf-8"))
         c = a["case"]
         verdicts[c["verdict"]] = verdicts.get(c["verdict"], 0) + 1
@@ -381,7 +454,9 @@ def metrics():
                       "devices": r.get("devices") or ([r["device"]] if r.get("device") else []),
                       "fraud_cases": r.get("device_cases") or r.get("fraud_cases_on_device") or []})
     rings.sort(key=lambda r: -len(r["members"]))
-    model_rep = ROOT / "eval" / "model_report.json"
+    model_rep = ROOT / "eval" / "model_report_r2.json"
+    if not model_rep.exists():
+        model_rep = ROOT / "eval" / "model_report.json"
     model = json.loads(model_rep.read_text(encoding="utf-8")) if model_rep.exists() else None
     return {"backtest": backtest, "portfolio": {"verdicts": verdicts, "patterns": patterns, "sar_filed": sar,
                                                 "total_exposure": round(exp, 2), "avg_tool_calls": round(calls / max(n, 1), 1),

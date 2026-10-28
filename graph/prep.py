@@ -5,14 +5,20 @@ Derives `card_id` (customer_id + "-K" + rank of the sorted distinct
 profile id (DeviceInfo | id_30 | id_31 | id_33), then validates the card_id
 rule against every transaction referenced by the closed cases.
 """
+import sys
 from pathlib import Path
 
 import duckdb
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw"
-PREP = ROOT / "data" / "prep"
+sys.path.insert(0, str(ROOT))
+from agent.paths import CASE_PACK_CSV, CLOSED_CSV, DB, IDENT_CSVS, PREP, ROUND, TXN_CSVS  # noqa: E402
+
 PREP.mkdir(parents=True, exist_ok=True)
+
+
+def _csvs(paths) -> str:
+    return "[" + ", ".join(f"'{p.as_posix()}'" for p in paths) + "]"
 
 # Unnamed Vesta features kept as weak signals (documented as unnamed in evidence).
 KEEP_C = [f"C{i}" for i in (1, 2, 5, 6, 9, 11, 13, 14)]
@@ -22,7 +28,8 @@ KEEP_V = ["V258", "V257", "V294", "V283", "V317", "V307", "V127", "V133", "V70",
 
 
 def main() -> None:
-    con = duckdb.connect(str(PREP / "hhgoa.duckdb"))
+    print(f"round {ROUND}: building {DB.name}")
+    con = duckdb.connect(str(DB))
     con.execute("PRAGMA threads=16")
 
     cols = ", ".join(KEEP_C + KEEP_D + KEEP_M + KEEP_V)
@@ -32,7 +39,7 @@ def main() -> None:
                card1, card2, card3, card4, card5, card6, addr1, addr2, dist1, dist2,
                P_emaildomain, R_emaildomain, {cols},
                customer_id, ts, channel, risk_score
-        FROM read_csv('{(RAW / "transactions.csv").as_posix()}', all_varchar=true, header=true)
+        FROM read_csv({_csvs(TXN_CSVS)}, all_varchar=true, header=true, union_by_name=true)
     """)
 
     # card_id: rank of the distinct (card4, card6) pair within the customer, '' sorts first.
@@ -67,16 +74,16 @@ def main() -> None:
                id_12, id_15, id_16, id_23, id_28, id_29, id_30, id_31, id_33, id_34, id_35, id_38,
                coalesce(DeviceInfo,'') || ' | ' || coalesce(id_30,'') || ' | ' ||
                coalesce(id_31,'') || ' | ' || coalesce(id_33,'') AS device_profile
-        FROM read_csv('{(RAW / "identity.csv").as_posix()}', all_varchar=true, header=true)
+        FROM read_csv({_csvs(IDENT_CSVS)}, all_varchar=true, header=true, union_by_name=true)
     """)
 
     con.execute(f"""
         CREATE OR REPLACE TABLE closed AS
-        SELECT * FROM read_csv('{(RAW / "closed_cases_history.csv").as_posix()}', all_varchar=true, header=true)
+        SELECT * FROM read_csv('{CLOSED_CSV.as_posix()}', all_varchar=true, header=true)
     """)
     con.execute(f"""
         CREATE OR REPLACE TABLE case_pack AS
-        SELECT * FROM read_csv('{(RAW / "case_pack.csv").as_posix()}', all_varchar=true, header=true)
+        SELECT * FROM read_csv('{CASE_PACK_CSV.as_posix()}', all_varchar=true, header=true)
     """)
 
     # Validate the card_id rule against every closed-case transaction.

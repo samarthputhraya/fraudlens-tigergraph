@@ -15,7 +15,7 @@ import numpy as np
 from agent.graph_client import AS_OF_NOW, ToolCall, Trace, fmt_ts
 
 ROOT = Path(__file__).resolve().parents[1]
-DB = ROOT / "data" / "prep" / "hhgoa.duckdb"
+from agent.paths import DB, MODEL_SCORES  # noqa: E402
 
 TXN_COLS = """t.TransactionID AS id, t.card_id, t.customer_id, strftime(t.ts_dt, '%Y-%m-%d %H:%M:%S') AS ts, t.amt,
   t.ProductCD AS product, t.channel, t.score AS risk_score, coalesce(t.addr1,'') AS addr1,
@@ -31,7 +31,7 @@ TXN_COLS = """t.TransactionID AS id, t.card_id, t.customer_id, strftime(t.ts_dt,
 class MirrorGraph:
     def __init__(self) -> None:
         self.con = duckdb.connect(str(DB), read_only=True)
-        scores = ROOT / "data" / "prep" / "model_scores.parquet"
+        scores = MODEL_SCORES
         if scores.exists():
             self.con.execute(f"CREATE TEMP VIEW ms AS SELECT CAST(TransactionID AS VARCHAR) tid, p_cal "
                              f"FROM read_parquet('{scores.as_posix()}')")
@@ -39,12 +39,35 @@ class MirrorGraph:
             self.con.execute("CREATE TEMP VIEW ms AS SELECT '' tid, -1.0 p_cal WHERE false")
         self.trace = Trace()
         self.agent = "lead"
+        self.source = "offline-mirror"  # never official: answers produced here are labelled as such
+        for name in self.QUERIES:
+            setattr(self, name, self._guard(name, getattr(self, name)))
         self._closed_emb = None
         self._know = None
         self._acct_ready = False
         # temporal backtest controls: only closed cases opened before `cutoff` exist, and `exclude` are masked
         self.cutoff: str | None = None
         self.exclude: set = set()
+
+    QUERIES = ("txn_context", "card_window", "card_profile", "recurring_match", "device_neighbors", "region_activity",
+               "prior_cases", "account_history", "similar_cases", "search_knowledge", "model_ring_scan", "ids_exist")
+
+    def _guard(self, name: str, fn):
+        """Same fail-closed contract as GraphClient.run: a failed query raises DependencyFailure and is logged."""
+        from agent.safety import DependencyFailure, audit, fault
+
+        def wrapped(*args, **kwargs):
+            try:
+                if fault("graph", name):
+                    raise RuntimeError("fault drill: the graph is unavailable")
+                return fn(*args, **kwargs)
+            except DependencyFailure:
+                raise
+            except Exception as e:  # noqa: BLE001
+                self.trace.add(ToolCall(kwargs.get("agent") or self.agent, "mirror", name, {}, 0, 0.0, False, "mirror"))
+                audit("dependency_failure", {"dependency": "graph", "step": name, "via": "mirror", "detail": str(e)})
+                raise DependencyFailure("graph", name, str(e)) from None
+        return wrapped
 
     def _visible(self, case_id: str, opened_at: str | None) -> bool:
         if case_id in self.exclude:

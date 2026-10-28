@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from agent.llm import embed  # noqa: E402
+from agent.paths import CLOSED_CSV  # noqa: E402
 
 OUT = ROOT / "data" / "prep" / "closed_emb.json"
 
@@ -19,7 +20,7 @@ def case_text(r: dict) -> str:
 
 
 def main() -> None:
-    rows = list(csv.DictReader((ROOT / "data" / "raw" / "closed_cases_history.csv").open(encoding="utf-8")))
+    rows = list(csv.DictReader(CLOSED_CSV.open(encoding="utf-8")))
     embs = embed([case_text(r) for r in rows])
     OUT.write_text(json.dumps({r["case_id"]: e for r, e in zip(rows, embs)}), encoding="utf-8")
     print(f"embedded {len(rows)} closed cases -> {OUT}")

@@ -11,22 +11,22 @@ The resolved account is the same entity the graph uses: card_id + billing region
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import duckdb
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw"
-PREP = ROOT / "data" / "prep"
+from agent.paths import CLOSED_CSV, DB, IDENT_CSVS, PREP, R2, ROOT, TXN_CSVS  # noqa: F401 (ROOT is re-exported)
+
+_SUFFIX = "_r2" if R2 else ""
+RAW_TXN = PREP / f"raw_txn{_SUFFIX}.parquet"
+RAW_IDENT = PREP / f"raw_ident{_SUFFIX}.parquet"
 
 
 def _cache_raw(con: duckdb.DuckDBPyConnection) -> None:
     PREP.mkdir(parents=True, exist_ok=True)
-    for name, src in (("raw_txn.parquet", "transactions.csv"), ("raw_ident.parquet", "identity.csv")):
-        out = PREP / name
+    for out, srcs in ((RAW_TXN, TXN_CSVS), (RAW_IDENT, IDENT_CSVS)):
         if not out.exists():
-            con.execute(f"copy (select * from read_csv_auto('{(RAW / src).as_posix()}', sample_size=-1)) "
+            files = "[" + ", ".join(f"'{p.as_posix()}'" for p in srcs) + "]"
+            con.execute(f"copy (select * from read_csv_auto({files}, sample_size=-1, union_by_name=true)) "
                         f"to '{out.as_posix()}' (format parquet)")
 
 
@@ -34,14 +34,14 @@ def connect() -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.execute("SET enable_progress_bar=false")
     _cache_raw(con)
-    con.execute(f"create or replace view t as select * from read_parquet('{(PREP / 'raw_txn.parquet').as_posix()}')")
-    con.execute(f"create or replace view i as select * from read_parquet('{(PREP / 'raw_ident.parquet').as_posix()}')")
-    con.execute(f"attach '{(PREP / 'hhgoa.duckdb').as_posix()}' as p (read_only)")
+    con.execute(f"create or replace view t as select * from read_parquet('{RAW_TXN.as_posix()}')")
+    con.execute(f"create or replace view i as select * from read_parquet('{RAW_IDENT.as_posix()}')")
+    con.execute(f"attach '{DB.as_posix()}' as p (read_only)")
     return con
 
 
 def _closed_case_rows(con: duckdb.DuckDBPyConnection) -> None:
-    closed = pd.read_csv(RAW / "closed_cases_history.csv")
+    closed = pd.read_csv(CLOSED_CSV)
     rows = []
     for _, r in closed.iterrows():
         for x in str(r.txn_ids).split("|"):
@@ -120,11 +120,14 @@ def build(con: duckdb.DuckDBPyConnection | None = None) -> pd.DataFrame:
         from acc full outer join crd using (TransactionID)
     """)
     df = con.execute("""
-        select f.* exclude (tts), month(f.tts) as month, hour(f.tts) as hour, dayofweek(f.tts) as dow,
+        select f.* exclude (tts), month(f.tts) as month, year(f.tts) * 12 + month(f.tts) as ym, hour(f.tts) as hour, dayofweek(f.tts) as dow,
                m.* exclude (TransactionID),
                (f.TransactionID in (select TransactionID from cx where outcome='confirmed_fraud'))::int as y,
-               (f.TransactionID in (select TransactionID from cx where outcome='cleared'))::int as cleared
+               (f.TransactionID in (select TransactionID from cx where outcome='cleared'))::int as cleared,
+               lc.label_closed_at
         from feats f left join mem m using (TransactionID)
+        left join (select TransactionID, min(closed_at) as label_closed_at from cx
+                   where outcome='confirmed_fraud' group by 1) lc using (TransactionID)
     """).df()
     for c in ("acct_prior_fraud", "acct_prior_cleared", "card_prior_fraud", "card_prior_cleared"):
         df[c] = df[c].fillna(0)
@@ -135,7 +138,7 @@ def build(con: duckdb.DuckDBPyConnection | None = None) -> pd.DataFrame:
 
 
 # identifiers, timestamps, labels and look-up keys are never model inputs
-NON_FEATURES = {"TransactionID", "TransactionDT", "ts", "y", "cleared", "month", "card_id", "account_id", "customer_id",
+NON_FEATURES = {"TransactionID", "TransactionDT", "ts", "y", "cleared", "month", "ym", "label_closed_at", "card_id", "account_id", "customer_id",
                 "card1", "device_profile"}
 
 

@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from agent.paths import CASE_PACK_CSV  # noqa: E402
 
 
 def results_table() -> str:
     rows = ["| Case | Trigger | Verdict | p | Pattern | Exposure | SAR | Initial → Final actions | Graph |",
             "|---|---|---|---|---|---|---|---|---|"]
-    trig = {r.split(",")[0]: r.split(",")[2] for r in (ROOT / "data" / "raw" / "case_pack.csv").read_text(encoding="utf-8").splitlines()[1:]}
+    trig = {r.split(",")[0]: r.split(",")[2] for r in CASE_PACK_CSV.read_text(encoding="utf-8").splitlines()[1:]}
     tot = {"calls": 0, "tokens": 0, "lat": 0.0, "n": 0}
     for f in sorted((ROOT / "cases").glob("HHG-*.json")):
         a = json.loads(f.read_text(encoding="utf-8"))

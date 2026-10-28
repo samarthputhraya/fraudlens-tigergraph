@@ -1,4 +1,9 @@
-"""Gemini on Vertex AI: text generation, JSON generation and embeddings, with token accounting and disk caching."""
+"""Gemini on Vertex AI: text generation, JSON generation and embeddings, with token accounting and disk caching.
+
+Bounded and fail-closed: each call has a timeout and one retry on the same model (no silent switch to another model),
+then raises DependencyFailure("llm", <role>, ...). Unparseable JSON is a failure too. The disk cache makes a re-run of
+the same case return the same text, which keeps answers reproducible.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -12,6 +17,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from agent.safety import DependencyFailure, fault
+
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
@@ -20,6 +27,9 @@ FLASH = os.getenv("LLM_MODEL_FLASH", "gemini-3.5-flash")
 EMBED = os.getenv("EMBED_MODEL", "text-embedding-005")
 CACHE = ROOT / "runs" / "llm_cache"
 CACHE.mkdir(parents=True, exist_ok=True)
+
+TIMEOUT_MS = {"flash": int(os.getenv("LLM_TIMEOUT_FLASH_MS", "45000")), "pro": int(os.getenv("LLM_TIMEOUT_PRO_MS", "90000"))}
+ATTEMPTS = 2  # one try plus one retry, then fail closed
 
 _client = None
 _lock = threading.Lock()
@@ -51,7 +61,7 @@ def client() -> genai.Client:
         if _client is None:
             _client = genai.Client(vertexai=True, project=os.environ["GOOGLE_CLOUD_PROJECT"],
                                    location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
-                                   http_options=types.HttpOptions(timeout=int(os.getenv("LLM_TIMEOUT_MS", "150000"))))
+                                   http_options=types.HttpOptions(timeout=TIMEOUT_MS["pro"]))
     return _client
 
 
@@ -60,9 +70,14 @@ def _key(*parts) -> str:
 
 
 def generate(prompt: str, system: str = "", model: str | None = None, json_schema: dict | None = None,
-             temperature: float = 0.2, cache: bool = True, usage_sink: list | None = None) -> str:
+             temperature: float = 0.2, cache: bool = True, usage_sink: list | None = None, role: str = "llm") -> str:
     """Generate text (or JSON when json_schema is given). Cached on disk by (model, system, prompt, schema)."""
     model = model or PRO
+    if fault("llm", role) or fault("llm_timeout", role):
+        raise DependencyFailure("llm", role, "fault drill: the model call timed out" if fault("llm_timeout", role)
+                                else "fault drill: the model is unavailable")
+    if fault("llm_garbage", role):
+        return "}{ this is not the JSON you asked for"
     key = _key(model, system, prompt, json_schema, temperature)
     path = CACHE / f"{key}.json"
     if cache and path.exists():
@@ -72,13 +87,11 @@ def generate(prompt: str, system: str = "", model: str | None = None, json_schem
             usage_sink.append(rec.get("tokens", 0))
         return rec["text"]
     last = None
-    for attempt in range(3):
-        if attempt == 2 and model != FLASH:
-            model = FLASH  # degrade gracefully to the fast model on repeated failures
+    for attempt in range(ATTEMPTS):
         cfg = types.GenerateContentConfig(
             temperature=temperature, system_instruction=system or None,
             thinking_config=types.ThinkingConfig(thinking_level="low" if model == FLASH else "medium"),
-            http_options=types.HttpOptions(timeout=60000 if model == FLASH else 150000))
+            http_options=types.HttpOptions(timeout=TIMEOUT_MS["flash" if model == FLASH else "pro"]))
         if json_schema:
             cfg.response_mime_type = "application/json"
             cfg.response_json_schema = json_schema
@@ -91,19 +104,26 @@ def generate(prompt: str, system: str = "", model: str | None = None, json_schem
                 usage_sink.append(tokens)
             path.write_text(json.dumps({"text": text, "tokens": tokens, "model": model}), encoding="utf-8")
             return text
-        except Exception as e:  # noqa: BLE001 - retry transient API errors
+        except Exception as e:  # noqa: BLE001 - one retry on transient API errors, then fail closed
             last = e
-            time.sleep(2 * (attempt + 1))
-    raise RuntimeError(f"LLM call failed: {last}")
+            if attempt + 1 < ATTEMPTS:
+                time.sleep(2)
+    raise DependencyFailure("llm", role, f"{type(last).__name__}: {last}")
 
 
-def generate_json(prompt: str, schema: dict, system: str = "", model: str | None = None, **kw) -> dict:
-    text = generate(prompt, system=system, model=model, json_schema=schema, **kw)
+def generate_json(prompt: str, schema: dict, system: str = "", model: str | None = None, role: str = "llm", **kw) -> dict:
+    text = generate(prompt, system=system, model=model, json_schema=schema, role=role, **kw)
     try:
-        return json.loads(text)
+        out = json.loads(text)
     except json.JSONDecodeError:
         start, end = text.find("{"), text.rfind("}")
-        return json.loads(text[start:end + 1])
+        try:
+            out = json.loads(text[start:end + 1]) if start >= 0 and end > start else None
+        except json.JSONDecodeError:
+            out = None
+    if not isinstance(out, dict) or any(k not in out for k in schema.get("required", [])):
+        raise DependencyFailure("llm", role, "the model returned output that does not match the requested JSON schema")
+    return out
 
 
 def embed(texts: list[str], task: str = "RETRIEVAL_DOCUMENT", batch: int = 30) -> list[list[float]]:
@@ -118,17 +138,18 @@ def embed(texts: list[str], task: str = "RETRIEVAL_DOCUMENT", batch: int = 30) -
             todo.append(i)
     for s in range(0, len(todo), batch):
         idx = todo[s:s + batch]
-        for attempt in range(5):
+        if fault("llm", "embed"):
+            raise DependencyFailure("llm", "embed", "fault drill: the embedding model is unavailable")
+        for attempt in range(ATTEMPTS):
             try:
                 resp = client().models.embed_content(
                     model=EMBED, contents=[texts[i][:2500] for i in idx],
                     config=types.EmbedContentConfig(task_type=task, output_dimensionality=768))
                 break
             except Exception as e:  # noqa: BLE001
-                if attempt == 4:
-                    raise
-                time.sleep(3 * (attempt + 1))
-                print("embed retry", e)
+                if attempt + 1 == ATTEMPTS:
+                    raise DependencyFailure("llm", "embed", f"{type(e).__name__}: {e}") from None
+                time.sleep(3)
         for i, emb in zip(idx, resp.embeddings):
             out[i] = list(emb.values)
             (CACHE / f"emb_{_key(EMBED, task, texts[i])}.json").write_text(json.dumps(out[i]))
