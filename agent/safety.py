@@ -32,6 +32,13 @@ class DependencyFailure(RuntimeError):
         return {"dependency": self.dependency, "step": self.step, "detail": self.detail}
 
 
+class InvalidInput(DependencyFailure):
+    """The case itself can't be investigated (e.g. its flagged transaction doesn't exist). Same handling: stop, say why."""
+
+    def __init__(self, step: str, detail: str) -> None:
+        super().__init__("input", step, detail)
+
+
 # ---- fault drills -------------------------------------------------------------------------------------------------
 # FRAUDLENS_FAULT="graph:card_window,llm:writer" makes those steps fail on purpose, so the fail-closed behaviour can be
 # shown live and tested. Forms: "graph:<query>", "graph:*", "llm:<role>", "llm:*", "llm_garbage:<role>", "llm_timeout:<role>".

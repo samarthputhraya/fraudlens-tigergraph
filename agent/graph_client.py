@@ -33,7 +33,8 @@ sys.path.insert(0, str(ROOT / "graph"))
 _RENAME = {"new_flag": "is_new", "proxy_type": "proxy"}  # GSQL reserves is_new; map back to the agent's names
 VERTEX_PARAMS = {"txn_context": ("txn",), "card_window": ("card",), "card_profile": ("card",),
                  "recurring_match": ("card",), "device_neighbors": ("dev",), "region_activity": ("region",),
-                 "prior_cases": ("card",), "account_history": ("txn",), "case_graph": ("ic",)}
+                 "prior_cases": ("card",), "account_history": ("txn",), "case_graph": ("ic",),
+                 "recipient_activity": ("dom",)}
 SET_VERTEX_PARAMS = {"similar_cases": ("devices", "cards")}
 ALLOWED_MCP_TOOLS = ",".join([
     "run_installed_query", "get_query_description", "get_query_metadata", "is_query_installed", "show_query",
@@ -313,6 +314,21 @@ class GraphClient:
     def alert_scan(self, start, end, min_score: float = 0.85, max_n: int = 500, **kw) -> list[dict]:
         return self.run("alert_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "min_score": min_score,
                                        "max_n": max_n}, **kw).get("alerts", [])
+
+    def typology_scan(self, start, end, base_start, micro_max: float = 10.0, min_micro: int = 4, ramp_min: float = 500.0,
+                      **kw) -> dict:
+        out = self.run("typology_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "base_start": fmt_ts(base_start),
+                                         "micro_max": micro_max, "min_micro": min_micro, "ramp_min": ramp_min}, **kw)
+        micro = [{"card_id": r.get("id"), "customer_id": r.get("customer_id"), "n": int(r.get("n_micro") or 0),
+                  "days": int(r.get("n_days") or 0), "prior_n": int(r.get("n_base") or 0)} for r in out.get("micro", [])]
+        new_dev = [{**r, "device": r.get("dev", ""), "proxy": r.get("proxy", "")} for r in out.get("new_device_txns", [])]
+        return {"micro": micro, "new_device_txns": sorted(new_dev, key=lambda r: r["ts"]),
+                "ramp_txns": sorted(out.get("ramp_txns", []), key=lambda r: (r["card_id"], r["ts"]))}
+
+    def recipient_activity(self, domain: str, start, end, base_start, **kw) -> dict:
+        out = self.run("recipient_activity", {"dom": domain, "start_ts": fmt_ts(start), "end_ts": fmt_ts(end),
+                                              "base_start": fmt_ts(base_start)}, **kw)
+        return {"cards_window": sorted(out.get("cards_window") or []), "monthly_cards": dict(out.get("monthly_cards") or {})}
 
     def ring_components(self, **kw) -> dict:
         return self.run("ring_components", {}, **kw)

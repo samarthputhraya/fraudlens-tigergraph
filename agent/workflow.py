@@ -116,7 +116,8 @@ class Investigator:
         ep = gather(s["case"], self.g, names)
         findings, _ = run_detectors(ep)
         first = [{"key": f.key, "claim": f.claim[:220], "lr": f.lr} for f in findings]
-        return {"ep": ep, "first_findings": first}
+        # ep.case may now name the card the bank's record says made the transaction (see evidence.gather)
+        return {"ep": ep, "first_findings": first, "case": ep.case}
 
     def lead_plan(self, s: State) -> State:
         if not self.use_llm:
@@ -218,7 +219,13 @@ class Investigator:
         reply, reqs, cust_ev = None, [], None
         final = pl["initial"]
         p_final, verdict, pattern, desc = led["p"], verdict0, pattern0, desc0
-        if pl.get("evidence_request"):
+        if pl.get("verdict_override"):
+            verdict = pl["verdict_override"]
+            rtype, rtext = pl["evidence_request"]
+            reqs.append({"type": rtype, "asked_after_step": steps_so_far, "assumed_response": rtext})
+            self.emit("evidence_request", {"type": rtype, "branch": "pending", "assumed_response": rtext,
+                                           "asked_after_step": steps_so_far})
+        elif pl.get("evidence_request"):
             reply = choose_reply(sit)
             rtype, rtext = pl["evidence_request"]
             text = (rtext or (sit.legit_explanation[0].upper() + sit.legit_explanation[1:])) if reply == "confirm" else REPLY_TEXT[reply]
@@ -244,7 +251,7 @@ class Investigator:
             episode, exposure, dates = [], 0.0, []
         else:
             episode, exposure, dates = facts["episode"], exposure0, dates0
-            if pattern == "none":
+            if pattern == "none" and verdict == "fraud":
                 pattern, desc = pattern_of("fraud", facts, ep.txn)
         res = {"ep": ep, "findings": findings, "facts": facts, "ledger": led, "situation": sit, "plan": pl, "reply": reply,
                "evidence_requests": reqs, "customer_evidence": cust_ev, "initial": pl["initial"], "final": final,
@@ -349,7 +356,7 @@ class Investigator:
         ids = set(ans["case"]["affected_txn_ids"]) | {ans["case"]["first_suspicious_txn_id"]} - {""}
         exists = self.g.ids_exist(sorted(ids), ans["case"]["connected_card_ids"], ans["case"]["similar_prior_cases"], [case["customer_id"]])
         amounts = {}
-        for w in ep.window + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]:
+        for w in ep.window + (ep.extra.get("window_30d") or []) + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]:
             amounts[w["id"]] = float(w["amt"])
         exists["amounts"] = amounts
         # drop anything the validator cannot find in the graph (never cite a made-up ID)
@@ -385,6 +392,7 @@ class Investigator:
         steps = ", ".join(sorted({f"{f['dependency']}:{f['step']}" for f in self._failures}))
         note = f"a dependency failed during this investigation ({steps})"
         nba = ans["next_best_actions"]
+        nba["final"] = list(nba["final"])  # never mutate `initial` through a shared list
         if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in nba["final"]):
             nba["final"].append({"action": "ESCALATE_TO_ANALYST", "route": "auto",
                                  "reason": f"Fail closed: {note}; an analyst must review before anything is acted on"})
@@ -428,7 +436,7 @@ class Investigator:
 
     def _draft(self, s: State) -> dict:
         r, ep = s["result"], s["ep"]
-        rows = {w["id"]: w for w in ep.window + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]}
+        rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or []) + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [ep.txn]}
         return {
             "case_id": s["case"]["case_id"], "trigger": s["case"]["trigger_text"], "opened_at": s["case"]["opened_at"],
             "customer_id": s["case"]["customer_id"], "card_id": s["case"]["card_id"],
@@ -526,7 +534,7 @@ class Investigator:
                                                                   if r["verdict"] == "fraud" else "fraud is not confirmed or strongly suspected."))
         narrative = ""
         if sar_file:
-            rows = {w["id"]: w for w in ep.window + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [t]}
+            rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or []) + ep.account.get("history", []) + ((ep.device or {}).get("txns") or []) + [t]}
             items = [rows[i] for i in r["episode"] if i in rows]
             listing = "; ".join(f"{x['id']} on {x['ts'][:16]} for ${float(x['amt']):,.2f} ({x.get('channel', '').replace('_', '-')})" for x in items[:8])
             conn = sorted(r["facts"].get("connected_cards") or [])

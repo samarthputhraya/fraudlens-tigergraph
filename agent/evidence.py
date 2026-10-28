@@ -54,8 +54,18 @@ def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
     ctx = g.txn_context(case["flagged_txn_id"], agent=an.get("context", "lead"))
     ep.txn, ep.card = ctx["txn"], ctx["card"]
     ep.refs["context"] = _ref(g, n)
+    if not ep.txn or not ep.txn.get("ts"):
+        from agent.safety import InvalidInput
+        raise InvalidInput("txn_context", f"flagged transaction {case['flagged_txn_id']} does not exist in the graph; "
+                                          f"nothing was investigated or invented")
     ts = ep.ts
-    card_id = case["card_id"]
+    # Data integrity: investigate the card that actually made the transaction. If the case record names another card,
+    # say so (an analyst must reconcile it) instead of silently reading the wrong card's history.
+    record_card = ep.txn.get("card_id") or case["card_id"]
+    if record_card != case["card_id"]:
+        ep.extra["card_mismatch"] = {"case_card": case["card_id"], "record_card": record_card}
+        ep.case = {**case, "card_id": record_card, "case_pack_card_id": case["card_id"]}
+    card_id = ep.case["card_id"]
 
     n = len(g.trace.calls)
     ep.window = g.card_window(card_id, ts - timedelta(days=14), opened, agent=an.get("window", "transaction"))
@@ -87,7 +97,52 @@ def gather(case: dict, g: Any, agent_names: dict | None = None) -> EvidencePack:
     n = len(g.trace.calls)
     ep.prior = g.prior_cases(card_id, opened, agent=an.get("prior", "precedent"))
     ep.refs["prior"] = _ref(g, n)
+
+    typology_evidence(ep, g, an)
     return ep
+
+
+def typology_evidence(ep: EvidencePack, g: Any, an: dict | None = None) -> None:
+    """Evidence for the new-typology detectors (agent/typologies.py): the card's last 30 days, its own 90-day baseline
+    when a micro-charge run is possible, the reach of each recipient domain it paid, and a window scan for other cards
+    with the same signature. Everything is read up to the case's open time only."""
+    from agent import typologies as ty
+    an = an or {}
+    card = ep.case["card_id"]
+    lo, hi = ty.window(ep.opened_at)
+    n = len(g.trace.calls)
+    rows = g.card_window(card, lo, hi, agent=an.get("window", "transaction"))
+    ep.extra["window_30d"] = rows
+    ep.refs["window_30d"] = _ref(g, n)
+    if ty.micro_run(rows, hi, 0) is not None:
+        n = len(g.trace.calls)
+        base_lo = lo - timedelta(days=ty.BASELINE_D)
+        base = g.card_window(card, base_lo, lo, agent=an.get("window", "transaction"))
+        ep.extra["micro_prior_n"] = sum(1 for r in base if r.get("channel") == "online" and float(r["amt"]) < ty.MICRO_MAX
+                                        and base_lo < P(r["ts"]) <= lo)
+        ep.refs["micro_baseline"] = _ref(g, n)
+    domains: list[str] = []
+    for r in sorted(rows, key=lambda r: r["ts"], reverse=True):
+        d = r.get("r_email") or ""
+        if r.get("channel") == "online" and d and d not in domains:
+            domains.append(d)
+    flagged = ep.txn.get("r_email") or ""
+    if flagged in domains:
+        domains.remove(flagged)
+        domains.insert(0, flagged)
+    ep.extra["recipient"] = {}
+    for d in domains[:4]:
+        n = len(g.trace.calls)
+        st = g.recipient_activity(d, lo, hi, hi - timedelta(days=210), agent=an.get("network", "network"))
+        ep.extra["recipient"][d] = {"domain": d, "cards_window": st["cards_window"],
+                                    "monthly_cards": list(st["monthly_cards"].values())}
+        ep.refs[f"recipient:{d}"] = _ref(g, n)
+    candidates = [ep.extra.get("micro_prior_n") is not None, ty.spoofed_device(rows, hi), ty.escalating_ramp(rows, hi)]
+    if any(candidates):
+        n = len(g.trace.calls)
+        ep.extra["typology_scan"] = g.typology_scan(lo, hi, lo - timedelta(days=ty.BASELINE_D),
+                                                    agent=an.get("network", "network"))
+        ep.refs["typology_scan"] = _ref(g, n)
 
 
 def memory_query_text(ep: EvidencePack, hypothesis: str = "") -> str:

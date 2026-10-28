@@ -17,9 +17,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tg import GRAPH, ROOT, conn, gsql, retry  # noqa: E402
 
-LOAD_DIR = ROOT / "data" / "prep" / "load"
-CHUNK_DIR = ROOT / "data" / "prep" / "chunks"
-DONE_FILE = ROOT / "data" / "prep" / "loaded.json"
+sys.path.insert(0, str(ROOT))
+from agent.paths import LOAD_DIR, MODEL_SCORES, R2  # noqa: E402
+
+# Round 2 loads the January delta (graph/export.py --since 2017-01-01) on top of the Round 1 graph.
+CHUNK_DIR = ROOT / "data" / "prep" / ("chunks_r2" if R2 else "chunks")
+DONE_FILE = ROOT / "data" / "prep" / ("loaded_r2.json" if R2 else "loaded.json")
 CHUNK_BYTES = 8_000_000
 
 # (csv name, loading job) in dependency order
@@ -127,7 +130,8 @@ def cmd_vectors() -> None:
     dp = [(ch["id"], p, {}) for ch in chunks for p in ch.get("patterns", []) if p in pat_ids]
     print("doc chunks", len(chunks), "DOC_RULE", retry(lambda: c.upsertEdges("DocChunk", "DOC_RULE", "PolicyRule", dr)),
           "DOC_PATTERN", retry(lambda: c.upsertEdges("DocChunk", "DOC_PATTERN", "FraudPattern", dp)))
-    embs = json.loads((ROOT / "data" / "prep" / "closed_emb.json").read_text())
+    from agent.paths import CLOSED_EMB
+    embs = json.loads(CLOSED_EMB.read_text())
     items = list(embs.items())
     for i in range(0, len(items), 250):
         part = items[i:i + 250]
@@ -162,7 +166,7 @@ def cmd_scores() -> None:
     if "model_p" not in attrs:
         print("-- schema change: Transaction.model_p")
         show(gsql((ROOT / "graph" / "schema_model_score.gsql").read_text(encoding="utf-8")))
-    sc = pd.read_parquet(ROOT / "data" / "prep" / "model_scores.parquet")
+    sc = pd.read_parquet(MODEL_SCORES)
     rows = [(str(int(t)), {"model_p": round(float(v), 6)}) for t, v in zip(sc.TransactionID, sc.p_cal)]
     t0 = time.time()
     for i in range(0, len(rows), 5000):

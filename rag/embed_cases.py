@@ -9,9 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from agent.llm import embed  # noqa: E402
-from agent.paths import CLOSED_CSV  # noqa: E402
-
-OUT = ROOT / "data" / "prep" / "closed_emb.json"
+from agent.paths import CLOSED_CSV, CLOSED_EMB as OUT  # noqa: E402
 
 
 def case_text(r: dict) -> str:

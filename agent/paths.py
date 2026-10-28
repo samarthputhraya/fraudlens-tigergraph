@@ -28,5 +28,6 @@ GRADER = RAW_R2 / "grader" / "grade.py"
 
 DB = PREP / ("hhgoa_r2.duckdb" if R2 else "hhgoa.duckdb")
 MODEL_SCORES = PREP / ("model_scores_r2.parquet" if R2 else "model_scores.parquet")
+CLOSED_EMB = PREP / ("closed_emb_r2.json" if R2 else "closed_emb.json")
 LOAD_DIR = PREP / ("load_r2" if R2 else "load")
 CASES_OUT = ROOT / ("cases_r2" if R2 else "cases")

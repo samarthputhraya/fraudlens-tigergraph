@@ -1,0 +1,38 @@
+CREATE OR REPLACE QUERY typology_scan(DATETIME start_ts, DATETIME end_ts, DATETIME base_start, DOUBLE micro_max = 10.0,
+                                      INT min_micro = 4, DOUBLE ramp_min = 500.0) FOR GRAPH Fraud {
+  /* Window scan behind the new-typology detectors (Final Round challenge 1). For one case window it returns:
+     micro: cards with min_micro or more online charges under micro_max (charges too small to trip a threshold),
+     with the number of days they span and the same card's count in the baseline window before start_ts;
+     new_device_txns: online transactions from a named (non-generic) device marked New, for the spoofed-fingerprint
+     check (one handset model reporting operating systems from different families);
+     ramp_txns: online transactions of cards with 4+ online purchases reaching ramp_min, for the escalating-ramp check.
+     Python applies the signature rules (agent/typologies.py); this query only reads the graph. */
+  SumAccum<INT> @n_micro, @n_base, @n_online, @n_days;
+  SetAccum<STRING> @days;
+  MaxAccum<DOUBLE> @max_amt;
+  SumAccum<STRING> @dev, @new_flag, @proxy_type;
+  All = {Transaction.*};
+  T = SELECT t FROM All:t WHERE t.ts > start_ts AND t.ts <= end_ts AND t.channel == "online";
+
+  M = SELECT c FROM T:t -(rev_MADE:e)-> Card:c WHERE t.amt < micro_max
+      ACCUM c.@n_micro += 1, c.@days += datetime_format(t.ts, "%Y-%m-%d");
+  M = SELECT c FROM M:c WHERE c.@n_micro >= min_micro AND c.@days.size() >= 3
+      POST-ACCUM c.@n_days = c.@days.size();
+  B = SELECT c FROM M:c -(MADE:e)-> Transaction:t
+      WHERE t.ts > base_start AND t.ts <= start_ts AND t.channel == "online" AND t.amt < micro_max
+      ACCUM c.@n_base += 1;
+  PRINT M[M.id, M.customer_id, M.@n_micro, M.@n_days, M.@n_base] AS micro;
+
+  D = SELECT d FROM T:t -(FROM_DEVICE:e)-> DeviceProfile:d
+      WHERE e.dev_new == "New" AND d.is_generic == FALSE
+      ACCUM t.@dev = d.id, t.@new_flag = e.dev_new, t.@proxy_type = e.proxy_type;
+  DT = SELECT t FROM T:t WHERE t.@dev != "";
+  PRINT DT[DT.id, DT.card_id, DT.ts, DT.amt, DT.product, DT.channel, DT.r_email, DT.@dev, DT.@new_flag, DT.@proxy_type] AS new_device_txns;
+
+  R = SELECT c FROM T:t -(rev_MADE:e)-> Card:c WHERE t.amt >= 20
+      ACCUM c.@n_online += 1, c.@max_amt += t.amt;
+  R = SELECT c FROM R:c WHERE c.@n_online >= 4 AND c.@max_amt >= ramp_min;
+  RT = SELECT t FROM R:c -(MADE:e)-> Transaction:t
+       WHERE t.ts > start_ts AND t.ts <= end_ts AND t.channel == "online" AND t.amt >= 20;
+  PRINT RT[RT.id, RT.card_id, RT.ts, RT.amt, RT.product, RT.channel] AS ramp_txns;
+}

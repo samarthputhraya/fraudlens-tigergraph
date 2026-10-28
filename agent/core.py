@@ -48,7 +48,9 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
         shared_desc=shared_desc, recurring=bool(facts.get("recurring")), card_testing=bool(facts.get("card_testing")),
         ct_cleared_over_100=bool(facts.get("card_testing_cleared_over_100")),
         strong_families=fraud_fams + (1 if led["strong"] else 0), legit_families=legit_fams,
-        single_signal=fraud_fams <= 1 and not led["strong"], conflict=conflict, legit_explanation=explanation)
+        single_signal=fraud_fams <= 1 and not led["strong"], conflict=conflict, legit_explanation=explanation,
+        integrity_conflict=bool(facts.get("card_mismatch")),
+        side_concern="; ".join(f"{x.name} on {', '.join(x.txns[:4])}" for x in facts.get("side_typologies", [])))
 
 
 def choose_reply(s: Situation) -> str:
@@ -69,7 +71,7 @@ REPLY_TEXT = {
 
 
 def amount_of(ep: EvidencePack, ids: list[str]) -> tuple[float, list[str]]:
-    rows = {w["id"]: w for w in ep.window}
+    rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or [])}
     rows[ep.txn["id"]] = ep.txn
     for h in ep.account.get("history", []):
         rows.setdefault(h["id"], h)

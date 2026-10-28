@@ -50,7 +50,8 @@ class MirrorGraph:
         self.exclude: set = set()
 
     QUERIES = ("txn_context", "card_window", "card_profile", "recurring_match", "device_neighbors", "region_activity",
-               "prior_cases", "account_history", "similar_cases", "search_knowledge", "model_ring_scan", "ids_exist")
+               "prior_cases", "account_history", "similar_cases", "search_knowledge", "model_ring_scan", "ids_exist",
+               "typology_scan", "recipient_activity")
 
     def _guard(self, name: str, fn):
         """Same fail-closed contract as GraphClient.run: a failed query raises DependencyFailure and is logged."""
@@ -253,7 +254,8 @@ class MirrorGraph:
         import time
         t0 = time.time()
         if self._closed_emb is None:
-            data = json.loads((ROOT / "data" / "prep" / "closed_emb.json").read_text())
+            from agent.paths import CLOSED_EMB
+            data = json.loads(CLOSED_EMB.read_text())
             self._closed_ids = list(data.keys())
             m = np.array([data[i] for i in self._closed_ids], dtype=np.float32)
             self._closed_emb = m / np.linalg.norm(m, axis=1, keepdims=True)
@@ -327,6 +329,55 @@ class MirrorGraph:
                           [fmt_ts(start), fmt_ts(end), min_p, min_customers, max_cards_all])
         self._log("model_ring_scan", {"start_ts": fmt_ts(start), "end_ts": fmt_ts(end), "min_p": min_p}, len(rows), t0, agent)
         return rows
+
+    def typology_scan(self, start, end, base_start, micro_max: float = 10.0, min_micro: int = 4, ramp_min: float = 500.0,
+                      agent: str | None = None) -> dict:
+        """Mirror of graph/queries/19_typology_scan.gsql (same inputs, same output keys)."""
+        import time
+        t0 = time.time()
+        s, e, b = fmt_ts(start), fmt_ts(end), fmt_ts(base_start)
+        win = "t.ts_dt > CAST(? AS TIMESTAMP) AND t.ts_dt <= CAST(? AS TIMESTAMP) AND t.channel = 'online'"
+        micro = self._rows(f"""
+            WITH w AS (SELECT t.card_id, any_value(t.customer_id) AS customer_id, count(*) AS n,
+                              count(DISTINCT strftime(t.ts_dt, '%Y-%m-%d')) AS days
+                       FROM txn t WHERE {win} AND t.amt < ? GROUP BY t.card_id
+                       HAVING count(*) >= ? AND count(DISTINCT strftime(t.ts_dt, '%Y-%m-%d')) >= 3)
+            SELECT w.card_id, w.customer_id, w.n, w.days,
+                   (SELECT count(*) FROM txn b WHERE b.card_id = w.card_id AND b.ts_dt > CAST(? AS TIMESTAMP)
+                      AND b.ts_dt <= CAST(? AS TIMESTAMP) AND b.channel = 'online' AND b.amt < ?) AS prior_n
+            FROM w ORDER BY w.card_id""", [s, e, micro_max, min_micro, b, s, micro_max])
+        new_dev = self._rows(f"""
+            SELECT t.TransactionID AS id, t.card_id, strftime(t.ts_dt, '%Y-%m-%d %H:%M:%S') AS ts, t.amt, t.ProductCD AS product,
+                   t.channel, coalesce(t.R_emaildomain, '') AS r_email, i.device_profile AS device, i.id_15 AS is_new,
+                   coalesce(i.id_23, '') AS proxy
+            FROM txn t JOIN ident i ON i.TransactionID = t.TransactionID
+            WHERE {win} AND i.id_15 = 'New'
+              AND ((CASE WHEN i.DeviceInfo IS NULL THEN 1 ELSE 0 END) + (CASE WHEN i.id_30 IS NULL THEN 1 ELSE 0 END)
+                   + (CASE WHEN i.id_33 IS NULL THEN 1 ELSE 0 END)) < 2
+            ORDER BY t.ts_dt""", [s, e])
+        ramp = self._rows(f"""
+            WITH c AS (SELECT t.card_id FROM txn t WHERE {win} AND t.amt >= 20 GROUP BY t.card_id
+                       HAVING count(*) >= 4 AND max(t.amt) >= ?)
+            SELECT t.TransactionID AS id, t.card_id, strftime(t.ts_dt, '%Y-%m-%d %H:%M:%S') AS ts, t.amt, t.ProductCD AS product,
+                   t.channel
+            FROM txn t JOIN c USING (card_id) WHERE {win} AND t.amt >= 20 ORDER BY t.card_id, t.ts_dt""", [s, e, ramp_min, s, e])
+        self._log("typology_scan", {"start_ts": s, "end_ts": e, "base_start": b, "micro_max": micro_max,
+                                    "min_micro": min_micro, "ramp_min": ramp_min}, len(micro) + len(new_dev) + len(ramp), t0, agent)
+        return {"micro": micro, "new_device_txns": new_dev, "ramp_txns": ramp}
+
+    def recipient_activity(self, domain: str, start, end, base_start, agent: str | None = None) -> dict:
+        """Mirror of graph/queries/20_recipient_activity.gsql."""
+        import time
+        t0 = time.time()
+        s, e, b = fmt_ts(start), fmt_ts(end), fmt_ts(base_start)
+        win = self._rows("""SELECT DISTINCT card_id FROM txn WHERE R_emaildomain = ? AND channel = 'online'
+                            AND ts_dt > CAST(? AS TIMESTAMP) AND ts_dt <= CAST(? AS TIMESTAMP) ORDER BY 1""", [domain, s, e])
+        monthly = self._rows("""SELECT strftime(ts_dt, '%Y-%m') AS m, count(DISTINCT card_id) AS n FROM txn
+                                WHERE R_emaildomain = ? AND channel = 'online' AND ts_dt > CAST(? AS TIMESTAMP)
+                                AND ts_dt <= CAST(? AS TIMESTAMP) GROUP BY 1 ORDER BY 1""", [domain, b, s])
+        self._log("recipient_activity", {"dom": domain, "start_ts": s, "end_ts": e, "base_start": b},
+                  len(win) + len(monthly), t0, agent)
+        return {"cards_window": [r["card_id"] for r in win], "monthly_cards": {r["m"]: r["n"] for r in monthly}}
 
     def describe_queries(self, agent: str = "lead") -> dict:
         import time

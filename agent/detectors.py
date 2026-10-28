@@ -18,6 +18,15 @@ from datetime import timedelta
 from pathlib import Path
 
 from agent.evidence import EvidencePack, P
+from agent.integrity import claims_vs_record, hostile_spans
+from agent.paths import R2
+
+# January 2017 is newer than every label the transaction model learned from, and the bank warns its January patterns
+# are unseen: from this date a low model score is not used as evidence of innocence.
+DRIFT_FROM = "2017-01-01" if R2 else "9999"
+TYPOLOGY_LR = {"micro_run": 25.0, "spoofed_device": 40.0, "escalating_ramp": 30.0, "recipient_surge": 30.0}
+TYPOLOGY_FAMILY = {"micro_run": "behaviour", "spoofed_device": "device", "escalating_ramp": "behaviour",
+                   "recipient_surge": "network"}
 
 EPISODE_GAP_H = 48
 RARE_DEVICE_CARDS = 25          # a device profile seen on <= this many cards all-time is "rare"
@@ -28,10 +37,11 @@ EPISODE_SAMPLES = 4000          # Monte Carlo draws for the probabilistic 48 h e
 
 
 def _model_meta() -> tuple[float, str]:
-    rep = Path(__file__).resolve().parents[1] / "eval" / "model_report.json"
+    ev = Path(__file__).resolve().parents[1] / "eval"
+    rep = ev / ("model_report_r2.json" if R2 else "model_report.json")
     try:
         r = json.loads(rep.read_text(encoding="utf-8"))
-        return float(r.get("novdec_mean_p_cal") or 0.0275), f"{r['validation']['auc_october_all']:.3f}"
+        return float(r.get("scored_mean_p_cal") or r.get("novdec_mean_p_cal") or 0.0275), f"{r['validation']['auc_october_all']:.3f}"
     except Exception:  # noqa: BLE001
         return 0.0275, "n/a"
 
@@ -91,14 +101,49 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
     facts["model_p"] = mp if has_model else None
     if has_model:
         lr = (mp / (1 - mp)) / (MODEL_BASE_RATE / (1 - MODEL_BASE_RATE)) if 0 < mp < 1 else (0.05 if mp <= 0 else 200.0)
+        lr = max(0.02, min(lr, 400.0))
+        drift = str(t.get("ts", "")) >= DRIFT_FROM
+        if drift:
+            lr = max(0.5, min(lr, 8.0))
         f.append(Finding("model_score",
-                         f"The transaction model trained on the bank's own closed cases (4,665 confirmed-fraud and 900 cleared "
-                         f"investigations, July-October; October hold-out AUC {MODEL_AUC}) scores this transaction {mp:.3f}, "
-                         f"against a {MODEL_BASE_RATE:.1%} base rate. It reads the unnamed Vesta C/D/M/V columns, the identity "
-                         f"record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all "
-                         f"as known at transaction time (it never sees the case outcome)",
-                         max(0.02, min(lr, 400.0)), "model", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
-                         data={"model_p": mp}))
+                         f"The transaction model trained on the bank's own closed cases (July-October; October hold-out AUC "
+                         f"{MODEL_AUC}) scores this transaction {mp:.3f}, against a {MODEL_BASE_RATE:.1%} base rate. It reads the "
+                         f"unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the "
+                         f"graph's memory of earlier closed cases, all as known at transaction time"
+                         + (". January activity is newer than anything the model learned from and carries patterns it has never "
+                            "seen, so a low score is not used as evidence of innocence: its weight is bounded to between 0.5 and 8"
+                            if drift else ""),
+                         lr, "model", ref=ep.refs.get("context", ""), entity_ids=[t["id"]],
+                         data={"model_p": mp, "drift": drift}))
+    facts["drift"] = has_model and str(t.get("ts", "")) >= DRIFT_FROM
+
+    # ---------------------------------------------------------------- free text is data, never instruction
+    trig = ep.case.get("trigger_text", "")
+    hostile = hostile_spans(trig)
+    if hostile:
+        f.append(Finding("hostile_text",
+                         f"The alert text contains {len(hostile)} instruction(s) aimed at the agent rather than an analyst ("
+                         + "; ".join(f'{h["what"]}: "{h["text"]}"' for h in hostile)
+                         + "). Free text is treated as data: it was not followed and did not change any number, verdict "
+                           "or action", 1.0, "integrity", source="external", ref=f"trigger:{ep.case['case_id']}",
+                         entity_ids=[t["id"]], data={"spans": hostile}))
+        facts["hostile_text"] = hostile
+    mism = claims_vs_record(trig, t, ep.case.get("trigger_type", ""))
+    if mism:
+        f.append(Finding("trigger_mismatch",
+                         "The alert text says " + ", ".join(f"{m['field']} {m['claimed']}" for m in mism)
+                         + "; the bank's transaction record says " + ", ".join(f"{m['field']} {m['record']}" for m in mism)
+                         + ". The record is used and the claim is not", 1.0, "integrity",
+                         ref=ep.refs.get("context", ""), entity_ids=[t["id"]], data={"mismatch": mism}))
+        facts["trigger_mismatch"] = mism
+    cm = ep.extra.get("card_mismatch")
+    if cm:
+        f.append(Finding("card_record_mismatch",
+                         f"The case record names card {cm['case_card']}, but the bank's transaction record puts transaction "
+                         f"{t['id']} on card {cm['record_card']}, the card its closed cases also use. The investigation reads "
+                         f"{cm['record_card']}; the discrepancy goes to an analyst to reconcile", 1.0, "integrity",
+                         ref=ep.refs.get("context", ""), entity_ids=[t["id"], cm["record_card"], cm["case_card"]], data=cm))
+        facts["card_mismatch"] = cm
 
     # ---------------------------------------------------------------- account lineage (entity resolution)
     hist = ep.account.get("history", [])
@@ -378,14 +423,70 @@ def run_detectors(ep: EvidencePack) -> tuple[list[Finding], dict]:
             facts["shared_links"].append(("case", cx["id"]))
             break
 
+    # ---------------------------------------------------------------- new typologies (challenge 1)
+    _typology_findings(ep, f, facts)
+
     # ---------------------------------------------------------------- episode (same account, 48 h chain)
     facts["episode"] = build_episode(ep, facts)
+    rows = {w["id"]: w for w in ep.window + (ep.extra.get("window_30d") or [])}
+    rows[t["id"]] = t
+    if facts.get("typology_txns"):
+        # a typology names exactly which transactions belong to the abuse; they are the episode
+        facts["episode"] = sorted(set(facts["typology_txns"]) | {t["id"]}, key=lambda i: (rows[i]["ts"], i) if i in rows else ("", i))
     reg_n = Counter(prof.get("region_n", {}))
     facts["home_region"] = reg_n.most_common(1)[0][0] if reg_n else ""
-    rows = {w["id"]: w for w in ep.window}
-    rows[t["id"]] = t
     facts["episode_rows"] = [rows[i] for i in facts["episode"] if i in rows]
     return f, facts
+
+
+def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
+    from agent import typologies as ty
+    rows = ep.extra.get("window_30d") or []
+    if not rows:
+        return
+    end, card, tid = ep.opened_at, ep.case["card_id"], ep.txn["id"]
+    found = []
+    if ep.extra.get("micro_prior_n") is not None:
+        found.append(ty.micro_run(rows, end, ep.extra["micro_prior_n"]))
+    found += [ty.spoofed_device(rows, end), ty.escalating_ramp(rows, end)]
+    for st in (ep.extra.get("recipient") or {}).values():
+        found.append(ty.recipient_surge(rows, end, st))
+    found = [x for x in found if x is not None]
+    scan = ep.extra.get("typology_scan") or {}
+    for typ in found:
+        typ.ring = [c for c in (typ.ring if typ.key == "recipient_surge" else ty.ring_members(typ.key, scan, card)) if c != card]
+    involving = [x for x in found if tid in x.txns]
+    side = [x for x in found if tid not in x.txns]
+
+    def ref(typ):
+        return ep.refs.get(f"recipient:{typ.shared[1]}", "") if typ.shared else ep.refs.get("window_30d", "")
+
+    if involving:
+        best = max(involving, key=lambda x: (TYPOLOGY_LR[x.key], len(x.txns)))
+        for typ in involving:
+            f.append(Finding(typ.key, typ.claim, TYPOLOGY_LR[typ.key], TYPOLOGY_FAMILY[typ.key], ref=ref(typ),
+                             entity_ids=typ.txns[:12], pattern_hint="undocumented",
+                             data={"txns": typ.txns, "ring": typ.ring[:25], "description": typ.description}))
+        ring = sorted(set().union(*(set(x.ring) for x in involving)))
+        if len(ring) >= 2 and best.key != "recipient_surge":
+            f.append(Finding("coordinated",
+                             f"The same {best.name} signature appears on {len(ring)} other card(s) in the same 30 days "
+                             f"({', '.join(ring[:6])}{', ...' if len(ring) > 6 else ''}): coordinated activity across customers, "
+                             f"not one cardholder's habit", 4.0, "network", ref=ep.refs.get("typology_scan", ""),
+                             entity_ids=ring[:15], pattern_hint="undocumented", data={"members": ring}))
+        facts["typology"] = best
+        facts["typology_txns"] = sorted(set().union(*(set(x.txns) for x in involving)))
+        facts["connected_cards"] |= set(ring[:25])
+        if best.shared:
+            facts["shared_links"].append(best.shared)
+        facts["pattern_signals"]["undocumented:" + best.key] += 4
+    for typ in side:
+        f.append(Finding("card_other_typology",
+                         f"Other charges on this card, not the flagged transaction, match the {typ.name} pattern: {typ.claim}. "
+                         f"They go to an analyst as a separate concern and don't change the assessment of the flagged "
+                         f"transaction", 1.0, "integrity", ref=ref(typ), entity_ids=typ.txns[:12],
+                         data={"txns": typ.txns, "typology": typ.key}))
+        facts.setdefault("side_typologies", []).append(typ)
 
 
 def region_label(x) -> str:

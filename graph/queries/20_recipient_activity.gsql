@@ -1,0 +1,19 @@
+CREATE OR REPLACE QUERY recipient_activity(VERTEX<EmailDomain> dom, DATETIME start_ts, DATETIME end_ts,
+                                           DATETIME base_start) FOR GRAPH Fraud {
+  /* How many different cards paid this recipient e-mail domain online inside the case window, against the domain's
+     own month-by-month reach in the baseline before it. A sudden surge is the "many cards paying one recipient"
+     typology; policy R6 names the same recipient email in one window as a shared origin. Reads only up to end_ts. */
+  SetAccum<STRING> @@cards_window;
+  MapAccum<STRING, SetAccum<STRING>> @@monthly;
+  MapAccum<STRING, INT> @@monthly_cards;
+  Start = {dom};
+  T = SELECT t FROM Start:d -(rev_RECIPIENT_EMAIL:e)-> Transaction:t
+      WHERE t.channel == "online" AND t.ts > base_start AND t.ts <= end_ts
+      ACCUM CASE WHEN t.ts > start_ts THEN @@cards_window += t.card_id
+                 ELSE @@monthly += (datetime_format(t.ts, "%Y-%m") -> t.card_id) END;
+  FOREACH (m, s) IN @@monthly DO
+    @@monthly_cards += (m -> s.size());
+  END;
+  PRINT @@cards_window AS cards_window;
+  PRINT @@monthly_cards AS monthly_cards;
+}

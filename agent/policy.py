@@ -46,6 +46,8 @@ class Situation:
     single_signal: bool = False
     conflict: bool = False
     legit_explanation: str = ""
+    integrity_conflict: bool = False   # the case record and the bank's own record disagree (data quality)
+    side_concern: str = ""             # other charges on the card match a fraud typology (not the flagged one)
 
 
 def sar_required(s: Situation, verdict: str) -> bool:
@@ -87,9 +89,45 @@ def fraud_actions(s: Situation, basis: str) -> list[dict]:
     return out
 
 
+def with_side_concern(actions: list[dict], s: Situation) -> list[dict]:
+    """Other charges on the card look like a known typology: protect the card and hand them to an analyst. Both actions
+    cost a legitimate customer nothing; a block is never added for charges the case isn't about."""
+    if not s.side_concern or any(a["action"] in ("BLOCK_CARD", "BLOCK_ALL_CARDS") for a in actions):
+        return actions
+    out = list(actions)
+    if not any(a["action"] == "MONITOR_CARD" for a in out):
+        out.append(act("MONITOR_CARD", f"R6 / R9: other charges on this card match a fraud typology ({s.side_concern}); "
+                                       f"raise monitoring for 72 hours", s.exposure))
+    if not any(a["action"] == "ESCALATE_TO_ANALYST" for a in out):
+        out.append(act("ESCALATE_TO_ANALYST", "R8: the card carries other suspicious charges outside this alert; hand them "
+                                              "to an analyst with the evidence", s.exposure))
+    return out
+
+
 def plan(s: Situation) -> dict:
+    res = _plan(s)
+    if s.side_concern:
+        res["initial"] = with_side_concern(res["initial"], s)
+        res["branches"] = {k: with_side_concern(v, s) for k, v in res["branches"].items()}
+    return res
+
+
+def _plan(s: Situation) -> dict:
     e = s.exposure
     res: dict = {"evidence_request": None, "branches": {}}
+
+    # ------------------------------------------------------------------ the records disagree about the case itself
+    if s.integrity_conflict and not (s.p >= 0.85 and s.strong_families >= 2):
+        initial = [act("CREATE_CASE", "Section 3a: keep a record while the data discrepancy is resolved", e),
+                   act("MONITOR_CARD", "R8: raise monitoring for 72 hours while the card record is reconciled", e),
+                   act("VERIFY_WITH_CUSTOMER", "R1: confirm the purchase with the cardholder before any block", e),
+                   act("ESCALATE_TO_ANALYST", "R8: the evidence conflicts - the case record and the bank's transaction "
+                                              "record name different cards; an analyst must reconcile them", e)]
+        res.update(initial=initial, verdict_override="uncertain",
+                   evidence_request=("analyst_info", "Analyst asked to reconcile the case record's card with the bank's "
+                                                     "transaction record; no answer yet, so the case stays with the analyst"))
+        res["branches"] = {"confirm": initial, "deny": initial, "no_reply": initial}
+        return res
 
     # ------------------------------------------------------------------ customer already disputed the charge
     if s.trigger == "customer_report":
@@ -110,8 +148,12 @@ def plan(s: Situation) -> dict:
             res["initial"] = initial
             return res
         if s.conflict and s.p < 0.5:
-            initial = [act("BLOCK_CARD", f"R2: the customer denies the transaction; exposure ${e:,.2f}", e),
-                       act("CREATE_CASE", "R2 / section 3a: customer dispute", e),
+            # The denial conflicts with the evidence (the purchase fits the cardholder's own pattern). Blocking an
+            # innocent customer is the costliest mistake, so verify and escalate under R8 instead of blocking.
+            initial = [act("CREATE_CASE", "Section 3a: the customer disputes a charge", e),
+                       act("VERIFY_WITH_CUSTOMER", "R1 / R8: the graph evidence does not support the denial; confirm the "
+                                                   "details with the cardholder before any block", e),
+                       act("MONITOR_CARD", "R4 / R8: raise monitoring for 72 hours while the dispute is reviewed", e),
                        act("ESCALATE_TO_ANALYST", "R8: the graph evidence conflicts with the customer's report", e)]
             res["initial"] = initial
             res["branches"] = {"confirm": initial, "deny": initial, "no_reply": initial}

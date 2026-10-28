@@ -1,0 +1,113 @@
+{
+ "2016-08": {
+  "recipient_surge": {
+   "cards": 39,
+   "any_fraud_txn": 0,
+   "only_cleared": 0,
+   "domains": [
+    "hotmail.fr",
+    "yahoo.co.jp"
+   ]
+  },
+  "micro_run": {
+   "cards": 5,
+   "any_fraud_txn": 2,
+   "only_cleared": 0
+  },
+  "escalating_ramp": {
+   "cards": 8,
+   "any_fraud_txn": 4,
+   "only_cleared": 0
+  }
+ },
+ "2016-09": {
+  "micro_run": {
+   "cards": 7,
+   "any_fraud_txn": 3,
+   "only_cleared": 0
+  },
+  "recipient_surge": {
+   "cards": 18,
+   "any_fraud_txn": 8,
+   "only_cleared": 0,
+   "domains": [
+    "live.fr",
+    "protonmail.com"
+   ]
+  },
+  "escalating_ramp": {
+   "cards": 4,
+   "any_fraud_txn": 1,
+   "only_cleared": 0
+  }
+ },
+ "2016-10": {
+  "recipient_surge": {
+   "cards": 9,
+   "any_fraud_txn": 9,
+   "only_cleared": 0,
+   "domains": [
+    "protonmail.com"
+   ]
+  },
+  "micro_run": {
+   "cards": 3,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  },
+  "escalating_ramp": {
+   "cards": 4,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  }
+ },
+ "2016-11": {
+  "micro_run": {
+   "cards": 1,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  },
+  "escalating_ramp": {
+   "cards": 3,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  }
+ },
+ "2016-12": {
+  "micro_run": {
+   "cards": 5,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  },
+  "escalating_ramp": {
+   "cards": 5,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  }
+ },
+ "2017-01": {
+  "micro_run": {
+   "cards": 27,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  },
+  "recipient_surge": {
+   "cards": 17,
+   "any_fraud_txn": 0,
+   "only_cleared": 0,
+   "domains": [
+    "sc.rr.com"
+   ]
+  },
+  "escalating_ramp": {
+   "cards": 14,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  },
+  "spoofed_device": {
+   "cards": 6,
+   "any_fraud_txn": 0,
+   "only_cleared": 0
+  }
+ }
+}

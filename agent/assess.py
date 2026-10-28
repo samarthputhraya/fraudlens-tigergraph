@@ -18,7 +18,8 @@ PRIORS = {"customer_report": 0.60, "analyst_request": 0.45}
 DISPUTE_PRIOR = 0.86
 TRIGGER_PRIOR = {"customer_report": DISPUTE_PRIOR, "analyst_request": PRIORS["analyst_request"]}
 FAMILY_CAP = math.log(60.0)
-STRONG = {"structuring", "card_testing", "shared_device", "account_prior_fraud"}
+STRONG = {"structuring", "card_testing", "shared_device", "account_prior_fraud", "micro_run", "spoofed_device",
+          "escalating_ramp", "recipient_surge", "coordinated"}
 
 
 def logit(p: float) -> float:
@@ -48,7 +49,13 @@ def ledger(trigger: str, findings: list[Finding], score: float = 0.5) -> dict:
     only graph evidence the model cannot see (other cards, rings, structuring, testing sequences, recurrence, the
     customer's own report) moves it further. Without the model, the fitted score-bin prior and single-signal LRs apply."""
     model = next((f for f in findings if f.key == "model_score"), None)
-    if model is not None:
+    drift = model is not None and bool(model.data.get("drift"))
+    if drift:
+        # January: the model never saw this month's patterns, so it is not the starting point. Start from the trigger's
+        # own prior (the bank's score is near useless here too, so a score alert starts at the base rate); the model is
+        # then one bounded piece of evidence, and the signals it would have absorbed count on their own.
+        prior = TRIGGER_PRIOR.get(trigger, BASE_RATE)
+    elif model is not None:
         mp = min(0.999, max(0.001, float(model.data["model_p"])))
         prior = mp
         if trigger in TRIGGER_PRIOR:
@@ -60,7 +67,7 @@ def ledger(trigger: str, findings: list[Finding], score: float = 0.5) -> dict:
         prior = prior_for(trigger, score)
     fam = defaultdict(float)
     for f in findings:
-        if f.key == "model_score" or f.in_model:
+        if (f.key == "model_score" and not drift) or (f.in_model and not drift):
             continue
         fam[f.family] += f.weight
     total = logit(prior)
@@ -69,7 +76,7 @@ def ledger(trigger: str, findings: list[Finding], score: float = 0.5) -> dict:
         w = max(-FAMILY_CAP, min(FAMILY_CAP, w))
         total += w
     for f in findings:
-        counted = not (f.in_model or f.key == "model_score")
+        counted = drift or not (f.in_model or f.key == "model_score")
         contrib.append({"key": f.key, "family": f.family, "lr": round(f.lr, 2),
                         "delta_logodds": round(f.weight, 3) if counted else 0.0,
                         "note": "in model score" if f.in_model else ("starting point" if f.key == "model_score" else "")})
@@ -100,6 +107,9 @@ def pattern_of(verdict: str, facts: dict, txn: dict) -> tuple[str, str]:
     if verdict == "legitimate":
         return "none", ""
     sig = facts.get("pattern_signals", {})
+    typ = facts.get("typology")
+    if typ is not None:
+        return typ.pattern, typ.description
     if facts.get("structuring"):
         n = len(facts["structuring"])
         return "undocumented", (
