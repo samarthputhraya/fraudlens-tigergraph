@@ -1,0 +1,695 @@
+{
+  "case_id": "HHF-018",
+  "events": [
+    {
+      "t": 1793263987.13,
+      "kind": "trigger",
+      "case_id": "HHF-018",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3612011 ($34.22) at 0.8. Review and decide.",
+      "opened_at": "2017-01-01 18:29:48"
+    },
+    {
+      "t": 1793263987.13,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793263989.41,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is legitimate, representing a valid purchase by the cardholder who has a history of traveling or using a VPN/proxy (consistent with the cleared prior alert CC-4570).",
+        "The transaction is unauthorized card-not-present fraud, where an attacker is using an anonymous proxy to bypass location checks."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the card's transaction history, checking for other recent transactions, location changes, or suspicious patterns.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if this $34.22 transaction matches a pattern of recurring charges on this card, which would support a legitimate transaction hypothesis.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1793263990.0,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264003.7,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "medium",
+      "assessment": "The flagged online transaction 3612011 is low-value and aligns with the card's historical baseline of online activity, but it was conducted via an anonymous proxy. Additionally, the 72-hour window reveals a highly suspicious rapid-fire sequence of three nearly identical in-person transactions (3587491, 3587492, and 3587495) within a 44-second span, suggesting potential card testing or terminal abuse.",
+      "key_points": [
+        "Flagged transaction 3612011 ($34.22) was processed online using an anonymous proxy (IP_PROXY:ANONYMOUS) and a generic desktop browser signature.",
+        "A rapid-fire sequence of three in-person transactions occurred on 2016-12-30 (3587491, 3587492, and 3587495) with nearly identical amounts (~$57.95) within less than a minute.",
+        "Both the bank's real-time risk score (0.03) and the transaction model (0.002035) evaluated the flagged transaction 3612011 as low risk, contrasting with the untrusted alert text claiming a score of 0.8."
+      ]
+    },
+    {
+      "t": 1793264003.7,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction was flagged due to a high real-time risk score of 0.8. The transaction was conducted via an anonymous proxy using a generic Internet Explorer 11 desktop browser signature. Given that the account has no established history and only one recorded transaction, the use of an anonymizing proxy is highly suspicious.",
+      "key_points": [
+        "Transaction 3612011 was flagged by the real-time model with a high risk score of 0.8.",
+        "The connection utilized an anonymous proxy (IP_PROXY:ANONYMOUS) from a generic desktop device profile.",
+        "The resolved account C02753-K1|299.0|183 has no prior transaction history, with its first and only transaction occurring on 2017-01-01."
+      ]
+    },
+    {
+      "t": 1793264003.7,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The alert on transaction 3612011 is linked to a device profile shared by 244 cards all-time, which represents a generic browser signature rather than a coordinated fraud ring. There are no closed or active investigation cases associated with any of the neighboring transactions, and the transaction model probabilities remain low across the connected cards.",
+      "key_points": [
+        "The device profile is shared by 244 cards all-time, indicating a generic browser signature shared by many unrelated users rather than a dedicated fraud ring.",
+        "Neighboring transactions, such as 3584388 on card C11919-K2 and 3584460 on card C11923-K2, show elevated real-time risk scores (0.7 and 0.64 respectively) but have very low transaction model probabilities (0.066546 and 0.009569).",
+        "None of the associated cards or transactions in the device neighbor history have any closed or active investigation cases."
+      ]
+    },
+    {
+      "t": 1793264003.7,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "medium",
+      "assessment": "The alert concerns transaction 3612011 ($34.22) flagged with a real-time risk score of 0.8. The customer (C02753) has a mixed history, including two confirmed fraud cases (CC-1739 and CC-4010) involving out-of-region card-present use on card C02753-K1, as well as a cleared high-value alert (CC-4570) where travel was confirmed. Given the customer's history of both genuine out-of-region travel and confirmed card-present fraud, further verification is required to determine if this transaction is legitimate.",
+      "key_points": [
+        "Customer C02753 has two prior confirmed fraud cases (CC-1739 and CC-4010) on card C02753-K1, both involving unauthorized card-present transactions in an unfamiliar billing region.",
+        "The customer also has a cleared case (CC-4570) where a high-value transaction of $1,962.05 was confirmed as legitimate travel.",
+        "Prior similar alerts in the bank's memory (such as CC-0848, CC-0399, and CC-0037) were frequently cleared after the cardholder confirmed travel to the billing region in question."
+      ]
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3612011)",
+      "entity_ids": [
+        "3612011"
+      ],
+      "in_model": false,
+      "model_p": 0.002035
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "finding",
+      "key": "trigger_mismatch",
+      "claim": "The alert's score (0.80, as in the case record) differs from the score stored on the transaction (0.03). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3612011)",
+      "entity_ids": [
+        "3612011"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "finding",
+      "key": "proxy",
+      "claim": "The session was routed through an anonymous proxy",
+      "lr": 3.0,
+      "family": "device",
+      "ref": "query:txn_context(txn=3612011)",
+      "entity_ids": [
+        "3612011"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-4570; latest note: \"Case CC-4570: model scored a $1,962.05 transaction at 0.96. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C02753-K1, before_ts=2017-01-01 18:29:48)",
+      "entity_ids": [
+        "CC-4570"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "assessment",
+      "p": 0.04,
+      "prior": 0.034,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "trigger_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "proxy",
+          "family": "device",
+          "lr": 3.0,
+          "delta_logodds": 1.099,
+          "note": "in model score"
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223,
+          "note": "in model score"
+        }
+      ],
+      "exposure": 34.22,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.04 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $34.22 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed they made the purchase",
+      "asked_after_step": 15
+    },
+    {
+      "t": 1793264003.73,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.04,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1793264004.26,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-0848",
+        "CC-1887",
+        "CC-4570",
+        "CC-0399",
+        "CC-1139",
+        "CC-1137",
+        "CC-1147",
+        "CC-2533"
+      ],
+      "knowledge": [
+        "Glossary",
+        "R5 Card testing",
+        "R3 Customer confirms the transaction",
+        "No fraud",
+        "Things to know",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1793264043.34,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering a card block and case escalation."
+    },
+    {
+      "t": 1793264058.52,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-018",
+        "n_vertices": 6,
+        "n_edges": 20
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3612011)",
+      "params": {
+        "txn": "3612011"
+      },
+      "rows": 2,
+      "ms": 123.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02753-K1, start_ts=2016-12-18 15:29:48, end_ts=2017-01-01 18:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "start_ts": "2016-12-18 15:29:48",
+        "end_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 14,
+      "ms": 130.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C02753-K1, before_ts=2017-01-01 15:29:48, recent_days=30)",
+      "params": {
+        "card": "C02753-K1",
+        "before_ts": "2017-01-01 15:29:48",
+        "recent_days": 30
+      },
+      "rows": 110,
+      "ms": 121.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02753-K1, amt=34.22, tol=0.34, before_ts=2017-01-01 15:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "amt": 34.22,
+        "tol": 0.34,
+        "before_ts": "2017-01-01 15:29:48"
+      },
+      "rows": 1,
+      "ms": 130.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3612011, lookback_days=200)",
+      "params": {
+        "txn": "3612011",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 135.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=Trident/7.0 |  | ie 11.0 for desktop | , start_ts=2016-12-02 15:29:48, end_ts=2017-01-01 18:29:48)",
+      "params": {
+        "dev": "Trident/7.0 |  | ie 11.0 for desktop | ",
+        "start_ts": "2016-12-02 15:29:48",
+        "end_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 135,
+      "ms": 434.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C02753-K1, before_ts=2017-01-01 18:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "before_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 4,
+      "ms": 136.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02753-K1, start_ts=2016-12-02 18:29:48, end_ts=2017-01-01 18:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "start_ts": "2016-12-02 18:29:48",
+        "end_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 22,
+      "ms": 133.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=gmail.com, start_ts=2016-12-02 18:29:48, end_ts=2017-01-01 18:29:48, base_start=2016-06-05 18:29:48, max_detail=200)",
+      "params": {
+        "dom": "gmail.com",
+        "start_ts": "2016-12-02 18:29:48",
+        "end_ts": "2017-01-01 18:29:48",
+        "base_start": "2016-06-05 18:29:48",
+        "max_detail": 200
+      },
+      "rows": 1375,
+      "ms": 301.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=anonymous.com, start_ts=2016-12-02 18:29:48, end_ts=2017-01-01 18:29:48, base_start=2016-06-05 18:29:48, max_detail=200)",
+      "params": {
+        "dom": "anonymous.com",
+        "start_ts": "2016-12-02 18:29:48",
+        "end_ts": "2017-01-01 18:29:48",
+        "base_start": "2016-06-05 18:29:48",
+        "max_detail": 200
+      },
+      "rows": 823,
+      "ms": 190.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=yahoo.com, start_ts=2016-12-02 18:29:48, end_ts=2017-01-01 18:29:48, base_start=2016-06-05 18:29:48, max_detail=200)",
+      "params": {
+        "dom": "yahoo.com",
+        "start_ts": "2016-12-02 18:29:48",
+        "end_ts": "2017-01-01 18:29:48",
+        "base_start": "2016-06-05 18:29:48",
+        "max_detail": 200
+      },
+      "rows": 461,
+      "ms": 160.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 219.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C02753-K1, start_ts=2016-12-02 15:29:48, end_ts=2017-01-01 18:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "start_ts": "2016-12-02 15:29:48",
+        "end_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 22,
+      "ms": 130.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C02753-K1, amt=34.22, tol=0.34, before_ts=2017-01-01 15:29:48)",
+      "params": {
+        "card": "C02753-K1",
+        "amt": 34.22,
+        "tol": 0.34,
+        "before_ts": "2017-01-01 15:29:48"
+      },
+      "rows": 1,
+      "ms": 131.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 |  | ie 11.0 for desktop | '], cards=['C02753-K1'], k=6, pattern=, before_ts=2017-01-01 18:29:48)",
+      "params": {
+        "devices": [
+          "Trident/7.0 |  | ie 11.0 for desktop | "
+        ],
+        "cards": [
+          "C02753-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 17,
+      "ms": 261.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['Trident/7.0 |  | ie 11.0 for desktop | '], cards=['C02753-K1'], k=8, pattern=, before_ts=2017-01-01 18:29:48)",
+      "params": {
+        "devices": [
+          "Trident/7.0 |  | ie 11.0 for desktop | "
+        ],
+        "cards": [
+          "C02753-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-01 18:29:48"
+      },
+      "rows": 21,
+      "ms": 242.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 276.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0848', 'CC-1887', 'CC-4570', 'CC-0399', 'CC-1139', 'CC-1137', 'CC-1147', 'CC-2533'], customer_ids=['C02753'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-0848",
+          "CC-1887",
+          "CC-4570",
+          "CC-0399",
+          "CC-1139",
+          "CC-1137",
+          "CC-1147",
+          "CC-2533"
+        ],
+        "customer_ids": [
+          "C02753"
+        ]
+      },
+      "rows": 9,
+      "ms": 514.2,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged online transaction 3612011 is low-value and aligns with the card's historical baseline of online activity, but it was conducted via an anonymous proxy. Additionally, the 72-hour window reveals a highly suspicious rapid-fire sequence of three nearly identical in-person transactions (3587491, 3587492, and 3587495) within a 44-second span, suggesting potential card testing or terminal abuse.",
+      "risk": "medium",
+      "key_points": [
+        "Flagged transaction 3612011 ($34.22) was processed online using an anonymous proxy (IP_PROXY:ANONYMOUS) and a generic desktop browser signature.",
+        "A rapid-fire sequence of three in-person transactions occurred on 2016-12-30 (3587491, 3587492, and 3587495) with nearly identical amounts (~$57.95) within less than a minute.",
+        "Both the bank's real-time risk score (0.03) and the transaction model (0.002035) evaluated the flagged transaction 3612011 as low risk, contrasting with the untrusted alert text claiming a score of 0.8."
+      ],
+      "open_questions": [
+        "Why were three nearly identical in-person transactions processed within 44 seconds on 2016-12-30?",
+        "Is the use of an anonymous proxy for transaction 3612011 typical for this customer's online behavior?"
+      ],
+      "suggested_pattern": "card_testing"
+    },
+    "identity": {
+      "assessment": "The transaction was flagged due to a high real-time risk score of 0.8. The transaction was conducted via an anonymous proxy using a generic Internet Explorer 11 desktop browser signature. Given that the account has no established history and only one recorded transaction, the use of an anonymizing proxy is highly suspicious.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3612011 was flagged by the real-time model with a high risk score of 0.8.",
+        "The connection utilized an anonymous proxy (IP_PROXY:ANONYMOUS) from a generic desktop device profile.",
+        "The resolved account C02753-K1|299.0|183 has no prior transaction history, with its first and only transaction occurring on 2017-01-01."
+      ],
+      "open_questions": [
+        "What is the true IP address and geographical location of the user behind the anonymous proxy?",
+        "Are there any other attempted or failed transactions associated with card C02753-K1?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "network": {
+      "assessment": "The alert on transaction 3612011 is linked to a device profile shared by 244 cards all-time, which represents a generic browser signature rather than a coordinated fraud ring. There are no closed or active investigation cases associated with any of the neighboring transactions, and the transaction model probabilities remain low across the connected cards.",
+      "risk": "low",
+      "key_points": [
+        "The device profile is shared by 244 cards all-time, indicating a generic browser signature shared by many unrelated users rather than a dedicated fraud ring.",
+        "Neighboring transactions, such as 3584388 on card C11919-K2 and 3584460 on card C11923-K2, show elevated real-time risk scores (0.7 and 0.64 respectively) but have very low transaction model probabilities (0.066546 and 0.009569).",
+        "None of the associated cards or transactions in the device neighbor history have any closed or active investigation cases."
+      ],
+      "open_questions": [
+        "Are there any specific shared attributes, such as IP addresses or billing regions, that link these cards beyond the generic browser signature?",
+        "What triggered the high real-time risk score of 0.8 on transaction 3612011 given the low transaction model scores of its neighbors?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "The alert concerns transaction 3612011 ($34.22) flagged with a real-time risk score of 0.8. The customer (C02753) has a mixed history, including two confirmed fraud cases (CC-1739 and CC-4010) involving out-of-region card-present use on card C02753-K1, as well as a cleared high-value alert (CC-4570) where travel was confirmed. Given the customer's history of both genuine out-of-region travel and confirmed card-present fraud, further verification is required to determine if this transaction is legitimate.",
+      "risk": "medium",
+      "key_points": [
+        "Customer C02753 has two prior confirmed fraud cases (CC-1739 and CC-4010) on card C02753-K1, both involving unauthorized card-present transactions in an unfamiliar billing region.",
+        "The customer also has a cleared case (CC-4570) where a high-value transaction of $1,962.05 was confirmed as legitimate travel.",
+        "Prior similar alerts in the bank's memory (such as CC-0848, CC-0399, and CC-0037) were frequently cleared after the cardholder confirmed travel to the billing region in question."
+      ],
+      "open_questions": [
+        "Is transaction 3612011 an online (card-not-present) transaction or an in-person (card-present) transaction?",
+        "Does the location or billing region of transaction 3612011 match the customer's established home region, their confirmed travel history, or the fraudulent regions identified in CC-1739 and CC-4010?"
+      ],
+      "suggested_pattern": "out_of_region_use"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is legitimate, representing a valid purchase by the cardholder who has a history of traveling or using a VPN/proxy (consistent with the cleared prior alert CC-4570).",
+      "The transaction is unauthorized card-not-present fraud, where an attacker is using an anonymous proxy to bypass location checks."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the card's transaction history, checking for other recent transactions, location changes, or suspicious patterns.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if this $34.22 transaction matches a pattern of recurring charges on this card, which would support a legitimate transaction hypothesis.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Determine if the transaction is a legitimate purchase by verifying the card's historical activity patterns and checking for recurring charges, given the conflicting risk scores and the card's history of cleared travel-related alerts."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering a card block and case escalation."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-018",
+    "n_vertices": 6,
+    "n_edges": 20
+  }
+}

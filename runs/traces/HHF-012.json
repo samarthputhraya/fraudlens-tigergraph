@@ -1,0 +1,630 @@
+{
+  "case_id": "HHF-012",
+  "events": [
+    {
+      "t": 1793264109.67,
+      "kind": "trigger",
+      "case_id": "HHF-012",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3655457 ($261.51) at 0.53. Review and decide.",
+      "opened_at": "2017-01-09 04:34:19"
+    },
+    {
+      "t": 1793264109.67,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264114.55,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is legitimate activity by the established cardholder, consistent with their extensive history of 138 prior purchases in billing region 476.",
+        "The transaction is a recurring or expected charge of a similar amount previously seen on this card.",
+        "The transaction is unauthorized card-present fraud occurring despite the matching billing region."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the card's recent transaction history and check for any sudden changes in spending patterns, velocity, or suspicious activity leading up to this transaction.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if the cardholder has made previous transactions of a similar amount (around $261.51), which would support a legitimate recurring payment hypothesis.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1793264115.58,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264121.02,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "low",
+      "assessment": "The flagged transaction 3655457 is highly consistent with the customer's established purchasing history. It is an in-person transaction for product W at the customer's typical location (addr1 476.0), with an amount well below their historical maximum of $884.02.",
+      "key_points": [
+        "The flagged transaction 3655457 ($261.51) aligns with the customer's baseline of 148 transactions, which are predominantly in-person (138) and for product W (138).",
+        "The transaction amount is well within the customer's historical limit, where the maximum transaction reached $884.02, and previous transactions like 3544914 reached $499.92.",
+        "Both the bank's real-time risk score (0.05) and the transaction model score (0.002035) for the flagged transaction are very low, indicating no anomalous behavior."
+      ]
+    },
+    {
+      "t": 1793264121.02,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction is associated with a newly observed account C12223-K1|476.0|191 which has only one recorded transaction on 2017-01-09. No device profile, proxy, or device type information was captured, leaving no technical footprint to analyze. Due to the lack of historical data and missing device indicators, the transaction carries a moderate level of risk.",
+      "key_points": [
+        "Account C12223-K1|476.0|191 has a history of only 1 transaction occurring on 2017-01-09.",
+        "The device profile is completely empty, with no device ID, proxy status, or device type recorded.",
+        "Unnamed model features m4 and m6 are populated as 'M0' and 'T' respectively."
+      ]
+    },
+    {
+      "t": 1793264121.02,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The transaction was flagged by the real-time risk model, but network analysis reveals no shared device neighbors or connected fraud cases. The transaction region is associated with 53 existing cards and no new cards, indicating a stable regional footprint with no signs of coordinated ring activity.",
+      "key_points": [
+        "Transaction 3655457 was flagged with a real-time risk score of 0.53.",
+        "No device neighbors or connected cases were identified in the network queries.",
+        "The transaction region contains 53 existing cards and 0 new cards, showing no recent influx of new card activity."
+      ]
+    },
+    {
+      "t": 1793264121.02,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The alert flags transaction 3655457 for $261.51 with a real-time risk score of 0.53. While some historical high-scoring alerts like CC-0761 and CC-4637 were cleared due to confirmed travel, the customer has a prior confirmed account takeover case (CC-0179). This historical fraud context elevates the risk of the current transaction.",
+      "key_points": [
+        "The real-time model flagged transaction 3655457 with a risk score of 0.53.",
+        "The customer has a prior confirmed fraud case, CC-0179, which involved an account takeover on card C12223-K1.",
+        "Prior cases such as CC-0761, CC-4637, CC-2770, and CC-4642 demonstrate that high real-time scores are frequently cleared when travel is confirmed."
+      ]
+    },
+    {
+      "t": 1793264121.03,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3655457)",
+      "entity_ids": [
+        "3655457"
+      ],
+      "in_model": false,
+      "model_p": 0.002035
+    },
+    {
+      "t": 1793264121.03,
+      "kind": "finding",
+      "key": "trigger_mismatch",
+      "claim": "The alert's score (0.53, as in the case record) differs from the score stored on the transaction (0.05). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3655457)",
+      "entity_ids": [
+        "3655457"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264121.03,
+      "kind": "finding",
+      "key": "region_known",
+      "claim": "This card has 138 earlier purchases billed to region 476 (first on 2016-07-03)",
+      "lr": 0.65,
+      "family": "region",
+      "ref": "query:card_profile(card=C12223-K1, before_ts=2017-01-09 00:34:19, recent_days=30)",
+      "entity_ids": [
+        "3655457"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264121.03,
+      "kind": "assessment",
+      "p": 0.03,
+      "prior": 0.034,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "trigger_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "region_known",
+          "family": "region",
+          "lr": 0.65,
+          "delta_logodds": -0.431,
+          "note": "in model score"
+        }
+      ],
+      "exposure": 261.51,
+      "initial": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          }
+        ],
+        "deny": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264121.03,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.03,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1793264121.51,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-0179",
+        "CC-2742",
+        "CC-4473",
+        "CC-2770",
+        "CC-2764",
+        "CC-5142",
+        "CC-2147"
+      ],
+      "knowledge": [
+        "Glossary",
+        "R5 Card testing",
+        "Things to know",
+        "No fraud",
+        "R3 Customer confirms the transaction",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1793264132.63,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "Evidence that the card was stolen or a customer dispute regarding the transaction would change the verdict."
+    },
+    {
+      "t": 1793264154.23,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-012",
+        "n_vertices": 6,
+        "n_edges": 15
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3655457)",
+      "params": {
+        "txn": "3655457"
+      },
+      "rows": 2,
+      "ms": 162.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C12223-K1, start_ts=2016-12-26 00:34:19, end_ts=2017-01-09 04:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "start_ts": "2016-12-26 00:34:19",
+        "end_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 13,
+      "ms": 185.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C12223-K1, before_ts=2017-01-09 00:34:19, recent_days=30)",
+      "params": {
+        "card": "C12223-K1",
+        "before_ts": "2017-01-09 00:34:19",
+        "recent_days": 30
+      },
+      "rows": 148,
+      "ms": 119.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C12223-K1, amt=261.51, tol=2.62, before_ts=2017-01-09 00:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "amt": 261.51,
+        "tol": 2.62,
+        "before_ts": "2017-01-09 00:34:19"
+      },
+      "rows": 0,
+      "ms": 162.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3655457, lookback_days=200)",
+      "params": {
+        "txn": "3655457",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 105.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=476.0, start_ts=2017-01-06 00:34:19, end_ts=2017-01-09 04:34:19, max_cards=50)",
+      "params": {
+        "region": "476.0",
+        "start_ts": "2017-01-06 00:34:19",
+        "end_ts": "2017-01-09 04:34:19",
+        "max_cards": 50
+      },
+      "rows": 0,
+      "ms": 184.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C12223-K1, before_ts=2017-01-09 04:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "before_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 2,
+      "ms": 121.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C12223-K1, start_ts=2016-12-10 04:34:19, end_ts=2017-01-09 04:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "start_ts": "2016-12-10 04:34:19",
+        "end_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 25,
+      "ms": 195.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=gmail.com, start_ts=2016-12-10 04:34:19, end_ts=2017-01-09 04:34:19, base_start=2016-06-13 04:34:19, max_detail=200)",
+      "params": {
+        "dom": "gmail.com",
+        "start_ts": "2016-12-10 04:34:19",
+        "end_ts": "2017-01-09 04:34:19",
+        "base_start": "2016-06-13 04:34:19",
+        "max_detail": 200
+      },
+      "rows": 1344,
+      "ms": 194.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 203.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C12223-K1, start_ts=2016-12-10 00:34:19, end_ts=2017-01-09 04:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "start_ts": "2016-12-10 00:34:19",
+        "end_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 26,
+      "ms": 146.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C12223-K1, amt=261.51, tol=2.62, before_ts=2017-01-09 00:34:19)",
+      "params": {
+        "card": "C12223-K1",
+        "amt": 261.51,
+        "tol": 2.62,
+        "before_ts": "2017-01-09 00:34:19"
+      },
+      "rows": 0,
+      "ms": 120.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C12223-K1'], k=6, pattern=, before_ts=2017-01-09 04:34:19)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C12223-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 12,
+      "ms": 243.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C12223-K1'], k=8, pattern=, before_ts=2017-01-09 04:34:19)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C12223-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-09 04:34:19"
+      },
+      "rows": 14,
+      "ms": 218.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 237.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0179', 'CC-2742', 'CC-4473', 'CC-2770', 'CC-2764', 'CC-5142', 'CC-2147'], customer_ids=['C12223'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-0179",
+          "CC-2742",
+          "CC-4473",
+          "CC-2770",
+          "CC-2764",
+          "CC-5142",
+          "CC-2147"
+        ],
+        "customer_ids": [
+          "C12223"
+        ]
+      },
+      "rows": 8,
+      "ms": 415.6,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3655457 is highly consistent with the customer's established purchasing history. It is an in-person transaction for product W at the customer's typical location (addr1 476.0), with an amount well below their historical maximum of $884.02.",
+      "risk": "low",
+      "key_points": [
+        "The flagged transaction 3655457 ($261.51) aligns with the customer's baseline of 148 transactions, which are predominantly in-person (138) and for product W (138).",
+        "The transaction amount is well within the customer's historical limit, where the maximum transaction reached $884.02, and previous transactions like 3544914 reached $499.92.",
+        "Both the bank's real-time risk score (0.05) and the transaction model score (0.002035) for the flagged transaction are very low, indicating no anomalous behavior."
+      ],
+      "open_questions": [
+        "Why did the upstream alert text report a score of 0.53 when the actual real-time risk score is recorded as 0.05?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "identity": {
+      "assessment": "The transaction is associated with a newly observed account C12223-K1|476.0|191 which has only one recorded transaction on 2017-01-09. No device profile, proxy, or device type information was captured, leaving no technical footprint to analyze. Due to the lack of historical data and missing device indicators, the transaction carries a moderate level of risk.",
+      "risk": "medium",
+      "key_points": [
+        "Account C12223-K1|476.0|191 has a history of only 1 transaction occurring on 2017-01-09.",
+        "The device profile is completely empty, with no device ID, proxy status, or device type recorded.",
+        "Unnamed model features m4 and m6 are populated as 'M0' and 'T' respectively."
+      ],
+      "open_questions": [
+        "What is the billing or shipping address associated with this transaction to verify alignment with addr1 476.0?",
+        "Are there any other transactions on card C12223-K1 that occurred outside the provided dataset?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The transaction was flagged by the real-time risk model, but network analysis reveals no shared device neighbors or connected fraud cases. The transaction region is associated with 53 existing cards and no new cards, indicating a stable regional footprint with no signs of coordinated ring activity.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3655457 was flagged with a real-time risk score of 0.53.",
+        "No device neighbors or connected cases were identified in the network queries.",
+        "The transaction region contains 53 existing cards and 0 new cards, showing no recent influx of new card activity."
+      ],
+      "open_questions": [
+        "What was the specific device profile used for transaction 3655457, given that no device neighbors were returned?",
+        "What are the historical fraud or chargeback rates associated with the 53 existing cards in this region?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "The alert flags transaction 3655457 for $261.51 with a real-time risk score of 0.53. While some historical high-scoring alerts like CC-0761 and CC-4637 were cleared due to confirmed travel, the customer has a prior confirmed account takeover case (CC-0179). This historical fraud context elevates the risk of the current transaction.",
+      "risk": "high",
+      "key_points": [
+        "The real-time model flagged transaction 3655457 with a risk score of 0.53.",
+        "The customer has a prior confirmed fraud case, CC-0179, which involved an account takeover on card C12223-K1.",
+        "Prior cases such as CC-0761, CC-4637, CC-2770, and CC-4642 demonstrate that high real-time scores are frequently cleared when travel is confirmed."
+      ],
+      "open_questions": [
+        "Is transaction 3655457 linked to the same customer (C12223) or card (C12223-K1) involved in case CC-0179?",
+        "What is the transaction model's score for transaction 3655457?",
+        "Has the customer confirmed this transaction or reported any recent travel?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is legitimate activity by the established cardholder, consistent with their extensive history of 138 prior purchases in billing region 476.",
+      "The transaction is a recurring or expected charge of a similar amount previously seen on this card.",
+      "The transaction is unauthorized card-present fraud occurring despite the matching billing region."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the card's recent transaction history and check for any sudden changes in spending patterns, velocity, or suspicious activity leading up to this transaction.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if the cardholder has made previous transactions of a similar amount (around $261.51), which would support a legitimate recurring payment hypothesis.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "Establish whether the transaction aligns with the cardholder's historical spending patterns and recurring charges, given the strong regional history and low transaction model score."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "Evidence that the card was stolen or a customer dispute regarding the transaction would change the verdict."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-012",
+    "n_vertices": 6,
+    "n_edges": 15
+  }
+}

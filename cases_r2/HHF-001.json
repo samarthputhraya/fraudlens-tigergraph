@@ -1,0 +1,168 @@
+{
+  "case_id": "HHF-001",
+  "case": {
+    "status": "escalated",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "undocumented",
+    "pattern_description": "The undocumented pattern involves fraudsters using sophisticated device spoofing techniques, specifically combining Android handset identifiers with Windows operating systems, while hiding behind anonymous proxies. This pattern affects customers targeted by actors attempting to evade standard device fingerprinting controls. It was discovered following an analyst's request to investigate commonalities across multiple cards experiencing losses without sharing a legitimate device profile.",
+    "affected_txn_ids": [
+      "3660106",
+      "3660107",
+      "3660108"
+    ],
+    "first_suspicious_txn_id": "3660106",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 2189.02,
+    "evidence": [
+      {
+        "claim": "3 online purchase(s) ($850.28, $890.79, $447.95) from a device that reports itself as 'RCT6303W87M7 Build/MRA58K', an Android handset, but with operating system(s) Windows 10, Windows 7: a fingerprint no real device produces, marked New for this account, 3 behind an anonymising proxy",
+        "source": "graph",
+        "ref": "query:card_window(card=C05061-K1, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19)",
+        "entity_ids": [
+          "3660106",
+          "3660107",
+          "3660108"
+        ],
+        "as_of": "2017-01-15 01:25:19"
+      },
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.292, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660108)",
+        "entity_ids": [
+          "3660108"
+        ],
+        "as_of": "2017-01-15 01:25:19"
+      },
+      {
+        "claim": "The session was routed through an anonymous proxy",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660108)",
+        "entity_ids": [
+          "3660108"
+        ],
+        "as_of": "2017-01-15 01:25:19"
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0889; latest note: \"Case CC-0889: model scored a $99.93 transaction at 0.84. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C05061-K1, before_ts=2017-01-15 01:25:19)",
+        "entity_ids": [
+          "CC-0889"
+        ],
+        "as_of": "2017-01-15 01:25:19"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2985; CC-2971; CC-3035; CC-2649 (confirmed_fraud, undocumented)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=['RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | '], cards=['C05061-K1'], k=8, pattern=, before_ts=2017-01-15 01:25:19)",
+        "entity_ids": [
+          "CC-2985",
+          "CC-2971",
+          "CC-3035",
+          "CC-2649",
+          "CC-0889"
+        ],
+        "as_of": "2017-01-15 01:25:19"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R9 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R9",
+        "entity_ids": [],
+        "as_of": "2017-01-15 01:25:19"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2985",
+      "CC-2971",
+      "CC-3035",
+      "CC-2649",
+      "CC-0889"
+    ],
+    "summary": "An alert was triggered by the following analyst request: \"Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.\" The graph evidence showed three online purchases made from a spoofed device fingerprint that combined an Android handset identifier with Windows operating systems, routed through an anonymous proxy. The final verdict is fraud. The final actions are to automatically create a case and escalate to an analyst, along with recommendations awaiting human approval to block the card (L1) and file a report (L2).",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-001"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9).",
+    "narrative": "This report details suspicious online activity involving customer C05061 and card C05061-K1. Between January 12 and January 14, 2017, three unauthorized online transactions totaling $2,189.02 were conducted. The sequence began with transaction 3660106 for $850.28 on January 12, 2017. This was followed by transaction 3660107 for $890.79 on January 13, 2017, and concluded with transaction 3660108 for $447.95 on January 14, 2017. The activity is highly suspicious because the transactions were initiated from a new device utilizing an anonymous proxy to mask its origin. Furthermore, the device signature was spoofed, presenting an impossible combination of an Android handset model (RCT6303W87M7 Build/MRA58K) running Windows 7 and Windows 10 operating systems. This sophisticated device spoofing indicates an intentional effort to bypass security controls. The total exposure for this fraudulent activity is $2,189.02.",
+    "subjects": [
+      "C05061",
+      "C05061-K1"
+    ],
+    "total_amount_usd": 2189.02,
+    "activity_dates": [
+      "2017-01-12",
+      "2017-01-14"
+    ]
+  },
+  "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (device, model); further queries would not change the actions.",
+  "tool_calls": 21,
+  "tokens": 11172,
+  "latency_s": 67.3,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:26:41+0530",
+    "complete": true,
+    "failures": []
+  }
+}

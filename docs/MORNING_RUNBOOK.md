@@ -34,6 +34,7 @@ Everything below was prepared overnight on the offline mirror. **TigerGraph Sava
 - This loads `data/prep/load_r2/`: 60,196 January transactions, their edges, the cards and accounts whose totals changed, and all 5,585 closed cases (the history was replaced).
 - It is resumable. Progress is kept in `data/prep/loaded_r2.json`.
 - To regenerate the CSVs: `.venv/Scripts/python graph/prep.py && .venv/Scripts/python graph/export.py --since 2017-01-01`.
+- **If it stops with "The job load_transactions is disabled"** (this happened on 29 Oct): adding `model_p` in Round 1 switched that job off. Drop it and recreate it from `graph/loading_jobs_positional.gsql`, which already has the trailing `_` for `model_p`, then rerun `load`. It resumes where it stopped.
 
 ## 3. Install the new and changed queries
 

@@ -1,0 +1,158 @@
+{
+  "case_id": "HHF-009",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.05,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.012, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660355)",
+        "entity_ids": [
+          "3660355"
+        ],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "This card is used almost only in person (8 of 169 earlier transactions online); this purchase is online",
+        "source": "graph",
+        "ref": "query:card_profile(card=C09177-K1, before_ts=2017-01-27 15:08:36, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "Both card-present and online purchases on the same account within 48 hours, with identity anomalies (new device, proxy or name/address match flag)",
+        "source": "graph",
+        "ref": "query:account_history(txn=3660355, lookback_days=200)",
+        "entity_ids": [
+          "3640665"
+        ],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "$228.01 is in the top 3% of this card's purchase amounts",
+        "source": "graph",
+        "ref": "query:card_profile(card=C09177-K1, before_ts=2017-01-27 15:08:36, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "The alert's score (0.80, as in the case record) differs from the score stored on the transaction (0.10). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660355)",
+        "entity_ids": [
+          "3660355"
+        ],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0681 (cleared, none); CC-2742 (cleared, none); CC-3873 (cleared, none); CC-0083 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=['LG-H831 |  |  | '], cards=['C09177-K1'], k=8, pattern=, before_ts=2017-01-27 18:08:36)",
+        "entity_ids": [
+          "CC-0681",
+          "CC-2742",
+          "CC-3873",
+          "CC-0083",
+          "CC-0831",
+          "CC-0281"
+        ],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": [],
+        "as_of": "2017-01-27 18:08:36"
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed they made the purchase",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3660355"
+        ],
+        "as_of": "2017-01-27 18:08:36"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0681",
+      "CC-2742",
+      "CC-3873",
+      "CC-0083",
+      "CC-0831",
+      "CC-0281"
+    ],
+    "summary": "This case was opened because the bank's real-time model flagged transaction 3660355 on card C09177-K1 with a high risk score. Graph evidence showed that the transaction amount was unusually high for this card and occurred online, whereas the card is typically used in person. Additionally, there was a mix of in-person and online activity within 48 hours involving a new device, though the transaction model returned a low score of 0.012. A simulated customer validation response indicated that the cardholder confirmed making the purchase. As a result, the final verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-009"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 14,
+      "assumed_response": "Cardholder confirmed they made the purchase"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.12 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability fell from 0.12 to 0.05 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 17,
+  "tokens": 9931,
+  "latency_s": 124.6,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:33:49+0530",
+    "complete": true,
+    "failures": []
+  }
+}

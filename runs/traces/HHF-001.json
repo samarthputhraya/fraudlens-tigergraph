@@ -1,0 +1,802 @@
+{
+  "case_id": "HHF-001",
+  "events": [
+    {
+      "t": 1793264201.47,
+      "kind": "trigger",
+      "case_id": "HHF-001",
+      "trigger_type": "analyst_request",
+      "text": "Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.",
+      "opened_at": "2017-01-15 01:25:19"
+    },
+    {
+      "t": 1793264201.47,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264210.89,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The cardholder is a victim of account takeover (ATO) by a fraudster using a spoofed device signature to bypass detection.",
+        "The card is part of a wider fraud ring sharing spoofed device profiles or routing through the same anonymous proxy network.",
+        "The transaction is legitimate, and the unusual device signature is due to a legitimate user agent switcher or legacy browser environment."
+      ],
+      "calls": [
+        {
+          "tool": "device_neighbors",
+          "why": "To identify other cards or customers that have transacted using this spoofed device profile ('RCT6303W87M7 Build/MRA58K' combined with desktop OS signatures) to find commonalities.",
+          "days_back": 30
+        },
+        {
+          "tool": "card_window",
+          "why": "To review the full transaction history of card C05061-K1, including the other two spoofed device transactions mentioned in the findings.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1793264223.08,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264229.72,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3660108 is part of a three-day online burst of high-value product C transactions on card C05061-K1, totaling over $2,180. This activity represents a significant departure from the card's historical baseline, which primarily consists of in-person product W transactions. The transactions in this burst were conducted via anonymous proxies using variations of a specific device signature (RCT6303W87M7 Build/MRA58K).",
+      "key_points": [
+        "A rapid burst of three online transactions (3660106, 3660107, and 3660108) occurred between 2017-01-12 and 2017-01-14, totaling $2,189.02.",
+        "All three transactions in the burst utilized an anonymous proxy (IP_PROXY:ANONYMOUS) and were associated with a specific device signature starting with 'RCT6303W87M7 Build/MRA58K'.",
+        "This online product C activity deviates sharply from the card's baseline of 119 transactions, which is dominated by in-person product W transactions (75) and contains only 2 historical product C transactions."
+      ]
+    },
+    {
+      "t": 1793264229.72,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The transaction on card C05061-K1 was initiated from a new device profile that exhibits highly suspicious characteristics, including the use of an anonymous proxy and an inconsistent user agent string combining an Android build signature with Windows 7 and Internet Explorer 11. Given that this is the only transaction recorded on this card account and it utilizes an obfuscated network connection, there is a high likelihood of fraudulent activity.",
+      "key_points": [
+        "The transaction on card C05061-K1 is associated with a device profile flagged as 'New' with only 1 seen transaction.",
+        "The device profile utilizes an anonymous proxy (IP_PROXY:ANONYMOUS) and contains conflicting system identifiers ('RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | ').",
+        "The card account C05061-K1 has a single recorded transaction on 2017-01-14 with no prior history."
+      ]
+    },
+    {
+      "t": 1793264229.72,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "medium",
+      "assessment": "An analyst requested an investigation into transaction 3660108 on card C05061-K1 to find commonalities among affected cards. The network query shows no other cards sharing this device profile, meaning there is no evidence of a shared device ring or connected cases in the provided data. However, both transactions on this card utilized an anonymous proxy and were flagged as New devices.",
+      "key_points": [
+        "Card C05061-K1 has two transactions, 3660106 and 3660108, both conducted via an anonymous proxy (IP_PROXY:ANONYMOUS) on a New device.",
+        "The transaction model score for transaction 3660106 is elevated at 0.48, while transaction 3660108 has a lower model score of approximately 0.29.",
+        "There are no other cards or customers associated with this device profile in the provided dataset, indicating no immediate device-sharing ring."
+      ]
+    },
+    {
+      "t": 1793264229.72,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present transactions on new devices and out-of-region card-present use. This suggests the card details have been compromised repeatedly or across different channels, aligning with broader patterns of card-not-present fraud seen on other cards in the system.",
+      "key_points": [
+        "Card C05061-K1 has been associated with three separate confirmed fraud cases: CC-2420 (card-not-present on a new Windows/Chrome 55.0 device), CC-2674 (out-of-region card-present), and CC-4210 (out-of-region card-present).",
+        "Similar card-not-present fraud patterns on new devices have been confirmed on other cards recently, such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2), indicating a potential broader compromise vector.",
+        "Case CC-0889 was previously cleared as non-fraudulent after the cardholder confirmed travel, but subsequent activity has been heavily fraudulent."
+      ]
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.292, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 8.0,
+      "family": "model",
+      "ref": "query:txn_context(txn=3660108)",
+      "entity_ids": [
+        "3660108"
+      ],
+      "in_model": false,
+      "model_p": 0.291815
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "finding",
+      "key": "proxy",
+      "claim": "The session was routed through an anonymous proxy",
+      "lr": 3.0,
+      "family": "device",
+      "ref": "query:txn_context(txn=3660108)",
+      "entity_ids": [
+        "3660108"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0889; latest note: \"Case CC-0889: model scored a $99.93 transaction at 0.84. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C05061-K1, before_ts=2017-01-15 01:25:19)",
+      "entity_ids": [
+        "CC-0889"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "finding",
+      "key": "spoofed_device",
+      "claim": "3 online purchase(s) ($850.28, $890.79, $447.95) from a device that reports itself as 'RCT6303W87M7 Build/MRA58K', an Android handset, but with operating system(s) Windows 10, Windows 7: a fingerprint no real device produces, marked New for this account, 3 behind an anonymising proxy",
+      "lr": 40.0,
+      "family": "device",
+      "ref": "query:card_window(card=C05061-K1, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19)",
+      "entity_ids": [
+        "3660106",
+        "3660107",
+        "3660108"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "assessment",
+      "p": 0.97,
+      "prior": 0.45,
+      "verdict": "fraud",
+      "pattern": "undocumented",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 8.0,
+          "delta_logodds": 2.079,
+          "note": "starting point"
+        },
+        {
+          "key": "proxy",
+          "family": "device",
+          "lr": 3.0,
+          "delta_logodds": 1.099,
+          "note": "in model score"
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223,
+          "note": "in model score"
+        },
+        {
+          "key": "spoofed_device",
+          "family": "device",
+          "lr": 40.0,
+          "delta_logodds": 3.689,
+          "note": ""
+        }
+      ],
+      "exposure": 2189.02,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264229.73,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.97,
+      "pattern": "undocumented",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,189.02 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9)"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 2189.02,
+      "episode": [
+        "3660106",
+        "3660107",
+        "3660108"
+      ]
+    },
+    {
+      "t": 1793264230.52,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-2985",
+        "CC-2971",
+        "CC-3035",
+        "CC-2649",
+        "CC-0889"
+      ],
+      "knowledge": [
+        "The five known fraud patterns",
+        "The five known fraud patterns",
+        "Card testing",
+        "Undocumented pattern",
+        "Card-not-present fraud",
+        "Out-of-region use"
+      ]
+    },
+    {
+      "t": 1793264244.22,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in the initial and final actions lists. The policy explicitly states that 'Only auto actions may be executed by the agent', meaning the agent cannot execute these actions directly."
+      ],
+      "what_would_change_verdict": "Remove the L1 and L2 actions from the agent's execution lists, leaving only the auto actions (CREATE_CASE, ESCALATE_TO_ANALYST), or route the L1/L2 actions appropriately for human approval rather than executing them."
+    },
+    {
+      "t": 1793264268.74,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-001",
+        "n_vertices": 10,
+        "n_edges": 22
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3660108)",
+      "params": {
+        "txn": "3660108"
+      },
+      "rows": 2,
+      "ms": 109.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C05061-K1, start_ts=2016-12-31 20:25:19, end_ts=2017-01-15 01:25:19)",
+      "params": {
+        "card": "C05061-K1",
+        "start_ts": "2016-12-31 20:25:19",
+        "end_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 10,
+      "ms": 128.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C05061-K1, before_ts=2017-01-14 20:25:19, recent_days=30)",
+      "params": {
+        "card": "C05061-K1",
+        "before_ts": "2017-01-14 20:25:19",
+        "recent_days": 30
+      },
+      "rows": 119,
+      "ms": 113.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C05061-K1, amt=447.95, tol=4.48, before_ts=2017-01-14 20:25:19)",
+      "params": {
+        "card": "C05061-K1",
+        "amt": 447.95,
+        "tol": 4.48,
+        "before_ts": "2017-01-14 20:25:19"
+      },
+      "rows": 0,
+      "ms": 107.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3660108, lookback_days=200)",
+      "params": {
+        "txn": "3660108",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 122.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | , start_ts=2016-12-15 20:25:19, end_ts=2017-01-15 01:25:19)",
+      "params": {
+        "dev": "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | ",
+        "start_ts": "2016-12-15 20:25:19",
+        "end_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 3,
+      "ms": 110.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C05061-K1, before_ts=2017-01-15 01:25:19)",
+      "params": {
+        "card": "C05061-K1",
+        "before_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 5,
+      "ms": 142.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C05061-K1, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19)",
+      "params": {
+        "card": "C05061-K1",
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 19,
+      "ms": 113.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=gmail.com, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19, base_start=2016-06-19 01:25:19, max_detail=200)",
+      "params": {
+        "dom": "gmail.com",
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19",
+        "base_start": "2016-06-19 01:25:19",
+        "max_detail": 200
+      },
+      "rows": 1214,
+      "ms": 294.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=bellsouth.net, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19, base_start=2016-06-19 01:25:19, max_detail=200)",
+      "params": {
+        "dom": "bellsouth.net",
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19",
+        "base_start": "2016-06-19 01:25:19",
+        "max_detail": 200
+      },
+      "rows": 57,
+      "ms": 105.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=yahoo.com, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19, base_start=2016-06-19 01:25:19, max_detail=200)",
+      "params": {
+        "dom": "yahoo.com",
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19",
+        "base_start": "2016-06-19 01:25:19",
+        "max_detail": 200
+      },
+      "rows": 448,
+      "ms": 131.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=anonymous.com, start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19, base_start=2016-06-19 01:25:19, max_detail=200)",
+      "params": {
+        "dom": "anonymous.com",
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19",
+        "base_start": "2016-06-19 01:25:19",
+        "max_detail": 200
+      },
+      "rows": 750,
+      "ms": 134.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "typology_scan",
+      "ref": "query:typology_scan(start_ts=2016-12-16 01:25:19, end_ts=2017-01-15 01:25:19, base_start=2016-09-17 01:25:19, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+      "params": {
+        "start_ts": "2016-12-16 01:25:19",
+        "end_ts": "2017-01-15 01:25:19",
+        "base_start": "2016-09-17 01:25:19",
+        "micro_max": 10.0,
+        "min_micro": 4,
+        "ramp_min": 500.0
+      },
+      "rows": 1751,
+      "ms": 1934.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 464.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | , start_ts=2016-12-15 20:25:19, end_ts=2017-01-15 01:25:19)",
+      "params": {
+        "dev": "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | ",
+        "start_ts": "2016-12-15 20:25:19",
+        "end_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 3,
+      "ms": 102.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C05061-K1, start_ts=2016-12-15 20:25:19, end_ts=2017-01-15 01:25:19)",
+      "params": {
+        "card": "C05061-K1",
+        "start_ts": "2016-12-15 20:25:19",
+        "end_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 19,
+      "ms": 130.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | '], cards=['C05061-K1'], k=6, pattern=, before_ts=2017-01-15 01:25:19)",
+      "params": {
+        "devices": [
+          "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | "
+        ],
+        "cards": [
+          "C05061-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 15,
+      "ms": 224.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | '], cards=['C05061-K1'], k=8, pattern=, before_ts=2017-01-15 01:25:19)",
+      "params": {
+        "devices": [
+          "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | "
+        ],
+        "cards": [
+          "C05061-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 17,
+      "ms": 202.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 243.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | '], cards=['C05061-K1'], k=8, pattern=undocumented, before_ts=2017-01-15 01:25:19)",
+      "params": {
+        "devices": [
+          "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | "
+        ],
+        "cards": [
+          "C05061-K1"
+        ],
+        "k": 8,
+        "pattern": "undocumented",
+        "before_ts": "2017-01-15 01:25:19"
+      },
+      "rows": 17,
+      "ms": 243.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3660106', '3660107', '3660108'], card_ids=[], case_ids=['CC-2985', 'CC-2971', 'CC-3035', 'CC-2649', 'CC-0889'], customer_ids=['C05061'])",
+      "params": {
+        "txn_ids": [
+          "3660106",
+          "3660107",
+          "3660108"
+        ],
+        "card_ids": [],
+        "case_ids": [
+          "CC-2985",
+          "CC-2971",
+          "CC-3035",
+          "CC-2649",
+          "CC-0889"
+        ],
+        "customer_ids": [
+          "C05061"
+        ]
+      },
+      "rows": 9,
+      "ms": 675.8,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3660108 is part of a three-day online burst of high-value product C transactions on card C05061-K1, totaling over $2,180. This activity represents a significant departure from the card's historical baseline, which primarily consists of in-person product W transactions. The transactions in this burst were conducted via anonymous proxies using variations of a specific device signature (RCT6303W87M7 Build/MRA58K).",
+      "risk": "high",
+      "key_points": [
+        "A rapid burst of three online transactions (3660106, 3660107, and 3660108) occurred between 2017-01-12 and 2017-01-14, totaling $2,189.02.",
+        "All three transactions in the burst utilized an anonymous proxy (IP_PROXY:ANONYMOUS) and were associated with a specific device signature starting with 'RCT6303W87M7 Build/MRA58K'.",
+        "This online product C activity deviates sharply from the card's baseline of 119 transactions, which is dominated by in-person product W transactions (75) and contains only 2 historical product C transactions."
+      ],
+      "open_questions": [
+        "Are there other cards in the system experiencing similar bursts of product C transactions associated with the 'RCT6303W87M7 Build/MRA58K' device signature or anonymous proxies?",
+        "What is the true location of the customer compared to the IP addresses used during these proxy-masked transactions?"
+      ],
+      "suggested_pattern": "account_takeover"
+    },
+    "identity": {
+      "assessment": "The transaction on card C05061-K1 was initiated from a new device profile that exhibits highly suspicious characteristics, including the use of an anonymous proxy and an inconsistent user agent string combining an Android build signature with Windows 7 and Internet Explorer 11. Given that this is the only transaction recorded on this card account and it utilizes an obfuscated network connection, there is a high likelihood of fraudulent activity.",
+      "risk": "high",
+      "key_points": [
+        "The transaction on card C05061-K1 is associated with a device profile flagged as 'New' with only 1 seen transaction.",
+        "The device profile utilizes an anonymous proxy (IP_PROXY:ANONYMOUS) and contains conflicting system identifiers ('RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | ').",
+        "The card account C05061-K1 has a single recorded transaction on 2017-01-14 with no prior history."
+      ],
+      "open_questions": [
+        "What are the specific transaction details, such as the transaction amount and merchant information, for transaction 3660108?",
+        "Are there other cards in the system that have attempted transactions using the same anonymous proxy IP address?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "An analyst requested an investigation into transaction 3660108 on card C05061-K1 to find commonalities among affected cards. The network query shows no other cards sharing this device profile, meaning there is no evidence of a shared device ring or connected cases in the provided data. However, both transactions on this card utilized an anonymous proxy and were flagged as New devices.",
+      "risk": "medium",
+      "key_points": [
+        "Card C05061-K1 has two transactions, 3660106 and 3660108, both conducted via an anonymous proxy (IP_PROXY:ANONYMOUS) on a New device.",
+        "The transaction model score for transaction 3660106 is elevated at 0.48, while transaction 3660108 has a lower model score of approximately 0.29.",
+        "There are no other cards or customers associated with this device profile in the provided dataset, indicating no immediate device-sharing ring."
+      ],
+      "open_questions": [
+        "Are there other cards experiencing losses this month that were not captured in the device neighbor query due to different device profiles?",
+        "What is the true cardholder's verification status regarding these two high-value online transactions?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "precedent": {
+      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present transactions on new devices and out-of-region card-present use. This suggests the card details have been compromised repeatedly or across different channels, aligning with broader patterns of card-not-present fraud seen on other cards in the system.",
+      "risk": "high",
+      "key_points": [
+        "Card C05061-K1 has been associated with three separate confirmed fraud cases: CC-2420 (card-not-present on a new Windows/Chrome 55.0 device), CC-2674 (out-of-region card-present), and CC-4210 (out-of-region card-present).",
+        "Similar card-not-present fraud patterns on new devices have been confirmed on other cards recently, such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2), indicating a potential broader compromise vector.",
+        "Case CC-0889 was previously cleared as non-fraudulent after the cardholder confirmed travel, but subsequent activity has been heavily fraudulent."
+      ],
+      "open_questions": [
+        "What are the specific merchant or transaction details of transaction 3660108 on card C05061-K1?",
+        "Is there a common point of purchase (CPP) or merchant breach that links card C05061-K1 with cards C04709-K2 and C08391-K2?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The cardholder is a victim of account takeover (ATO) by a fraudster using a spoofed device signature to bypass detection.",
+      "The card is part of a wider fraud ring sharing spoofed device profiles or routing through the same anonymous proxy network.",
+      "The transaction is legitimate, and the unusual device signature is due to a legitimate user agent switcher or legacy browser environment."
+    ],
+    "extra_calls": [
+      {
+        "tool": "device_neighbors",
+        "why": "To identify other cards or customers that have transacted using this spoofed device profile ('RCT6303W87M7 Build/MRA58K' combined with desktop OS signatures) to find commonalities.",
+        "days_back": 30
+      },
+      {
+        "tool": "card_window",
+        "why": "To review the full transaction history of card C05061-K1, including the other two spoofed device transactions mentioned in the findings.",
+        "days_back": 30
+      }
+    ],
+    "focus": "Investigating the spoofed device profile and identifying other cards linked to it to uncover potential fraud ring activity or common points of compromise."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in the initial and final actions lists. The policy explicitly states that 'Only auto actions may be executed by the agent', meaning the agent cannot execute these actions directly."
+    ],
+    "what_would_change_verdict": "Remove the L1 and L2 actions from the agent's execution lists, leaving only the auto actions (CREATE_CASE, ESCALATE_TO_ANALYST), or route the L1/L2 actions appropriately for human approval rather than executing them."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-001",
+    "n_vertices": 10,
+    "n_edges": 22
+  }
+}

@@ -1,0 +1,807 @@
+{
+  "case_id": "HHF-011",
+  "events": [
+    {
+      "t": 1793264340.56,
+      "kind": "trigger",
+      "case_id": "HHF-011",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3640919 ($881.55) at 0.71. Review and decide.",
+      "opened_at": "2017-01-20 09:06:19"
+    },
+    {
+      "t": 1793264340.56,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264353.26,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The transaction is a legitimate high-value purchase by the cardholder in their established billing region (region 494).",
+        "The transaction is unauthorized (account takeover or card cloning), explaining why the amount is in the top 3% of the card's historical purchases.",
+        "The transaction is a legitimate recurring or expected large payment matching previous billing patterns on this card."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To examine the card's recent transaction history for other high-value transactions or unusual spending patterns surrounding this alert.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if the card has prior transactions of a similar high amount ($881.55), which would support a legitimate recurring payment hypothesis.",
+          "tol_pct": 1.0
+        }
+      ]
+    },
+    {
+      "t": 1793264356.12,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264365.32,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "medium",
+      "assessment": "The flagged transaction 3640919 is a high-value, in-person transaction ($881.55) that represents a significant burst compared to the card's historical baseline. While the bank's real-time risk score was elevated, the transaction model score remains very low, and the transaction aligns with the customer's established location history.",
+      "key_points": [
+        "The flagged transaction 3640919 ($881.55) is significantly larger than previous transactions on this card, such as 3640971 ($198.04) and 3640968 ($24.42).",
+        "The transaction shares the same billing address (addr1 494.0) and matching unnamed model features (d1=245, d15=394) as transaction 3640971 from three days prior, indicating consistent cardholder behavior.",
+        "The transaction model score for the flagged transaction is very low (0.004913), despite the bank's real-time risk score of 0.31 (and the alert's reported 0.71)."
+      ]
+    },
+    {
+      "t": 1793264365.32,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction was flagged by the real-time risk model on a relatively new account with almost no transaction history. Because the device profile is completely missing from the evidence, we cannot verify if a new device or proxy was used, nor can we link this transaction to known device signatures. Due to the high transaction amount on an inactive account and the lack of device data, the risk is considered medium.",
+      "key_points": [
+        "Account C09241-K2|494.0|-43 was opened 43 days prior to the transaction and has only one previously recorded transaction on 2017-01-20.",
+        "The device profile for transaction 3640919 is completely empty, providing no device ID, proxy status, or device type.",
+        "The unnamed model features m4 and m6 are recorded as 'M0' and 'T' respectively, but offer no identifying device details."
+      ]
+    },
+    {
+      "t": 1793264365.32,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The transaction 3640919 was flagged by the real-time risk model with a score of 0.71. However, network analysis reveals no shared device profiles, no connected fraud cases, and no new card activity in the region, indicating a lack of network or ring-based fraud evidence.",
+      "key_points": [
+        "Transaction 3640919 was flagged with a high real-time risk score of 0.71.",
+        "There are no device neighbors or connected cases associated with this transaction or card.",
+        "The region shows stable activity with 29 existing cards and zero new cards registered."
+      ]
+    },
+    {
+      "t": 1793264365.32,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The customer associated with card C09241-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover and out-of-region card-present use. Given this severe recurring fraud pattern across numerous closed cases, the current transaction 3640919 flagged by the real-time risk model is highly suspicious.",
+      "key_points": [
+        "The customer has at least eight closed cases confirmed as fraud on card C09241-K2, including CC-3595, CC-1537, and CC-0254 which were classified as account takeover.",
+        "Multiple other cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-3297, were confirmed as out-of-region fraud where the cardholder still retained the physical card.",
+        "Only one prior case, CC-1257, was cleared as non-fraudulent after the cardholder confirmed travel."
+      ]
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.005, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3640919)",
+      "entity_ids": [
+        "3640919"
+      ],
+      "in_model": false,
+      "model_p": 0.004913
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "trigger_mismatch",
+      "claim": "The alert's score (0.71, as in the case record) differs from the score stored on the transaction (0.31). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3640919)",
+      "entity_ids": [
+        "3640919"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "card_record_mismatch",
+      "claim": "The case record names card C09241-K1, but the bank's transaction record puts transaction 3640919 on card C09241-K2, the card its closed cases also use. The investigation reads C09241-K2; the discrepancy goes to an analyst to reconcile",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3640919)",
+      "entity_ids": [
+        "3640919",
+        "C09241-K2",
+        "C09241-K1"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "amount_high",
+      "claim": "$881.55 is in the top 3% of this card's purchase amounts",
+      "lr": 1.2,
+      "family": "amount",
+      "ref": "query:card_profile(card=C09241-K2, before_ts=2017-01-20 05:06:19, recent_days=30)",
+      "entity_ids": [
+        "3640919"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "region_known",
+      "claim": "This card has 491 earlier purchases billed to region 494 (first on 2016-07-04)",
+      "lr": 0.65,
+      "family": "region",
+      "ref": "query:card_profile(card=C09241-K2, before_ts=2017-01-20 05:06:19, recent_days=30)",
+      "entity_ids": [
+        "3640919"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1257; latest note: \"Case CC-1257: model scored a $24.99 transaction at 0.95. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C09241-K2, before_ts=2017-01-20 09:06:19)",
+      "entity_ids": [
+        "CC-1257"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "assessment",
+      "p": 0.03,
+      "prior": 0.034,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "trigger_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "card_record_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "amount_high",
+          "family": "amount",
+          "lr": 1.2,
+          "delta_logodds": 0.182,
+          "note": "in model score"
+        },
+        {
+          "key": "region_known",
+          "family": "region",
+          "lr": 0.65,
+          "delta_logodds": -0.431,
+          "note": "in model score"
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223,
+          "note": "in model score"
+        }
+      ],
+      "exposure": 881.55,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+        },
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: confirm the purchase with the cardholder before any block"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+          },
+          {
+            "action": "VERIFY_WITH_CUSTOMER",
+            "route": "auto",
+            "reason": "R1: confirm the purchase with the cardholder before any block"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+          }
+        ],
+        "deny": [
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+          },
+          {
+            "action": "VERIFY_WITH_CUSTOMER",
+            "route": "auto",
+            "reason": "R1: confirm the purchase with the cardholder before any block"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+          },
+          {
+            "action": "VERIFY_WITH_CUSTOMER",
+            "route": "auto",
+            "reason": "R1: confirm the purchase with the cardholder before any block"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "evidence_request",
+      "type": "analyst_info",
+      "branch": "pending",
+      "assumed_response": "Analyst asked to reconcile the case record's card with the bank's transaction record; no answer yet, so the case stays with the analyst",
+      "asked_after_step": 16
+    },
+    {
+      "t": 1793264365.37,
+      "kind": "decision",
+      "verdict": "uncertain",
+      "p": 0.03,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+        },
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: confirm the purchase with the cardholder before any block"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 881.55,
+      "episode": [
+        "3640919"
+      ]
+    },
+    {
+      "t": 1793264365.86,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-1779",
+        "CC-3022",
+        "CC-1257",
+        "CC-3297"
+      ],
+      "knowledge": [
+        "Glossary",
+        "No fraud",
+        "Things to know",
+        "R5 Card testing",
+        "R3 Customer confirms the transaction",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1793264387.59,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The draft hallucinates card ID 'C09241-K1' to manufacture an evidence conflict. The system instructions strictly forbid inventing card IDs.",
+        "Because the card discrepancy is fabricated, escalating under R8 for conflicting evidence is invalid.",
+        "With a probability of 0.03 and two independent pieces of evidence of innocence (transaction model score of 0.005 and 491 prior purchases to region 494), Section 6 requires stopping the investigation. The verdict should be legitimate, not uncertain."
+      ],
+      "what_would_change_verdict": "The verdict would change to fraud if the customer denies the transaction, or if there was actual evidence of account takeover or card testing."
+    },
+    {
+      "t": 1793264403.44,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-011",
+        "n_vertices": 11,
+        "n_edges": 19
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3640919)",
+      "params": {
+        "txn": "3640919"
+      },
+      "rows": 2,
+      "ms": 107.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09241-K2, start_ts=2017-01-06 05:06:19, end_ts=2017-01-20 09:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "start_ts": "2017-01-06 05:06:19",
+        "end_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 72,
+      "ms": 215.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C09241-K2, before_ts=2017-01-20 05:06:19, recent_days=30)",
+      "params": {
+        "card": "C09241-K2",
+        "before_ts": "2017-01-20 05:06:19",
+        "recent_days": 30
+      },
+      "rows": 6863,
+      "ms": 533.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09241-K2, amt=881.55, tol=8.82, before_ts=2017-01-20 05:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "amt": 881.55,
+        "tol": 8.82,
+        "before_ts": "2017-01-20 05:06:19"
+      },
+      "rows": 3,
+      "ms": 199.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3640919, lookback_days=200)",
+      "params": {
+        "txn": "3640919",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 134.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=494.0, start_ts=2017-01-17 05:06:19, end_ts=2017-01-20 09:06:19, max_cards=50)",
+      "params": {
+        "region": "494.0",
+        "start_ts": "2017-01-17 05:06:19",
+        "end_ts": "2017-01-20 09:06:19",
+        "max_cards": 50
+      },
+      "rows": 0,
+      "ms": 129.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C09241-K2, before_ts=2017-01-20 09:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "before_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 23,
+      "ms": 148.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09241-K2, start_ts=2016-12-21 09:06:19, end_ts=2017-01-20 09:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "start_ts": "2016-12-21 09:06:19",
+        "end_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 477,
+      "ms": 737.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=anonymous.com, start_ts=2016-12-21 09:06:19, end_ts=2017-01-20 09:06:19, base_start=2016-06-24 09:06:19, max_detail=200)",
+      "params": {
+        "dom": "anonymous.com",
+        "start_ts": "2016-12-21 09:06:19",
+        "end_ts": "2017-01-20 09:06:19",
+        "base_start": "2016-06-24 09:06:19",
+        "max_detail": 200
+      },
+      "rows": 708,
+      "ms": 161.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=yahoo.com, start_ts=2016-12-21 09:06:19, end_ts=2017-01-20 09:06:19, base_start=2016-06-24 09:06:19, max_detail=200)",
+      "params": {
+        "dom": "yahoo.com",
+        "start_ts": "2016-12-21 09:06:19",
+        "end_ts": "2017-01-20 09:06:19",
+        "base_start": "2016-06-24 09:06:19",
+        "max_detail": 200
+      },
+      "rows": 430,
+      "ms": 126.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=aol.com, start_ts=2016-12-21 09:06:19, end_ts=2017-01-20 09:06:19, base_start=2016-06-24 09:06:19, max_detail=200)",
+      "params": {
+        "dom": "aol.com",
+        "start_ts": "2016-12-21 09:06:19",
+        "end_ts": "2017-01-20 09:06:19",
+        "base_start": "2016-06-24 09:06:19",
+        "max_detail": 200
+      },
+      "rows": 538,
+      "ms": 122.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=gmail.com, start_ts=2016-12-21 09:06:19, end_ts=2017-01-20 09:06:19, base_start=2016-06-24 09:06:19, max_detail=200)",
+      "params": {
+        "dom": "gmail.com",
+        "start_ts": "2016-12-21 09:06:19",
+        "end_ts": "2017-01-20 09:06:19",
+        "base_start": "2016-06-24 09:06:19",
+        "max_detail": 200
+      },
+      "rows": 1126,
+      "ms": 197.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 220.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09241-K2, start_ts=2016-12-21 05:06:19, end_ts=2017-01-20 09:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "start_ts": "2016-12-21 05:06:19",
+        "end_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 477,
+      "ms": 645.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09241-K2, amt=881.55, tol=8.82, before_ts=2017-01-20 05:06:19)",
+      "params": {
+        "card": "C09241-K2",
+        "amt": 881.55,
+        "tol": 8.82,
+        "before_ts": "2017-01-20 05:06:19"
+      },
+      "rows": 3,
+      "ms": 130.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C09241-K2'], k=6, pattern=, before_ts=2017-01-20 09:06:19)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C09241-K2"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 17,
+      "ms": 241.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C09241-K2'], k=8, pattern=, before_ts=2017-01-20 09:06:19)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C09241-K2"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-20 09:06:19"
+      },
+      "rows": 21,
+      "ms": 217.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 227.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3640919'], card_ids=[], case_ids=['CC-1779', 'CC-3022', 'CC-1257', 'CC-3297'], customer_ids=['C09241'])",
+      "params": {
+        "txn_ids": [
+          "3640919"
+        ],
+        "card_ids": [],
+        "case_ids": [
+          "CC-1779",
+          "CC-3022",
+          "CC-1257",
+          "CC-3297"
+        ],
+        "customer_ids": [
+          "C09241"
+        ]
+      },
+      "rows": 6,
+      "ms": 395.1,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3640919 is a high-value, in-person transaction ($881.55) that represents a significant burst compared to the card's historical baseline. While the bank's real-time risk score was elevated, the transaction model score remains very low, and the transaction aligns with the customer's established location history.",
+      "risk": "medium",
+      "key_points": [
+        "The flagged transaction 3640919 ($881.55) is significantly larger than previous transactions on this card, such as 3640971 ($198.04) and 3640968 ($24.42).",
+        "The transaction shares the same billing address (addr1 494.0) and matching unnamed model features (d1=245, d15=394) as transaction 3640971 from three days prior, indicating consistent cardholder behavior.",
+        "The transaction model score for the flagged transaction is very low (0.004913), despite the bank's real-time risk score of 0.31 (and the alert's reported 0.71)."
+      ],
+      "open_questions": [
+        "Why is there a discrepancy between the alert text's reported score of 0.71 and the query's recorded risk_score of 0.31?",
+        "What specific merchandise or service was purchased to justify this sudden increase in transaction amount?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "identity": {
+      "assessment": "The transaction was flagged by the real-time risk model on a relatively new account with almost no transaction history. Because the device profile is completely missing from the evidence, we cannot verify if a new device or proxy was used, nor can we link this transaction to known device signatures. Due to the high transaction amount on an inactive account and the lack of device data, the risk is considered medium.",
+      "risk": "medium",
+      "key_points": [
+        "Account C09241-K2|494.0|-43 was opened 43 days prior to the transaction and has only one previously recorded transaction on 2017-01-20.",
+        "The device profile for transaction 3640919 is completely empty, providing no device ID, proxy status, or device type.",
+        "The unnamed model features m4 and m6 are recorded as 'M0' and 'T' respectively, but offer no identifying device details."
+      ],
+      "open_questions": [
+        "Why was the device profile information not captured or resolved for this transaction?",
+        "What are the billing and shipping address details for transaction 3640919 compared to the account's registered address?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The transaction 3640919 was flagged by the real-time risk model with a score of 0.71. However, network analysis reveals no shared device profiles, no connected fraud cases, and no new card activity in the region, indicating a lack of network or ring-based fraud evidence.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3640919 was flagged with a high real-time risk score of 0.71.",
+        "There are no device neighbors or connected cases associated with this transaction or card.",
+        "The region shows stable activity with 29 existing cards and zero new cards registered."
+      ],
+      "open_questions": [
+        "What specific non-network indicators triggered the high real-time risk score of 0.71?",
+        "Are there any chargeback histories or negative indicators on the 29 cards sharing the same region?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "precedent": {
+      "assessment": "The customer associated with card C09241-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover and out-of-region card-present use. Given this severe recurring fraud pattern across numerous closed cases, the current transaction 3640919 flagged by the real-time risk model is highly suspicious.",
+      "risk": "high",
+      "key_points": [
+        "The customer has at least eight closed cases confirmed as fraud on card C09241-K2, including CC-3595, CC-1537, and CC-0254 which were classified as account takeover.",
+        "Multiple other cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-3297, were confirmed as out-of-region fraud where the cardholder still retained the physical card.",
+        "Only one prior case, CC-1257, was cleared as non-fraudulent after the cardholder confirmed travel."
+      ],
+      "open_questions": [
+        "Is the current transaction 3640919 an online (card-not-present) transaction or a card-present transaction?",
+        "What device profile or location was associated with transaction 3640919, and does it match the customer's verified profile or previous fraud indicators?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The transaction is a legitimate high-value purchase by the cardholder in their established billing region (region 494).",
+      "The transaction is unauthorized (account takeover or card cloning), explaining why the amount is in the top 3% of the card's historical purchases.",
+      "The transaction is a legitimate recurring or expected large payment matching previous billing patterns on this card."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To examine the card's recent transaction history for other high-value transactions or unusual spending patterns surrounding this alert.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if the card has prior transactions of a similar high amount ($881.55), which would support a legitimate recurring payment hypothesis.",
+        "tol_pct": 1.0
+      }
+    ],
+    "focus": "card C09241-K2"
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The draft hallucinates card ID 'C09241-K1' to manufacture an evidence conflict. The system instructions strictly forbid inventing card IDs.",
+      "Because the card discrepancy is fabricated, escalating under R8 for conflicting evidence is invalid.",
+      "With a probability of 0.03 and two independent pieces of evidence of innocence (transaction model score of 0.005 and 491 prior purchases to region 494), Section 6 requires stopping the investigation. The verdict should be legitimate, not uncertain."
+    ],
+    "what_would_change_verdict": "The verdict would change to fraud if the customer denies the transaction, or if there was actual evidence of account takeover or card testing."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-011",
+    "n_vertices": 11,
+    "n_edges": 19
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "case_id": "HHF-002",
+  "case": {
+    "status": "escalated",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "undocumented",
+    "pattern_description": "The undocumented pattern involves the use of a spoofed device fingerprint that presents contradictory hardware and software information, such as an Android device reporting an iOS operating system, while operating behind an anonymous proxy. This pattern affects multiple unrelated customers and was discovered through graph analysis linking the impossible device signature across five different cards within a 30-day window, revealing a coordinated fraud ring.",
+    "affected_txn_ids": [
+      "3660125",
+      "3660126",
+      "3660127"
+    ],
+    "first_suspicious_txn_id": "3660125",
+    "connected_card_ids": [
+      "C05061-K1",
+      "C05704-K2",
+      "C07925-K1",
+      "C11309-K1"
+    ],
+    "connected_device_profiles": [],
+    "exposure_usd": 2166.71,
+    "evidence": [
+      {
+        "claim": "3 online purchase(s) ($637.13, $758.80, $770.78) from a device that reports itself as 'SM-J700T1', an Android handset, but with operating system(s) (blank), iOS 11.1.1, iOS 11.1.2: a fingerprint no real device produces, marked New for this account, 3 behind an anonymising proxy",
+        "source": "graph",
+        "ref": "query:card_window(card=C06220-K1, start_ts=2016-12-20 23:18:58, end_ts=2017-01-19 23:18:58)",
+        "entity_ids": [
+          "3660125",
+          "3660126",
+          "3660127"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "The same spoofed device fingerprint signature appears on 4 other card(s) in the same 30 days (C05061-K1, C05704-K2, C07925-K1, C11309-K1): coordinated activity across customers, not one cardholder's habit",
+        "source": "graph",
+        "ref": "query:typology_scan(start_ts=2016-12-20 23:18:58, end_ts=2017-01-19 23:18:58, base_start=2016-09-21 23:18:58, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+        "entity_ids": [
+          "C05061-K1",
+          "C05704-K2",
+          "C07925-K1",
+          "C11309-K1"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "The session was routed through an anonymous proxy",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660127)",
+        "entity_ids": [
+          "3660127"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (SM-J700T1 |  |  | )",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660127)",
+        "entity_ids": [
+          "3660127"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.012, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660127)",
+        "entity_ids": [
+          "3660127"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0815; latest note: \"Case CC-0815: model scored a $74.91 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C06220-K1, before_ts=2017-01-19 23:18:58)",
+        "entity_ids": [
+          "CC-0815"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 5-card ring has $7,610.94 at risk. Every ring card clears the 0.7 confidence bar on its own evidence, so the plan blocks all 5 (C06220-K1, C05061-K1, C11309-K1, C07925-K1, C05704-K2), cutting 100% of it; an expected 0.7 of them could still belong to customers who are not compromised. Blocked at under 0.9 confidence, named for review: C05061-K1, C11309-K1, C07925-K1, C05704-K2.",
+        "source": "graph",
+        "ref": "query:typology_scan(start_ts=2016-12-20 23:18:58, end_ts=2017-01-19 23:18:58, base_start=2016-09-21 23:18:58, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+        "entity_ids": [
+          "C06220-K1",
+          "C05061-K1",
+          "C11309-K1",
+          "C07925-K1",
+          "C05704-K2"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2985; CC-3035 (confirmed_fraud, undocumented); CC-2971 (confirmed_fraud, undocumented); CC-2649",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=['SM-J700T1 |  |  | '], cards=['C06220-K1', 'C05061-K1', 'C05704-K2', 'C07925-K1', 'C11309-K1'], k=8, pattern=, before_ts=2017-01-19 23:18:58)",
+        "entity_ids": [
+          "CC-2985",
+          "CC-3035",
+          "CC-2971",
+          "CC-2649",
+          "CC-0815"
+        ],
+        "as_of": "2017-01-19 23:18:58"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R9 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R9",
+        "entity_ids": [],
+        "as_of": "2017-01-19 23:18:58"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2985",
+      "CC-3035",
+      "CC-2971",
+      "CC-2649",
+      "CC-0815"
+    ],
+    "summary": "An analyst requested a review of transaction 3660127 on card C06220-K1 to identify commonalities across several cards showing losses. Graph evidence revealed that the transaction was part of a sequence of online purchases made from a spoofed device fingerprint routed through an anonymous proxy, a signature shared by four other cards in the past 30 days. The policy engine reached a final verdict of fraud. The system automatically executed CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while recommending BLOCK_CARD (awaiting L1 approval) and FILE_REPORT (awaiting L2 approval).",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-002"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,166.71 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $2,166.71 exceeds $1,000; the pattern is undocumented and coordinated across 5 cards (R9)"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R9: 4 other card(s) show the same spoofed device fingerprint in the same 30 days"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $2,166.71 is under $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $2,166.71 exceeds $1,000; the pattern is undocumented and coordinated across 5 cards (R9)"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R9: 4 other card(s) show the same spoofed device fingerprint in the same 30 days"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $2,166.71 exceeds $1,000; the pattern is undocumented and coordinated across 5 cards (R9).",
+    "narrative": "This report details suspicious online activity involving customer C06220 and card C06220-K1. Between January 17 and January 19, 2017, three unauthorized online transactions were attempted. The transactions are: ID 3660125 on 2017-01-17 for $637.13, ID 3660126 on 2017-01-18 for $758.80, and ID 3660127 on 2017-01-19 for $770.78. These purchases were conducted using a device profile marked as new for this account and routed through an anonymous proxy. The activity is highly suspicious because the device fingerprint is spoofed, presenting itself as an Android handset (SM-J700T1) while simultaneously reporting Apple iOS operating systems (iOS 11.1.1 and 11.1.2) or blank fields. This impossible device signature has been linked to four other cards (C05061-K1, C05704-K2, C07925-K1, C11309-K1) within the same 30-day period, indicating a coordinated fraud ring. The total exposure for this card is $2,166.71.",
+    "subjects": [
+      "C06220",
+      "C06220-K1",
+      "C05061-K1",
+      "C05704-K2",
+      "C07925-K1",
+      "C11309-K1"
+    ],
+    "total_amount_usd": 2166.71,
+    "activity_dates": [
+      "2017-01-17",
+      "2017-01-19"
+    ]
+  },
+  "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (device, network); further queries would not change the actions.",
+  "tool_calls": 21,
+  "tokens": 13925,
+  "latency_s": 71.6,
+  "containment": {
+    "ring_size": 5,
+    "ring_exposure_usd": 7610.94,
+    "innocent_cost_usd": 250.0,
+    "block": [
+      {
+        "card": "C06220-K1",
+        "exposure": 2166.71,
+        "conf": 0.95,
+        "why": "this case: 3 online purchase(s) ($637.13, $758.80, $770.78) from a device that reports itself as 'SM-J700T1', an Android handset, b",
+        "txns": [
+          "3660125",
+          "3660126",
+          "3660127"
+        ]
+      },
+      {
+        "card": "C05061-K1",
+        "exposure": 2189.02,
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (3 purchase(s))",
+        "txns": [
+          "3660106",
+          "3660107",
+          "3660108"
+        ]
+      },
+      {
+        "card": "C11309-K1",
+        "exposure": 1250.17,
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))",
+        "txns": [
+          "3660104",
+          "3660105"
+        ]
+      },
+      {
+        "card": "C07925-K1",
+        "exposure": 1135.53,
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))",
+        "txns": [
+          "3660101",
+          "3660103"
+        ]
+      },
+      {
+        "card": "C05704-K2",
+        "exposure": 869.51,
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))",
+        "txns": [
+          "3660097",
+          "3660096"
+        ]
+      }
+    ],
+    "monitor": [],
+    "plan": {
+      "cards_blocked": 5,
+      "exposure_cut_usd": 7610.94,
+      "exposure_cut_pct": 100.0,
+      "expected_innocent_blocked": 0.65
+    },
+    "block_everything": {
+      "cards_blocked": 5,
+      "exposure_cut_usd": 7610.94,
+      "exposure_cut_pct": 100.0,
+      "expected_innocent_blocked": 0.65
+    },
+    "customers_touched_on_weak_evidence": [
+      {
+        "card": "C05061-K1",
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (3 purchase(s))"
+      },
+      {
+        "card": "C11309-K1",
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))"
+      },
+      {
+        "card": "C07925-K1",
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))"
+      },
+      {
+        "card": "C05704-K2",
+        "conf": 0.85,
+        "why": "its own spoofed device fingerprint (2 purchase(s))"
+      }
+    ]
+  },
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:27:48+0530",
+    "complete": true,
+    "failures": []
+  }
+}

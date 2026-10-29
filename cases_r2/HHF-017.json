@@ -1,0 +1,155 @@
+{
+  "case_id": "HHF-017",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.04,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.000, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3638829)",
+        "entity_ids": [
+          "3638829"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0026; latest note: \"Case CC-0026: model scored a $200.07 transaction at 0.99. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C08842-K2, before_ts=2017-01-01 02:02:06)",
+        "entity_ids": [
+          "CC-0026"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "The session was routed through an anonymous proxy",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3638829)",
+        "entity_ids": [
+          "3638829"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "The alert's score (0.55, as in the case record) differs from the score stored on the transaction (0.01). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3638829)",
+        "entity_ids": [
+          "3638829"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0026 (cleared, none); CC-4809 (confirmed_fraud, account_takeover); CC-3715 (confirmed_fraud, out_of_region_use); CC-4281 (confirmed_fraud, card_not_present_fraud)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=['Windows | Windows 7 | chrome 61.0 | 1680x1050'], cards=['C08842-K2'], k=8, pattern=, before_ts=2017-01-01 02:02:06)",
+        "entity_ids": [
+          "CC-0026",
+          "CC-4809",
+          "CC-3715",
+          "CC-4281",
+          "CC-3931",
+          "CC-4259"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R3 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R3",
+        "entity_ids": [],
+        "as_of": "2017-01-01 02:02:06"
+      },
+      {
+        "claim": "Customer verification (simulated, assumption stated in evidence_requests): Cardholder confirmed they made the purchase",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3638829"
+        ],
+        "as_of": "2017-01-01 02:02:06"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0026",
+      "CC-4809",
+      "CC-3715",
+      "CC-4281",
+      "CC-3931",
+      "CC-4259",
+      "CC-4697",
+      "CC-4899"
+    ],
+    "summary": "The alert was triggered when the bank's real-time model scored transaction 3638829 on card C08842-K2 at 0.55. Graph evidence showed that the transaction model scored the event at 0.000, even though the session was routed through an anonymous proxy. The card also had a previous alert cleared as a false alarm. In a simulated response, the customer confirmed they made the purchase. The verdict is legitimate, resulting in the final actions ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-017"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 16,
+      "assumed_response": "Cardholder confirmed they made the purchase"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: evidence is being requested"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: single signal (probability 0.04 < 0.70); verify before any block"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: the cardholder confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The assumed customer response (\"Cardholder confirmed they made the purchase\") settled the alert: probability stayed at 0.04 and the recommendation moved from verification to ALLOW_TRANSACTION, CLOSE_NO_FRAUD (R3)."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
+  "tool_calls": 19,
+  "tokens": 9748,
+  "latency_s": 69.8,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:20:15+0530",
+    "complete": true,
+    "failures": []
+  }
+}

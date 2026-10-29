@@ -1,0 +1,708 @@
+{
+  "case_id": "HHF-009",
+  "events": [
+    {
+      "t": 1793264629.35,
+      "kind": "trigger",
+      "case_id": "HHF-009",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3660355 ($228.01, online) at 0.8. Review and decide.",
+      "opened_at": "2017-01-27 18:08:36"
+    },
+    {
+      "t": 1793264629.35,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264636.16,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "Account Takeover (ATO) where an unauthorized user is transacting online with a new device while the legitimate cardholder transacts in person (mixed-channel anomaly)",
+        "Legitimate cardholder transaction representing an unusual online purchase on their mobile device (LG-H831)",
+        "Legitimate recurring charge matching previous transaction patterns on this card"
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the timeline of card-present and online transactions within the 48-hour window to confirm the mixed-channel anomaly.",
+          "days_back": 14
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if the amount of $228.01 matches any historical recurring transactions on this card.",
+          "tol_pct": 1.0
+        },
+        {
+          "tool": "device_neighbors",
+          "why": "To determine if the device profile 'LG-H831 |  |  | ' has been linked to other cards or known fraud cases.",
+          "days_back": 30
+        }
+      ]
+    },
+    {
+      "t": 1793264638.62,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264648.15,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The flagged transaction 3660355 represents a significant deviation from the customer's historical baseline, which is heavily dominated by in-person transactions of product W. Within a 24-hour window, two high-value online transactions (3660354 and 3660355) for product C were attempted using a new mobile device profile. This sudden shift in channel, product type, and device signature suggests potential card-not-present fraud.",
+      "key_points": [
+        "The flagged transaction 3660355 ($228.01) and preceding transaction 3660354 ($261.61) are online purchases for product C, deviating from a baseline of 161 in-person transactions and only 1 historical product C transaction.",
+        "Both transactions were executed using a new mobile device profile (LG-H831), whereas the customer's history is almost exclusively in-person.",
+        "The transaction model score for the flagged transaction is 0.012414, reflecting an elevated risk compared to the customer's typical in-person transactions."
+      ]
+    },
+    {
+      "t": 1793264648.15,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The transaction 3660355 was flagged due to a high real-time risk score of 0.8. It was initiated from a new mobile device (LG-H831) which has not been seen before on card C09177-K1, contrasting with the account's only prior transaction 3640665 which was conducted in-person with a very low risk score.",
+      "key_points": [
+        "The transaction 3660355 ($228.01) was performed on a new mobile device (LG-H831) that has no prior history on card C09177-K1.",
+        "The cardholder account C09177-K1|337.0|209 has only one prior transaction (3640665) which was an in-person transaction with a low risk score of 0.03 and a low transaction model probability of 0.001052.",
+        "The device profile contains unnamed model features m4 set to M0 and m6 set to F."
+      ]
+    },
+    {
+      "t": 1793264648.15,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The alerted transaction 3660355 on card C09177-K1 shows no network connections to other cards, customers, or known fraud cases. The device is associated with only one card all-time, and both recorded transactions belong to the same customer, C09177. The transaction model score remains very low at 0.012414, indicating no immediate signs of systemic risk or ring activity.",
+      "key_points": [
+        "The device used for transaction 3660355 is associated with only one card (C09177-K1) and one customer (C09177) in the provided history.",
+        "The transaction model score (model_p) for the alerted transaction 3660355 is low at 0.012414.",
+        "There are no connected fraud cases or other cards sharing this device profile."
+      ]
+    },
+    {
+      "t": 1793264648.15,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The alert concerns transaction 3660355, which was flagged by the real-time risk model with a score of 0.8. Historical precedents show a strong trend of confirmed fraud associated with new Android devices (specifically LG models), although legitimate new device registrations do occasionally occur as seen in CC-2323.",
+      "key_points": [
+        "Multiple past cases involving new LG Android devices on Chrome have been confirmed as fraud, including card-not-present fraud in CC-2314, CC-5321, and CC-4189.",
+        "More severe account takeover patterns using similar LG device profiles were confirmed in cases CC-3155 and CC-3138.",
+        "A single precedent, CC-2323, represents a false positive where a high-scoring transaction on a new device was confirmed as legitimate by the cardholder."
+      ]
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.012, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.6159321821086973,
+      "family": "model",
+      "ref": "query:txn_context(txn=3660355)",
+      "entity_ids": [
+        "3660355"
+      ],
+      "in_model": false,
+      "model_p": 0.012414
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "finding",
+      "key": "trigger_mismatch",
+      "claim": "The alert's score (0.80, as in the case record) differs from the score stored on the transaction (0.10). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3660355)",
+      "entity_ids": [
+        "3660355"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "finding",
+      "key": "amount_high",
+      "claim": "$228.01 is in the top 3% of this card's purchase amounts",
+      "lr": 1.2,
+      "family": "amount",
+      "ref": "query:card_profile(card=C09177-K1, before_ts=2017-01-27 15:08:36, recent_days=30)",
+      "entity_ids": [
+        "3660355"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "finding",
+      "key": "channel_shift",
+      "claim": "This card is used almost only in person (8 of 169 earlier transactions online); this purchase is online",
+      "lr": 2.7,
+      "family": "behaviour",
+      "ref": "query:card_profile(card=C09177-K1, before_ts=2017-01-27 15:08:36, recent_days=30)",
+      "entity_ids": [
+        "3660355"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "finding",
+      "key": "mixed_channel",
+      "claim": "Both card-present and online purchases on the same account within 48 hours, with identity anomalies (new device, proxy or name/address match flag)",
+      "lr": 2.0,
+      "family": "behaviour",
+      "ref": "query:account_history(txn=3660355, lookback_days=200)",
+      "entity_ids": [
+        "3640665",
+        "3660355"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "assessment",
+      "p": 0.12,
+      "prior": 0.034,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.62,
+          "delta_logodds": -0.485,
+          "note": "starting point"
+        },
+        {
+          "key": "trigger_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "amount_high",
+          "family": "amount",
+          "lr": 1.2,
+          "delta_logodds": 0.182,
+          "note": "in model score"
+        },
+        {
+          "key": "channel_shift",
+          "family": "behaviour",
+          "lr": 2.7,
+          "delta_logodds": 0.993,
+          "note": "in model score"
+        },
+        {
+          "key": "mixed_channel",
+          "family": "behaviour",
+          "lr": 2.0,
+          "delta_logodds": 0.693,
+          "note": ""
+        }
+      ],
+      "exposure": 228.01,
+      "initial": [
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: evidence is being requested"
+        },
+        {
+          "action": "VERIFY_WITH_CUSTOMER",
+          "route": "auto",
+          "reason": "R1: single signal (probability 0.12 < 0.70); verify before any block"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "R3: the cardholder confirmed the transaction"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denied the transaction; exposure $228.01 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R4: no reply within 24 hours; raise monitoring for 72 hours"
+          },
+          {
+            "action": "DECLINE_TRANSACTION",
+            "route": "L1",
+            "reason": "R4: decline the pending authorisation"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "evidence_request",
+      "type": "customer_validation",
+      "branch": "confirm",
+      "assumed_response": "Cardholder confirmed they made the purchase",
+      "asked_after_step": 14
+    },
+    {
+      "t": 1793264648.16,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.05,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "R3: the cardholder confirmed the transaction"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "R3: cardholder confirmed they made the purchase; confirmation noted in the case file"
+        }
+      ],
+      "status": "closed_legitimate",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1793264648.63,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-0681",
+        "CC-2742",
+        "CC-3873",
+        "CC-0083",
+        "CC-0831",
+        "CC-0281"
+      ],
+      "knowledge": [
+        "Glossary",
+        "No fraud",
+        "R3 Customer confirms the transaction",
+        "R5 Card testing",
+        "Things to know",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1793264724.9,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The draft explicitly notes that two bank sources disagree regarding the risk score (0.80 vs 0.10), which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the ESCALATE_TO_ANALYST action, which was omitted."
+      ],
+      "what_would_change_verdict": "If the customer denied the transaction instead of confirming it, the verdict would change to fraud, requiring BLOCK_CARD and CREATE_CASE under Policy R2."
+    },
+    {
+      "t": 1793264753.92,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-009",
+        "n_vertices": 7,
+        "n_edges": 18
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3660355)",
+      "params": {
+        "txn": "3660355"
+      },
+      "rows": 2,
+      "ms": 118.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09177-K1, start_ts=2017-01-13 15:08:36, end_ts=2017-01-27 18:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "start_ts": "2017-01-13 15:08:36",
+        "end_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 14,
+      "ms": 133.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C09177-K1, before_ts=2017-01-27 15:08:36, recent_days=30)",
+      "params": {
+        "card": "C09177-K1",
+        "before_ts": "2017-01-27 15:08:36",
+        "recent_days": 30
+      },
+      "rows": 169,
+      "ms": 119.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09177-K1, amt=228.01, tol=2.28, before_ts=2017-01-27 15:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "amt": 228.01,
+        "tol": 2.28,
+        "before_ts": "2017-01-27 15:08:36"
+      },
+      "rows": 2,
+      "ms": 211.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3660355, lookback_days=200)",
+      "params": {
+        "txn": "3660355",
+        "lookback_days": 200
+      },
+      "rows": 2,
+      "ms": 125.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=LG-H831 |  |  | , start_ts=2016-12-28 15:08:36, end_ts=2017-01-27 18:08:36)",
+      "params": {
+        "dev": "LG-H831 |  |  | ",
+        "start_ts": "2016-12-28 15:08:36",
+        "end_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 3,
+      "ms": 127.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C09177-K1, before_ts=2017-01-27 18:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "before_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 1,
+      "ms": 114.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09177-K1, start_ts=2016-12-28 18:08:36, end_ts=2017-01-27 18:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "start_ts": "2016-12-28 18:08:36",
+        "end_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 32,
+      "ms": 315.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=gmail.com, start_ts=2016-12-28 18:08:36, end_ts=2017-01-27 18:08:36, base_start=2016-07-01 18:08:36, max_detail=200)",
+      "params": {
+        "dom": "gmail.com",
+        "start_ts": "2016-12-28 18:08:36",
+        "end_ts": "2017-01-27 18:08:36",
+        "base_start": "2016-07-01 18:08:36",
+        "max_detail": 200
+      },
+      "rows": 996,
+      "ms": 265.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 208.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09177-K1, start_ts=2017-01-13 15:08:36, end_ts=2017-01-27 18:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "start_ts": "2017-01-13 15:08:36",
+        "end_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 14,
+      "ms": 123.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09177-K1, amt=228.01, tol=2.28, before_ts=2017-01-27 15:08:36)",
+      "params": {
+        "card": "C09177-K1",
+        "amt": 228.01,
+        "tol": 2.28,
+        "before_ts": "2017-01-27 15:08:36"
+      },
+      "rows": 2,
+      "ms": 124.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "device_neighbors",
+      "ref": "query:device_neighbors(dev=LG-H831 |  |  | , start_ts=2016-12-28 15:08:36, end_ts=2017-01-27 18:08:36)",
+      "params": {
+        "dev": "LG-H831 |  |  | ",
+        "start_ts": "2016-12-28 15:08:36",
+        "end_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 3,
+      "ms": 117.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['LG-H831 |  |  | '], cards=['C09177-K1'], k=6, pattern=, before_ts=2017-01-27 18:08:36)",
+      "params": {
+        "devices": [
+          "LG-H831 |  |  | "
+        ],
+        "cards": [
+          "C09177-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 17,
+      "ms": 253.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=['LG-H831 |  |  | '], cards=['C09177-K1'], k=8, pattern=, before_ts=2017-01-27 18:08:36)",
+      "params": {
+        "devices": [
+          "LG-H831 |  |  | "
+        ],
+        "cards": [
+          "C09177-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-27 18:08:36"
+      },
+      "rows": 21,
+      "ms": 247.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 196.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0681', 'CC-2742', 'CC-3873', 'CC-0083', 'CC-0831', 'CC-0281'], customer_ids=['C09177'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-0681",
+          "CC-2742",
+          "CC-3873",
+          "CC-0083",
+          "CC-0831",
+          "CC-0281"
+        ],
+        "customer_ids": [
+          "C09177"
+        ]
+      },
+      "rows": 7,
+      "ms": 504.8,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3660355 represents a significant deviation from the customer's historical baseline, which is heavily dominated by in-person transactions of product W. Within a 24-hour window, two high-value online transactions (3660354 and 3660355) for product C were attempted using a new mobile device profile. This sudden shift in channel, product type, and device signature suggests potential card-not-present fraud.",
+      "risk": "high",
+      "key_points": [
+        "The flagged transaction 3660355 ($228.01) and preceding transaction 3660354 ($261.61) are online purchases for product C, deviating from a baseline of 161 in-person transactions and only 1 historical product C transaction.",
+        "Both transactions were executed using a new mobile device profile (LG-H831), whereas the customer's history is almost exclusively in-person.",
+        "The transaction model score for the flagged transaction is 0.012414, reflecting an elevated risk compared to the customer's typical in-person transactions."
+      ],
+      "open_questions": [
+        "Is the LG-H831 mobile device actually owned by the legitimate cardholder?",
+        "What prompted the sudden shift from in-person 'W' product purchases to online 'C' product purchases?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The transaction 3660355 was flagged due to a high real-time risk score of 0.8. It was initiated from a new mobile device (LG-H831) which has not been seen before on card C09177-K1, contrasting with the account's only prior transaction 3640665 which was conducted in-person with a very low risk score.",
+      "risk": "high",
+      "key_points": [
+        "The transaction 3660355 ($228.01) was performed on a new mobile device (LG-H831) that has no prior history on card C09177-K1.",
+        "The cardholder account C09177-K1|337.0|209 has only one prior transaction (3640665) which was an in-person transaction with a low risk score of 0.03 and a low transaction model probability of 0.001052.",
+        "The device profile contains unnamed model features m4 set to M0 and m6 set to F."
+      ],
+      "open_questions": [
+        "Why did the cardholder transition from an in-person channel to an online channel on a new mobile device within approximately 13 hours?",
+        "Are there any IP address or location mismatches associated with the new mobile device compared to the cardholder's registered address 337.0?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "The alerted transaction 3660355 on card C09177-K1 shows no network connections to other cards, customers, or known fraud cases. The device is associated with only one card all-time, and both recorded transactions belong to the same customer, C09177. The transaction model score remains very low at 0.012414, indicating no immediate signs of systemic risk or ring activity.",
+      "risk": "low",
+      "key_points": [
+        "The device used for transaction 3660355 is associated with only one card (C09177-K1) and one customer (C09177) in the provided history.",
+        "The transaction model score (model_p) for the alerted transaction 3660355 is low at 0.012414.",
+        "There are no connected fraud cases or other cards sharing this device profile."
+      ],
+      "open_questions": [
+        "What specific real-time features triggered the high risk score alert of 0.8 mentioned in the alert text, given the low transaction model score of 0.012414?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "The alert concerns transaction 3660355, which was flagged by the real-time risk model with a score of 0.8. Historical precedents show a strong trend of confirmed fraud associated with new Android devices (specifically LG models), although legitimate new device registrations do occasionally occur as seen in CC-2323.",
+      "risk": "high",
+      "key_points": [
+        "Multiple past cases involving new LG Android devices on Chrome have been confirmed as fraud, including card-not-present fraud in CC-2314, CC-5321, and CC-4189.",
+        "More severe account takeover patterns using similar LG device profiles were confirmed in cases CC-3155 and CC-3138.",
+        "A single precedent, CC-2323, represents a false positive where a high-scoring transaction on a new device was confirmed as legitimate by the cardholder."
+      ],
+      "open_questions": [
+        "What are the device profile details (model, OS, browser) associated with transaction 3660355?",
+        "Has the cardholder of transaction 3660355 been contacted to verify this specific online transaction?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "Account Takeover (ATO) where an unauthorized user is transacting online with a new device while the legitimate cardholder transacts in person (mixed-channel anomaly)",
+      "Legitimate cardholder transaction representing an unusual online purchase on their mobile device (LG-H831)",
+      "Legitimate recurring charge matching previous transaction patterns on this card"
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the timeline of card-present and online transactions within the 48-hour window to confirm the mixed-channel anomaly.",
+        "days_back": 14
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if the amount of $228.01 matches any historical recurring transactions on this card.",
+        "tol_pct": 1.0
+      },
+      {
+        "tool": "device_neighbors",
+        "why": "To determine if the device profile 'LG-H831 |  |  | ' has been linked to other cards or known fraud cases.",
+        "days_back": 30
+      }
+    ],
+    "focus": "Investigating the mixed-channel anomaly and verifying if the online transaction represents legitimate cardholder behavior or unauthorized account takeover."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The draft explicitly notes that two bank sources disagree regarding the risk score (0.80 vs 0.10), which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the ESCALATE_TO_ANALYST action, which was omitted."
+    ],
+    "what_would_change_verdict": "If the customer denied the transaction instead of confirming it, the verdict would change to fraud, requiring BLOCK_CARD and CREATE_CASE under Policy R2."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-009",
+    "n_vertices": 7,
+    "n_edges": 18
+  }
+}

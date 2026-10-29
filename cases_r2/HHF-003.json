@@ -1,0 +1,429 @@
+{
+  "case_id": "HHF-003",
+  "case": {
+    "status": "escalated",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "undocumented",
+    "pattern_description": "The undocumented pattern involves an escalating-value ramp signature where online purchases steadily climb in amount to probe the card's limit before repeating the maximum successful charge. This coordinated activity affects 14 cards in total over a 30-day period. It was discovered through a typology scan that identified the same escalating purchase behavior across multiple unrelated customers.",
+    "affected_txn_ids": [
+      "3660147",
+      "3660148",
+      "3660149",
+      "3660150",
+      "3660151",
+      "3660152",
+      "3660153"
+    ],
+    "first_suspicious_txn_id": "3660147",
+    "connected_card_ids": [
+      "C03040-K2",
+      "C03080-K2",
+      "C04096-K1",
+      "C06026-K2",
+      "C07847-K1",
+      "C07871-K1",
+      "C08563-K1",
+      "C08943-K2",
+      "C09026-K1",
+      "C09148-K1",
+      "C09274-K1",
+      "C09918-K1",
+      "C10320-K1"
+    ],
+    "connected_device_profiles": [],
+    "exposure_usd": 8551.47,
+    "evidence": [
+      {
+        "claim": "7 online purchases between 2017-01-22 and 2017-01-31 climbing from $181.73 to $1,800.00 ($181.73 -> $357.82 -> $811.92 -> $1,800.00 -> $1,800.00 -> $1,800.00 -> $1,800.00), with 4 charges at the top amount: the pattern of someone probing the card's limit",
+        "source": "graph",
+        "ref": "query:card_window(card=C11663-K1, start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28)",
+        "entity_ids": [
+          "3660147",
+          "3660148",
+          "3660149",
+          "3660150",
+          "3660151",
+          "3660152",
+          "3660153"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "The same escalating-value ramp signature appears on 13 other card(s) in the same 30 days: coordinated activity across customers, not one cardholder's habit; all of them on weaker evidence of their own, so they are monitored and not named here",
+        "source": "graph",
+        "ref": "query:typology_scan(start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28, base_start=2016-10-03 20:31:28, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+        "entity_ids": [
+          "C03040-K2",
+          "C03080-K2",
+          "C04096-K1",
+          "C06026-K2",
+          "C07847-K1",
+          "C07871-K1",
+          "C08563-K1",
+          "C08943-K2",
+          "C09026-K1",
+          "C09148-K1",
+          "C09274-K1",
+          "C09918-K1",
+          "C10320-K1"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.001, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3660153)",
+        "entity_ids": [
+          "3660153"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 14-card ring has $42,760.11 at risk. Blocking 1 card(s) (C11663-K1) would cut 20.0% of it, and the other 13 would be monitored. Blocking every ring card would cut 100.0% but is expected to block 6.5 customer(s) who are not compromised, against 0.1 for this plan.",
+        "source": "graph",
+        "ref": "query:typology_scan(start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28, base_start=2016-10-03 20:31:28, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+        "entity_ids": [
+          "C11663-K1"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2985 (confirmed_fraud, undocumented); CC-3035; CC-2971; CC-2649",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=[], cards=['C11663-K1', 'C03040-K2', 'C03080-K2', 'C04096-K1', 'C06026-K2', 'C07847-K1', 'C07871-K1', 'C08563-K1', 'C08943-K2', 'C09026-K1', 'C09148-K1'], k=8, pattern=, before_ts=2017-01-31 20:31:28)",
+        "entity_ids": [
+          "CC-2985",
+          "CC-3035",
+          "CC-2971",
+          "CC-2649",
+          "CC-4086",
+          "CC-3841"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R2, R9 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R2/R9",
+        "entity_ids": [],
+        "as_of": "2017-01-31 20:31:28"
+      },
+      {
+        "claim": "The customer reported that they never made the $1,800.00 purchase (3660153); under R2 this is a denial",
+        "source": "customer",
+        "ref": "trigger:HHF-003",
+        "entity_ids": [
+          "3660153"
+        ],
+        "as_of": "2017-01-31 20:31:28"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2985",
+      "CC-3035",
+      "CC-2971",
+      "CC-2649",
+      "CC-4086",
+      "CC-3841"
+    ],
+    "summary": "This alert was triggered when customer C11663 reported unauthorized charges, specifically referencing transaction 3660153 on card C11663-K1. Graph evidence revealed an escalating-value ramp signature across seven online purchases, a pattern also observed on 13 other cards, indicating coordinated limit-probing activity. The policy engine reached a final verdict of fraud. The final actions are to automatically CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while the recommendations to BLOCK_CARD and FILE_REPORT are routed to L2 awaiting a human's approval.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-003"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L2",
+        "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L2",
+        "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9).",
+    "narrative": "This Suspicious Activity Report details unauthorized online transactions on card C11663-K1 belonging to customer C11663. Between January 22 and January 31, 2017, seven online purchases were made, escalating in value to probe the card's limit. The sequence began with transaction 3660147 on 2017-01-22 for $181.73, followed by 3660148 on 2017-01-23 for $357.82, and 3660149 on 2017-01-24 for $811.92. The activity then capped at $1,800.00 for the remaining four transactions: 3660150 on 2017-01-26, 3660151 on 2017-01-27, 3660152 on 2017-01-28, and 3660153 on 2017-01-31. The customer explicitly denied making these charges. This activity is suspicious because it demonstrates a clear escalating-value ramp signature designed to test the card's maximum limit, a pattern found across multiple customers. The total exposure for this compromised card is $8,551.47.",
+    "subjects": [
+      "C11663",
+      "C11663-K1"
+    ],
+    "total_amount_usd": 8551.47,
+    "activity_dates": [
+      "2017-01-22",
+      "2017-01-31"
+    ]
+  },
+  "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (behaviour, network) support a defensible decision at probability 0.97; further queries would not change the actions.",
+  "tool_calls": 16,
+  "tokens": 12319,
+  "latency_s": 102.5,
+  "containment": {
+    "ring_size": 14,
+    "ring_exposure_usd": 42760.11,
+    "innocent_cost_usd": 250.0,
+    "block": [
+      {
+        "card": "C11663-K1",
+        "exposure": 8551.47,
+        "conf": 0.95,
+        "why": "this case: 7 online purchases between 2017-01-22 and 2017-01-31 climbing from $181.73 to $1,800.00 ($181.73 -> $357.82 -> $811.92 -",
+        "txns": [
+          "3660147",
+          "3660148",
+          "3660149",
+          "3660150",
+          "3660151",
+          "3660152",
+          "3660153"
+        ]
+      }
+    ],
+    "monitor": [
+      {
+        "card": "C09026-K1",
+        "exposure": 7595.03,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (6 purchase(s))",
+        "txns": [
+          "3660131",
+          "3660132",
+          "3660133",
+          "3660134",
+          "3660135",
+          "3660136"
+        ]
+      },
+      {
+        "card": "C08943-K2",
+        "exposure": 3495.45,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660154",
+          "3660155",
+          "3660156",
+          "3660157",
+          "3660158"
+        ]
+      },
+      {
+        "card": "C08563-K1",
+        "exposure": 3483.78,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660159",
+          "3660160",
+          "3660161",
+          "3660162",
+          "3660163"
+        ]
+      },
+      {
+        "card": "C03080-K2",
+        "exposure": 3393.98,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660169",
+          "3660170",
+          "3660171",
+          "3660172",
+          "3660173"
+        ]
+      },
+      {
+        "card": "C10320-K1",
+        "exposure": 2618.03,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3645958",
+          "3645939",
+          "3645951",
+          "3645934",
+          "3645948"
+        ]
+      },
+      {
+        "card": "C04096-K1",
+        "exposure": 2574.01,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660164",
+          "3660165",
+          "3660166",
+          "3660167",
+          "3660168"
+        ]
+      },
+      {
+        "card": "C07847-K1",
+        "exposure": 2503.79,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660142",
+          "3660143",
+          "3660144",
+          "3660145",
+          "3660146"
+        ]
+      },
+      {
+        "card": "C09148-K1",
+        "exposure": 2231.58,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3660137",
+          "3660138",
+          "3660139",
+          "3660140",
+          "3660141"
+        ]
+      },
+      {
+        "card": "C09274-K1",
+        "exposure": 1739.99,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3641320",
+          "3641319",
+          "3641299",
+          "3641342",
+          "3641361"
+        ]
+      },
+      {
+        "card": "C06026-K2",
+        "exposure": 1675.31,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (4 purchase(s))",
+        "txns": [
+          "3626218",
+          "3626182",
+          "3626185",
+          "3626212"
+        ]
+      },
+      {
+        "card": "C03040-K2",
+        "exposure": 1098.36,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (6 purchase(s))",
+        "txns": [
+          "3613525",
+          "3613475",
+          "3613477",
+          "3613550",
+          "3613536",
+          "3613523"
+        ]
+      },
+      {
+        "card": "C07871-K1",
+        "exposure": 962.1,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (5 purchase(s))",
+        "txns": [
+          "3634894",
+          "3634890",
+          "3634871",
+          "3634869",
+          "3634874"
+        ]
+      },
+      {
+        "card": "C09918-K1",
+        "exposure": 837.23,
+        "conf": 0.5,
+        "why": "its own escalating-value ramp (4 purchase(s))",
+        "txns": [
+          "3644320",
+          "3644327",
+          "3644324",
+          "3644328"
+        ]
+      }
+    ],
+    "plan": {
+      "cards_blocked": 1,
+      "exposure_cut_usd": 8551.47,
+      "exposure_cut_pct": 20.0,
+      "expected_innocent_blocked": 0.05
+    },
+    "block_everything": {
+      "cards_blocked": 14,
+      "exposure_cut_usd": 42760.11,
+      "exposure_cut_pct": 100.0,
+      "expected_innocent_blocked": 6.55
+    },
+    "customers_touched_on_weak_evidence": []
+  },
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:39:50+0530",
+    "complete": true,
+    "failures": []
+  }
+}

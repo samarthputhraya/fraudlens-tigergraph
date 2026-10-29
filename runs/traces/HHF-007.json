@@ -1,0 +1,660 @@
+{
+  "case_id": "HHF-007",
+  "events": [
+    {
+      "t": 1793264154.32,
+      "kind": "trigger",
+      "case_id": "HHF-007",
+      "trigger_type": "customer_report",
+      "text": "Customer C09582 message: 'I never made this $236.28 purchase. Please check my card.' Refers to 3660350.",
+      "opened_at": "2017-01-14 15:57:30"
+    },
+    {
+      "t": 1793264154.32,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264159.95,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The card was compromised via online card testing (4 micro-authorisations under $5) followed by an unauthorised high-value purchase.",
+        "The transaction is a legitimate recurring charge or customer purchase that was forgotten or disputed in error.",
+        "The cardholder's account was compromised through a channel shift, but the transaction model scored it low due to unnamed model features."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To examine the full sequence of transactions on this card, including the micro-authorisations and any other recent online activity.",
+          "days_back": 30
+        },
+        {
+          "tool": "recurring_match",
+          "why": "To check if the card has a history of recurring charges of approximately $236.28, which would support a legitimate transaction hypothesis.",
+          "tol_pct": 1.0
+        },
+        {
+          "tool": "similar_cases_by_pattern",
+          "why": "To find closed cases matching the card testing pattern followed by a larger online purchase to see if they share common indicators.",
+          "pattern": "card_testing"
+        }
+      ]
+    },
+    {
+      "t": 1793264163.28,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "Customer C09582 has explicitly disputed transaction 3660350 for $236.28, stating they did not authorize the purchase. The transaction was conducted online via a generic mobile device profile, representing a channel shift from typical in-person activity. Given the direct customer report and the card-not-present nature of the transaction, there is a high likelihood of fraud.",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 ($236.28) as unauthorized.",
+        "The flagged transaction 3660350 was an online purchase (product C) using a generic mobile device signature shared by 4,011 other transactions.",
+        "The transaction was flagged as 'New' with a real-time risk score of 0.19 and a transaction model score of 0.004553."
+      ]
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The customer C09582 reported an unauthorized transaction of $236.28 on transaction 3660350. The transaction was performed using a new mobile device that has never been seen on card C09582-K1 before. Given that the account history shows only a single transaction on the day of opening, this indicates potential card-not-present fraud on a newly established or rarely used account.",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 ($236.28) as unauthorized.",
+        "The transaction was completed using a 'New' mobile device with no prior history on card C09582-K1.",
+        "The associated account C09582-K1|476.0|-101 has an extremely sparse history with only one recorded transaction on 2017-01-14."
+      ]
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The customer reported an unauthorized transaction of $236.28 on card C09582. Network analysis reveals no shared device profiles, device neighbors, or connected cases associated with this transaction. Based on the available evidence, this appears to be an isolated report of fraud with no indications of a wider ring or network-level compromise.",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 as unauthorized.",
+        "No device neighbors or shared device profiles were found linked to the transaction or card.",
+        "There are no connected cases or shared regional patterns identified in the network database."
+      ]
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "medium",
+      "assessment": "Customer C09582 has reported an unrecognized purchase of $236.28 on transaction 3660350. This customer has a history of both confirmed fraud (CC-2822) and a cleared false positive (CC-1645) on card C09582-K1. The current report requires investigation to determine if it represents a new instance of unauthorized card use.",
+      "key_points": [
+        "Customer C09582 previously had a confirmed fraud case (CC-2822) on card C09582-K1 involving out-of-region card-present use.",
+        "The same customer had a prior alert (CC-1645) on card C09582-K1 that was cleared as legitimate after the customer confirmed travel.",
+        "The current alert is triggered by a direct customer report claiming an unrecognized purchase of $236.28 on transaction 3660350."
+      ]
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.005, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3660350)",
+      "entity_ids": [
+        "3660350"
+      ],
+      "in_model": false,
+      "model_p": 0.004553
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "finding",
+      "key": "card_testing",
+      "claim": "4 online authorisations under $5 within an hour ($1.53, $3.46, $3.33, $1.78), followed by a $236.28 purchase",
+      "lr": 30.0,
+      "family": "behaviour",
+      "ref": "query:card_window(card=C09582-K1, start_ts=2016-12-31 13:57:30, end_ts=2017-01-14 15:57:30)",
+      "entity_ids": [
+        "3660346",
+        "3660347",
+        "3660348",
+        "3660349",
+        "3660350"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "finding",
+      "key": "channel_shift",
+      "claim": "This card is used almost only in person (5 of 708 earlier transactions online); this purchase is online",
+      "lr": 2.7,
+      "family": "behaviour",
+      "ref": "query:card_profile(card=C09582-K1, before_ts=2017-01-14 13:57:30, recent_days=30)",
+      "entity_ids": [
+        "3660350"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "finding",
+      "key": "card_prior_cleared",
+      "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1645; latest note: \"Case CC-1645: model scored a $280.02 transaction at 0.93. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+      "lr": 0.8,
+      "family": "memory",
+      "ref": "query:prior_cases(card=C09582-K1, before_ts=2017-01-14 15:57:30)",
+      "entity_ids": [
+        "CC-1645"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "assessment",
+      "p": 0.97,
+      "prior": 0.86,
+      "verdict": "fraud",
+      "pattern": "card_testing",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "card_testing",
+          "family": "behaviour",
+          "lr": 30.0,
+          "delta_logodds": 3.401,
+          "note": ""
+        },
+        {
+          "key": "channel_shift",
+          "family": "behaviour",
+          "lr": 2.7,
+          "delta_logodds": 0.993,
+          "note": "in model score"
+        },
+        {
+          "key": "card_prior_cleared",
+          "family": "memory",
+          "lr": 0.8,
+          "delta_logodds": -0.223,
+          "note": "in model score"
+        }
+      ],
+      "exposure": 246.38,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R5: a purchase over $100 already cleared after the testing sequence; R2: the customer denies making the transaction; exposure $246.38 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R5: a purchase over $100 already cleared after the testing sequence; R2: the customer denies making the transaction; exposure $246.38 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R5: a purchase over $100 already cleared after the testing sequence; R2: the customer denies making the transaction; exposure $246.38 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R5: a purchase over $100 already cleared after the testing sequence; R2: the customer denies making the transaction; exposure $246.38 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264169.78,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.97,
+      "pattern": "card_testing",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "R5: a purchase over $100 already cleared after the testing sequence; R2: the customer denies making the transaction; exposure $246.38 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        }
+      ],
+      "status": "closed_fraud",
+      "exposure": 246.38,
+      "episode": [
+        "3660346",
+        "3660347",
+        "3660348",
+        "3660349",
+        "3660350"
+      ]
+    },
+    {
+      "t": 1793264170.29,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-2248",
+        "CC-2394",
+        "CC-4501",
+        "CC-2247",
+        "CC-1242",
+        "CC-1645"
+      ],
+      "knowledge": [
+        "The five known fraud patterns",
+        "Card-not-present fraud",
+        "Card testing",
+        "The five known fraud patterns",
+        "R5 Card testing",
+        "Account takeover"
+      ]
+    },
+    {
+      "t": 1793264187.26,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": true,
+      "issues": [],
+      "what_would_change_verdict": "Evidence that the customer's message was forged or that the customer actually authorized the transactions and is committing first-party fraud."
+    },
+    {
+      "t": 1793264201.41,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-007",
+        "n_vertices": 6,
+        "n_edges": 20
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3660350)",
+      "params": {
+        "txn": "3660350"
+      },
+      "rows": 2,
+      "ms": 102.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09582-K1, start_ts=2016-12-31 13:57:30, end_ts=2017-01-14 15:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "start_ts": "2016-12-31 13:57:30",
+        "end_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 72,
+      "ms": 305.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C09582-K1, before_ts=2017-01-14 13:57:30, recent_days=30)",
+      "params": {
+        "card": "C09582-K1",
+        "before_ts": "2017-01-14 13:57:30",
+        "recent_days": 30
+      },
+      "rows": 708,
+      "ms": 127.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09582-K1, amt=236.28, tol=2.36, before_ts=2017-01-14 13:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "amt": 236.28,
+        "tol": 2.36,
+        "before_ts": "2017-01-14 13:57:30"
+      },
+      "rows": 1,
+      "ms": 199.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3660350, lookback_days=200)",
+      "params": {
+        "txn": "3660350",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 126.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C09582-K1, before_ts=2017-01-14 15:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "before_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 3,
+      "ms": 107.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09582-K1, start_ts=2016-12-15 15:57:30, end_ts=2017-01-14 15:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "start_ts": "2016-12-15 15:57:30",
+        "end_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 118,
+      "ms": 390.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 221.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C09582-K1, start_ts=2016-12-15 13:57:30, end_ts=2017-01-14 15:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "start_ts": "2016-12-15 13:57:30",
+        "end_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 119,
+      "ms": 751.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C09582-K1, amt=236.28, tol=2.36, before_ts=2017-01-14 13:57:30)",
+      "params": {
+        "card": "C09582-K1",
+        "amt": 236.28,
+        "tol": 2.36,
+        "before_ts": "2017-01-14 13:57:30"
+      },
+      "rows": 1,
+      "ms": 106.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C09582-K1'], k=5, pattern=card_testing, before_ts=2017-01-14 15:57:30)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C09582-K1"
+        ],
+        "k": 5,
+        "pattern": "card_testing",
+        "before_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 12,
+      "ms": 421.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C09582-K1'], k=6, pattern=, before_ts=2017-01-14 15:57:30)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C09582-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 13,
+      "ms": 223.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C09582-K1'], k=8, pattern=, before_ts=2017-01-14 15:57:30)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C09582-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-14 15:57:30"
+      },
+      "rows": 15,
+      "ms": 235.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 249.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3660346', '3660347', '3660348', '3660349', '3660350'], card_ids=[], case_ids=['CC-2248', 'CC-2394', 'CC-4501', 'CC-2247', 'CC-1242', 'CC-1645'], customer_ids=['C09582'])",
+      "params": {
+        "txn_ids": [
+          "3660346",
+          "3660347",
+          "3660348",
+          "3660349",
+          "3660350"
+        ],
+        "card_ids": [],
+        "case_ids": [
+          "CC-2248",
+          "CC-2394",
+          "CC-4501",
+          "CC-2247",
+          "CC-1242",
+          "CC-1645"
+        ],
+        "customer_ids": [
+          "C09582"
+        ]
+      },
+      "rows": 12,
+      "ms": 291.9,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "Customer C09582 has explicitly disputed transaction 3660350 for $236.28, stating they did not authorize the purchase. The transaction was conducted online via a generic mobile device profile, representing a channel shift from typical in-person activity. Given the direct customer report and the card-not-present nature of the transaction, there is a high likelihood of fraud.",
+      "risk": "high",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 ($236.28) as unauthorized.",
+        "The flagged transaction 3660350 was an online purchase (product C) using a generic mobile device signature shared by 4,011 other transactions.",
+        "The transaction was flagged as 'New' with a real-time risk score of 0.19 and a transaction model score of 0.004553."
+      ],
+      "open_questions": [
+        "What is the historical spending baseline for card C09582-K1 prior to this 72-hour window?",
+        "Are there any other pending or recent online transactions on this card that the customer has not yet identified?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "identity": {
+      "assessment": "The customer C09582 reported an unauthorized transaction of $236.28 on transaction 3660350. The transaction was performed using a new mobile device that has never been seen on card C09582-K1 before. Given that the account history shows only a single transaction on the day of opening, this indicates potential card-not-present fraud on a newly established or rarely used account.",
+      "risk": "high",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 ($236.28) as unauthorized.",
+        "The transaction was completed using a 'New' mobile device with no prior history on card C09582-K1.",
+        "The associated account C09582-K1|476.0|-101 has an extremely sparse history with only one recorded transaction on 2017-01-14."
+      ],
+      "open_questions": [
+        "What are the specific device identifiers or IP locations associated with the transaction 3660350?",
+        "Are there any other transactions on card C09582-K1 that were not captured in the provided summary?"
+      ],
+      "suggested_pattern": "card_not_present_new_device"
+    },
+    "network": {
+      "assessment": "The customer reported an unauthorized transaction of $236.28 on card C09582. Network analysis reveals no shared device profiles, device neighbors, or connected cases associated with this transaction. Based on the available evidence, this appears to be an isolated report of fraud with no indications of a wider ring or network-level compromise.",
+      "risk": "low",
+      "key_points": [
+        "Customer C09582 reported transaction 3660350 as unauthorized.",
+        "No device neighbors or shared device profiles were found linked to the transaction or card.",
+        "There are no connected cases or shared regional patterns identified in the network database."
+      ],
+      "open_questions": [
+        "What are the specific merchant details and transaction channel for transaction 3660350?",
+        "Are there any other recent transactions on card C09582 that the customer has not yet disputed?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "precedent": {
+      "assessment": "Customer C09582 has reported an unrecognized purchase of $236.28 on transaction 3660350. This customer has a history of both confirmed fraud (CC-2822) and a cleared false positive (CC-1645) on card C09582-K1. The current report requires investigation to determine if it represents a new instance of unauthorized card use.",
+      "risk": "medium",
+      "key_points": [
+        "Customer C09582 previously had a confirmed fraud case (CC-2822) on card C09582-K1 involving out-of-region card-present use.",
+        "The same customer had a prior alert (CC-1645) on card C09582-K1 that was cleared as legitimate after the customer confirmed travel.",
+        "The current alert is triggered by a direct customer report claiming an unrecognized purchase of $236.28 on transaction 3660350."
+      ],
+      "open_questions": [
+        "Is transaction 3660350 associated with card C09582-K1 or a newly reissued card?",
+        "What are the transaction details for 3660350, including the merchant, location, and channel (card-present vs. card-not-present)?"
+      ],
+      "suggested_pattern": "undocumented"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The card was compromised via online card testing (4 micro-authorisations under $5) followed by an unauthorised high-value purchase.",
+      "The transaction is a legitimate recurring charge or customer purchase that was forgotten or disputed in error.",
+      "The cardholder's account was compromised through a channel shift, but the transaction model scored it low due to unnamed model features."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To examine the full sequence of transactions on this card, including the micro-authorisations and any other recent online activity.",
+        "days_back": 30
+      },
+      {
+        "tool": "recurring_match",
+        "why": "To check if the card has a history of recurring charges of approximately $236.28, which would support a legitimate transaction hypothesis.",
+        "tol_pct": 1.0
+      },
+      {
+        "tool": "similar_cases_by_pattern",
+        "why": "To find closed cases matching the card testing pattern followed by a larger online purchase to see if they share common indicators.",
+        "pattern": "card_testing"
+      }
+    ],
+    "focus": "The primary focus is to determine if the card was compromised via card testing prior to the $236.28 transaction, or if the transaction aligns with the customer's historical recurring patterns."
+  },
+  "critic": {
+    "agree": true,
+    "issues": [],
+    "what_would_change_verdict": "Evidence that the customer's message was forged or that the customer actually authorized the transactions and is committing first-party fraud."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-007",
+    "n_vertices": 6,
+    "n_edges": 20
+  }
+}

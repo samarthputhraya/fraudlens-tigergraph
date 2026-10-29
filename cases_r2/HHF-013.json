@@ -1,0 +1,158 @@
+{
+  "case_id": "HHF-013",
+  "case": {
+    "status": "escalated",
+    "verdict": "legitimate",
+    "fraud_probability": 0.03,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3626720)",
+        "entity_ids": [
+          "3626720"
+        ],
+        "as_of": "2017-01-26 20:40:00"
+      },
+      {
+        "claim": "This card has 5 earlier purchases billed to region 203 (first on 2016-08-27)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C06115-K1, before_ts=2017-01-26 16:40:00, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-26 20:40:00"
+      },
+      {
+        "claim": "The alert's score (0.69, as in the case record) differs from the score stored on the transaction (0.11). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3626720)",
+        "entity_ids": [
+          "3626720"
+        ],
+        "as_of": "2017-01-26 20:40:00"
+      },
+      {
+        "claim": "Other charges on this card, not the flagged transaction, match the recipient surge pattern: This card's online purchase(s) ($181.16, $140.59) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient. They go to an analyst as a separate concern and don't change the assessment of the flagged transaction",
+        "source": "graph",
+        "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-27 20:40:00, end_ts=2017-01-26 20:40:00, base_start=2016-06-30 20:40:00, max_detail=200)",
+        "entity_ids": [
+          "3660311",
+          "3660312"
+        ],
+        "as_of": "2017-01-26 20:40:00"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4235 (cleared, none); CC-5224 (cleared, none); CC-0573 (cleared, none); CC-2105 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=[], cards=['C06115-K1'], k=8, pattern=, before_ts=2017-01-26 20:40:00)",
+        "entity_ids": [
+          "CC-4235",
+          "CC-5224",
+          "CC-0573",
+          "CC-2105",
+          "CC-4205",
+          "CC-4021"
+        ],
+        "as_of": "2017-01-26 20:40:00"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R6, R8 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R6/R8",
+        "entity_ids": [],
+        "as_of": "2017-01-26 20:40:00"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-4235",
+      "CC-5224",
+      "CC-0573",
+      "CC-2105",
+      "CC-4205",
+      "CC-4021",
+      "CC-5203"
+    ],
+    "summary": "The alert was triggered because the real-time model scored transaction 3626720 on card C06115-K1 at 0.69. Graph evidence showed that the transaction amount is typical for the card and the billing region has been used previously, while the transaction model returned a low score of 0.002. Although other charges on the card went to a suspicious recipient domain associated with a surge, the flagged transaction itself appears clean. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION, CLOSE_NO_FRAUD, MONITOR_CARD, and ESCALATE_TO_ANALYST.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-013"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      },
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      },
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: fraud probability 0.03 <= 0.15 on independent legitimate signals (model, region); contacting the cardholder would not change the decision.",
+  "tool_calls": 15,
+  "tokens": 9945,
+  "latency_s": 40.6,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:32:16+0530",
+    "complete": true,
+    "failures": []
+  }
+}

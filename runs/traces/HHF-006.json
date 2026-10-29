@@ -1,0 +1,794 @@
+{
+  "case_id": "HHF-006",
+  "events": [
+    {
+      "t": 1793264753.97,
+      "kind": "trigger",
+      "case_id": "HHF-006",
+      "trigger_type": "analyst_request",
+      "text": "Analyst request: several cards this month show losses with no shared device. Review transaction 3660263 on card C01727-K2 and look for what the affected cards have in common.",
+      "opened_at": "2017-01-28 10:59:42"
+    },
+    {
+      "t": 1793264753.97,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264763.56,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The cards are linked via a coordinated cash-out or fraud ring targeting the recipient email domain sc.rr.com.",
+        "The cards were compromised via a common point of compromise (such as a local merchant or skimming operation) in billing region 231.",
+        "The transactions represent legitimate activity, such as payments to a regional service provider or ISP using the sc.rr.com domain."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the full transaction history of card C01727-K2, identifying other transactions, potential devices used, and other recipient domains.",
+          "days_back": 30
+        },
+        {
+          "tool": "region_activity",
+          "why": "To check if other cards in billing region 231 are showing similar patterns of new activity or confirmed fraud, indicating a localized compromise.",
+          "days_back": 14
+        },
+        {
+          "tool": "similar_cases_by_pattern",
+          "why": "To search for closed cases matching recipient email domain surges or similar multi-card fraud patterns without shared devices.",
+          "pattern": "recipient_surge"
+        }
+      ]
+    },
+    {
+      "t": 1793264765.87,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264773.27,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "medium",
+      "assessment": "The flagged transaction 3660263 is an online purchase of $295.92 on card C01727-K2, which deviates from the card's historical baseline that is heavily dominated by in-person transactions (107 out of 121 total transactions). The transaction model risk score for this transaction is relatively low (0.0665), and there is no device information captured to link it directly to other devices, but the shift in channel and product type warrants caution.",
+      "key_points": [
+        "Transaction 3660263 is an online transaction under product 'C' for $295.92, whereas the card's baseline shows a strong preference for in-person 'W' product transactions (107 out of 121).",
+        "The flagged transaction occurred on 2017-01-28 with a real-time risk score of 0.15 and a transaction model score of 0.0665.",
+        "The wider window shows a mix of in-person transactions (e.g., 3607101, 3607094) and occasional online transactions (e.g., 3607090 using an iOS device) sharing the same billing address area (addr1 231.0)."
+      ]
+    },
+    {
+      "t": 1793264773.27,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The transaction on card C01727-K2 has no associated device profile data, and the account history shows only a single transaction on 2017-01-28. Because there is no device information or historical transaction context, we cannot establish a shared device pattern or link this card to other affected cards.",
+      "key_points": [
+        "Card C01727-K2 has only one recorded transaction on 2017-01-28 with no prior history.",
+        "The device profile for this transaction is completely empty, meaning no device ID, proxy status, or device type was captured.",
+        "Unnamed model features include m4 set to 'M1' and m123 set to 'TTT'."
+      ]
+    },
+    {
+      "t": 1793264773.27,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The investigation into transaction 3660263 on card C01727-K2 reveals no shared device connections or linked fraud cases in the provided evidence. While the transaction's region is associated with 73 existing cards, there are no new cards registered in this region, and no device-sharing patterns are detected. Consequently, there is no evidence of a coordinated card ring or shared device profile linking these losses.",
+      "key_points": [
+        "Transaction 3660263 on card C01727-K2 has no associated device neighbors or wide device-sharing history in the provided data.",
+        "The transaction region is associated with 73 cards, but none of them are newly registered cards.",
+        "There are no connected fraud cases linked to this transaction or card in the system."
+      ]
+    },
+    {
+      "t": 1793264773.27,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, primarily categorized as account takeover and card-not-present fraud on a new device. Multiple historical cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) have already resulted in card blocks, customer reimbursements, and regulatory reports.",
+      "key_points": [
+        "Card C01727-K2 was compromised multiple times between July and October 2016, resulting in five confirmed fraud cases: CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908.",
+        "The majority of the historical fraud cases on this card were classified as account takeover, involving both credential and card data compromise.",
+        "Case CC-4908 involved card-not-present fraud utilizing a new ZTE-Z956 device, which was inconsistent with the cardholder's established history."
+      ]
+    },
+    {
+      "t": 1793264773.28,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.067, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 3.4932133774133476,
+      "family": "model",
+      "ref": "query:txn_context(txn=3660263)",
+      "entity_ids": [
+        "3660263"
+      ],
+      "in_model": false,
+      "model_p": 0.066546
+    },
+    {
+      "t": 1793264773.28,
+      "kind": "finding",
+      "key": "recipient_surge",
+      "claim": "This card's online purchase(s) ($305.41, $366.35, $295.92) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient",
+      "lr": 30.0,
+      "family": "network",
+      "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42, base_start=2016-07-02 10:59:42, max_detail=200)",
+      "entity_ids": [
+        "3660261",
+        "3660262",
+        "3660263"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264773.28,
+      "kind": "finding",
+      "key": "containment_plan",
+      "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 17-card ring has $7,612.44 at risk. Blocking 16 card(s) (C01727-K2, C04668-K1, C01357-K1, C02167-K2, C05610-K1, C01594-K1, C03060-K1, C11617-K1, ...) would cut 98.4% of it, and the other 1 would be monitored. Blocking every ring card would cut 100.0% but is expected to block 3.5 customer(s) who are not compromised, against 3.0 for this plan. Blocked at under 0.9 confidence, named for review: C04668-K1, C01357-K1, C02167-K2, C05610-K1, C01594-K1, C03060-K1, C11617-K1, C00534-K2, C10350-K1, C01507-K1, C06115-K1, C06639-K1, C11940-K1, C04146-K1, C08384-K1.",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42, base_start=2016-07-02 10:59:42, max_detail=200)",
+      "entity_ids": [
+        "C01727-K2",
+        "C04668-K1",
+        "C01357-K1",
+        "C02167-K2",
+        "C05610-K1",
+        "C01594-K1",
+        "C03060-K1",
+        "C11617-K1"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264773.28,
+      "kind": "assessment",
+      "p": 0.97,
+      "prior": 0.45,
+      "verdict": "fraud",
+      "pattern": "undocumented",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 3.49,
+          "delta_logodds": 1.251,
+          "note": "starting point"
+        },
+        {
+          "key": "recipient_surge",
+          "family": "network",
+          "lr": 30.0,
+          "delta_logodds": 3.401,
+          "note": ""
+        },
+        {
+          "key": "containment_plan",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        }
+      ],
+      "exposure": 967.68,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $967.68 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9)"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 16 other card(s) share recipient email sc.rr.com"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $967.68 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 16 other card(s) share recipient email sc.rr.com"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $967.68 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 16 other card(s) share recipient email sc.rr.com"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $967.68 is under $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R6 / section 3a: activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R6: 16 other card(s) share recipient email sc.rr.com"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264773.28,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.97,
+      "pattern": "undocumented",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L1",
+          "reason": "Section 6: probability >= 0.85 on two or more independent pieces of evidence; exposure $967.68 is under $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R6 / section 3a: activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9)"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R6: 16 other card(s) share recipient email sc.rr.com"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 967.68,
+      "episode": [
+        "3660261",
+        "3660262",
+        "3660263"
+      ]
+    },
+    {
+      "t": 1793264774.02,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-2985",
+        "CC-2971",
+        "CC-3035",
+        "CC-2649"
+      ],
+      "knowledge": [
+        "The five known fraud patterns",
+        "Card-not-present fraud",
+        "Card testing",
+        "Undocumented pattern",
+        "The five known fraud patterns",
+        "Out-of-region use"
+      ]
+    },
+    {
+      "t": 1793264875.18,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The BLOCK_CARD action cites Section 6 and claims two or more independent pieces of evidence, but there is only one piece of evidence supporting fraud (the shared recipient email domain). The transaction model score points to innocence, and the containment plan is not evidence."
+      ],
+      "what_would_change_verdict": "A second independent piece of evidence of fraud would justify the Section 6 stop rule, or verification with the customer could confirm the fraud."
+    },
+    {
+      "t": 1793264896.53,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-006",
+        "n_vertices": 12,
+        "n_edges": 39
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3660263)",
+      "params": {
+        "txn": "3660263"
+      },
+      "rows": 2,
+      "ms": 103.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C01727-K2, start_ts=2017-01-14 07:59:42, end_ts=2017-01-28 10:59:42)",
+      "params": {
+        "card": "C01727-K2",
+        "start_ts": "2017-01-14 07:59:42",
+        "end_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 10,
+      "ms": 120.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C01727-K2, before_ts=2017-01-28 07:59:42, recent_days=30)",
+      "params": {
+        "card": "C01727-K2",
+        "before_ts": "2017-01-28 07:59:42",
+        "recent_days": 30
+      },
+      "rows": 121,
+      "ms": 110.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C01727-K2, amt=295.92, tol=2.96, before_ts=2017-01-28 07:59:42)",
+      "params": {
+        "card": "C01727-K2",
+        "amt": 295.92,
+        "tol": 2.96,
+        "before_ts": "2017-01-28 07:59:42"
+      },
+      "rows": 0,
+      "ms": 130.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3660263, lookback_days=200)",
+      "params": {
+        "txn": "3660263",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 114.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C01727-K2, before_ts=2017-01-28 10:59:42)",
+      "params": {
+        "card": "C01727-K2",
+        "before_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 7,
+      "ms": 110.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C01727-K2, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42)",
+      "params": {
+        "card": "C01727-K2",
+        "start_ts": "2016-12-29 10:59:42",
+        "end_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 21,
+      "ms": 128.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42, base_start=2016-07-02 10:59:42, max_detail=200)",
+      "params": {
+        "dom": "sc.rr.com",
+        "start_ts": "2016-12-29 10:59:42",
+        "end_ts": "2017-01-28 10:59:42",
+        "base_start": "2016-07-02 10:59:42",
+        "max_detail": 200
+      },
+      "rows": 55,
+      "ms": 121.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=yahoo.com, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42, base_start=2016-07-02 10:59:42, max_detail=200)",
+      "params": {
+        "dom": "yahoo.com",
+        "start_ts": "2016-12-29 10:59:42",
+        "end_ts": "2017-01-28 10:59:42",
+        "base_start": "2016-07-02 10:59:42",
+        "max_detail": 200
+      },
+      "rows": 411,
+      "ms": 183.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=icloud.com, start_ts=2016-12-29 10:59:42, end_ts=2017-01-28 10:59:42, base_start=2016-07-02 10:59:42, max_detail=200)",
+      "params": {
+        "dom": "icloud.com",
+        "start_ts": "2016-12-29 10:59:42",
+        "end_ts": "2017-01-28 10:59:42",
+        "base_start": "2016-07-02 10:59:42",
+        "max_detail": 200
+      },
+      "rows": 185,
+      "ms": 443.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 241.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C01727-K2, start_ts=2016-12-29 07:59:42, end_ts=2017-01-28 10:59:42)",
+      "params": {
+        "card": "C01727-K2",
+        "start_ts": "2016-12-29 07:59:42",
+        "end_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 21,
+      "ms": 124.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=231.0, start_ts=2017-01-14 07:59:42, end_ts=2017-01-28 10:59:42, max_cards=50)",
+      "params": {
+        "region": "231.0",
+        "start_ts": "2017-01-14 07:59:42",
+        "end_ts": "2017-01-28 10:59:42",
+        "max_cards": 50
+      },
+      "rows": 0,
+      "ms": 136.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C01727-K2'], k=6, pattern=, before_ts=2017-01-28 10:59:42)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C01727-K2"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 16,
+      "ms": 211.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C01727-K2', 'C00534-K2', 'C01357-K1', 'C01507-K1', 'C01594-K1', 'C02167-K2', 'C03060-K1', 'C04146-K1', 'C04668-K1', 'C05610-K1', 'C06115-K1'], k=8, pattern=, before_ts=2017-01-28 10:59:42)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C01727-K2",
+          "C00534-K2",
+          "C01357-K1",
+          "C01507-K1",
+          "C01594-K1",
+          "C02167-K2",
+          "C03060-K1",
+          "C04146-K1",
+          "C04668-K1",
+          "C05610-K1",
+          "C06115-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 21,
+      "ms": 220.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 237.7,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C01727-K2'], k=8, pattern=undocumented, before_ts=2017-01-28 10:59:42)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C01727-K2"
+        ],
+        "k": 8,
+        "pattern": "undocumented",
+        "before_ts": "2017-01-28 10:59:42"
+      },
+      "rows": 18,
+      "ms": 248.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3660261', '3660262', '3660263'], card_ids=['C00534-K2', 'C01357-K1', 'C01507-K1', 'C01594-K1', 'C02167-K2', 'C03060-K1', 'C04146-K1', 'C04668-K1', 'C05610-K1', 'C06115-K1', 'C06639-K1', 'C08384-K1', 'C10350-K1', 'C11617-K1', 'C11743-K2', 'C11940-K1'], case_ids=['CC-2985', 'CC-2971', 'CC-3035', 'CC-2649'], customer_ids=['C01727'])",
+      "params": {
+        "txn_ids": [
+          "3660261",
+          "3660262",
+          "3660263"
+        ],
+        "card_ids": [
+          "C00534-K2",
+          "C01357-K1",
+          "C01507-K1",
+          "C01594-K1",
+          "C02167-K2",
+          "C03060-K1",
+          "C04146-K1",
+          "C04668-K1",
+          "C05610-K1",
+          "C06115-K1",
+          "C06639-K1",
+          "C08384-K1",
+          "C10350-K1",
+          "C11617-K1",
+          "C11743-K2",
+          "C11940-K1"
+        ],
+        "case_ids": [
+          "CC-2985",
+          "CC-2971",
+          "CC-3035",
+          "CC-2649"
+        ],
+        "customer_ids": [
+          "C01727"
+        ]
+      },
+      "rows": 24,
+      "ms": 591.0,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3660263 is an online purchase of $295.92 on card C01727-K2, which deviates from the card's historical baseline that is heavily dominated by in-person transactions (107 out of 121 total transactions). The transaction model risk score for this transaction is relatively low (0.0665), and there is no device information captured to link it directly to other devices, but the shift in channel and product type warrants caution.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3660263 is an online transaction under product 'C' for $295.92, whereas the card's baseline shows a strong preference for in-person 'W' product transactions (107 out of 121).",
+        "The flagged transaction occurred on 2017-01-28 with a real-time risk score of 0.15 and a transaction model score of 0.0665.",
+        "The wider window shows a mix of in-person transactions (e.g., 3607101, 3607094) and occasional online transactions (e.g., 3607090 using an iOS device) sharing the same billing address area (addr1 231.0)."
+      ],
+      "open_questions": [
+        "What are the specific card IDs and transaction details of the other 'affected cards' mentioned in the analyst request?",
+        "Is there any common merchant or digital footprint linking transaction 3660263 to the other losses, given that no device was captured for this transaction?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "identity": {
+      "assessment": "The transaction on card C01727-K2 has no associated device profile data, and the account history shows only a single transaction on 2017-01-28. Because there is no device information or historical transaction context, we cannot establish a shared device pattern or link this card to other affected cards.",
+      "risk": "medium",
+      "key_points": [
+        "Card C01727-K2 has only one recorded transaction on 2017-01-28 with no prior history.",
+        "The device profile for this transaction is completely empty, meaning no device ID, proxy status, or device type was captured.",
+        "Unnamed model features include m4 set to 'M1' and m123 set to 'TTT'."
+      ],
+      "open_questions": [
+        "What are the transaction details (amount, merchant, response code) for transaction 3660263?",
+        "What are the other affected cards mentioned in the analyst request, and do they share commonalities such as billing address (addr1) or bin?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The investigation into transaction 3660263 on card C01727-K2 reveals no shared device connections or linked fraud cases in the provided evidence. While the transaction's region is associated with 73 existing cards, there are no new cards registered in this region, and no device-sharing patterns are detected. Consequently, there is no evidence of a coordinated card ring or shared device profile linking these losses.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3660263 on card C01727-K2 has no associated device neighbors or wide device-sharing history in the provided data.",
+        "The transaction region is associated with 73 cards, but none of them are newly registered cards.",
+        "There are no connected fraud cases linked to this transaction or card in the system."
+      ],
+      "open_questions": [
+        "What are the specific transaction details, such as the merchant and amount, for transaction 3660263?",
+        "Are there other commonalities, such as shared billing addresses or email domains, among the affected cards that were not captured in the device or regional network data?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "precedent": {
+      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, primarily categorized as account takeover and card-not-present fraud on a new device. Multiple historical cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) have already resulted in card blocks, customer reimbursements, and regulatory reports.",
+      "risk": "high",
+      "key_points": [
+        "Card C01727-K2 was compromised multiple times between July and October 2016, resulting in five confirmed fraud cases: CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908.",
+        "The majority of the historical fraud cases on this card were classified as account takeover, involving both credential and card data compromise.",
+        "Case CC-4908 involved card-not-present fraud utilizing a new ZTE-Z956 device, which was inconsistent with the cardholder's established history."
+      ],
+      "open_questions": [
+        "What are the specific details of transaction 3660263, and does it share common merchant, location, or digital identifiers with other compromised cards?",
+        "Are there common points of compromise (such as a shared merchant or data breach) linking card C01727-K2 to the other affected cards mentioned in the analyst request?"
+      ],
+      "suggested_pattern": "account_takeover"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The cards are linked via a coordinated cash-out or fraud ring targeting the recipient email domain sc.rr.com.",
+      "The cards were compromised via a common point of compromise (such as a local merchant or skimming operation) in billing region 231.",
+      "The transactions represent legitimate activity, such as payments to a regional service provider or ISP using the sc.rr.com domain."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the full transaction history of card C01727-K2, identifying other transactions, potential devices used, and other recipient domains.",
+        "days_back": 30
+      },
+      {
+        "tool": "region_activity",
+        "why": "To check if other cards in billing region 231 are showing similar patterns of new activity or confirmed fraud, indicating a localized compromise.",
+        "days_back": 14
+      },
+      {
+        "tool": "similar_cases_by_pattern",
+        "why": "To search for closed cases matching recipient email domain surges or similar multi-card fraud patterns without shared devices.",
+        "pattern": "recipient_surge"
+      }
+    ],
+    "focus": "The primary focus is to determine the common link among the 17 cards transacting with the sc.rr.com recipient domain, specifically investigating whether they share a billing region, merchant, or historical transaction pattern."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The BLOCK_CARD action cites Section 6 and claims two or more independent pieces of evidence, but there is only one piece of evidence supporting fraud (the shared recipient email domain). The transaction model score points to innocence, and the containment plan is not evidence."
+    ],
+    "what_would_change_verdict": "A second independent piece of evidence of fraud would justify the Section 6 stop rule, or verification with the customer could confirm the fraud."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-006",
+    "n_vertices": 12,
+    "n_edges": 39
+  }
+}

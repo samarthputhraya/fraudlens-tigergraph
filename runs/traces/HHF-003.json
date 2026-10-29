@@ -1,0 +1,799 @@
+{
+  "case_id": "HHF-003",
+  "events": [
+    {
+      "t": 1793264990.03,
+      "kind": "trigger",
+      "case_id": "HHF-003",
+      "trigger_type": "customer_report",
+      "text": "Customer C11663 message: 'I did not make these charges on my card. Please look into it.' Refers to 3660153.",
+      "opened_at": "2017-01-31 20:31:28"
+    },
+    {
+      "t": 1793264990.03,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264997.96,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The cardholder is a victim of account takeover (ATO) or card theft, and the escalating ramp pattern represents unauthorized fraud as reported by the customer.",
+        "The card is part of a coordinated multi-card fraud ring executing an escalating-value ramp signature across 14 different cards.",
+        "The transaction represents friendly fraud or first-party abuse where the customer authorized the escalating charges but is falsely claiming they are unauthorized."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To analyze the full transaction history on this card, including the other 6 transactions in the escalating ramp, and inspect device profiles or proxy indicators.",
+          "days_back": 30
+        },
+        {
+          "tool": "similar_cases_by_pattern",
+          "why": "To search for closed cases matching the escalating-value ramp signature to see if they were confirmed as organized fraud rings.",
+          "pattern": "escalating_ramp"
+        },
+        {
+          "tool": "region_activity",
+          "why": "To check if other cards in the billing region '315' are exhibiting similar new activity or have confirmed fraud cases.",
+          "days_back": 14
+        }
+      ]
+    },
+    {
+      "t": 1793265000.18,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793265014.7,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "high",
+      "assessment": "The customer reported transaction 3660153 as unauthorized. This transaction is part of a suspicious sequence of four identical $1800 online transactions (3660150, 3660151, 3660152, and 3660153) occurring within a six-day window, which represents a significant departure from the customer's historical baseline of mostly in-person transactions.",
+      "key_points": [
+        "The flagged transaction 3660153 ($1800) is the fourth in a rapid succession of identical $1800 online transactions, following 3660150, 3660151, and 3660152.",
+        "While the first three $1800 transactions used billing address area 327.0, the disputed transaction 3660153 shifted to 315.0, matching the address area of an earlier in-person transaction 3652063.",
+        "The transaction model and bank risk scores remained low (model_p of 0.000657 and risk_score of 0.09 for 3660153), failing to flag this high-velocity, high-value burst."
+      ]
+    },
+    {
+      "t": 1793265014.7,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "high",
+      "assessment": "The customer C11663 has reported unauthorized activity on card C11663-K1, specifically referencing transaction 3660153. The associated account has an extremely short history with only a single recorded transaction, and there is no device profile information available to link this activity to a known or trusted device.",
+      "key_points": [
+        "Customer C11663 reported unauthorized charges on card C11663-K1, referencing transaction 3660153.",
+        "The account C11663-K1|315.0|-18 has a history of only one transaction, which occurred on 2017-01-31.",
+        "No device profile, device type, or proxy information was captured for the transaction, leaving the device identity completely unresolved."
+      ]
+    },
+    {
+      "t": 1793265014.7,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "Customer C11663 reported unauthorized charges on transaction 3660153. Network analysis reveals no shared device profiles, connected cases, or suspicious new card patterns in the region, suggesting this is an isolated dispute rather than a coordinated ring.",
+      "key_points": [
+        "Customer C11663 disputed transaction 3660153, claiming they did not authorize the charges.",
+        "No device neighbors or shared device profiles were identified in connection with this activity.",
+        "There are no connected cases linked to this account or transaction.",
+        "The transaction region contains 270 active cards, but none are newly registered, indicating no localized card-testing or registration spikes."
+      ]
+    },
+    {
+      "t": 1793265014.7,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "high",
+      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. Historical precedents show strong patterns of confirmed fraud involving either out-of-region card-present transactions or rapid, sub-threshold online purchases designed to evade detection.",
+      "key_points": [
+        "Prior cases CC-4124, CC-4086, CC-3748, and CC-3907 established a pattern of unauthorized online purchases kept just under a $500 authorization threshold within a short timeframe.",
+        "Cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where cardholders retained physical possession of their cards.",
+        "Autonomous case CASE-2016-AUTO-007 highlights previous card-not-present fraud involving shared rare device profiles across multiple accounts."
+      ]
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.001, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3660153)",
+      "entity_ids": [
+        "3660153"
+      ],
+      "in_model": false,
+      "model_p": 0.000657
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "finding",
+      "key": "escalating_ramp",
+      "claim": "7 online purchases between 2017-01-22 and 2017-01-31 climbing from $181.73 to $1,800.00 ($181.73 -> $357.82 -> $811.92 -> $1,800.00 -> $1,800.00 -> $1,800.00 -> $1,800.00), with 4 charges at the top amount: the pattern of someone probing the card's limit",
+      "lr": 30.0,
+      "family": "behaviour",
+      "ref": "query:card_window(card=C11663-K1, start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28)",
+      "entity_ids": [
+        "3660147",
+        "3660148",
+        "3660149",
+        "3660150",
+        "3660151",
+        "3660152",
+        "3660153"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "finding",
+      "key": "coordinated",
+      "claim": "The same escalating-value ramp signature appears on 13 other card(s) in the same 30 days: coordinated activity across customers, not one cardholder's habit; all of them on weaker evidence of their own, so they are monitored and not named here",
+      "lr": 4.0,
+      "family": "network",
+      "ref": "query:typology_scan(start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28, base_start=2016-10-03 20:31:28, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+      "entity_ids": [
+        "C03040-K2",
+        "C03080-K2",
+        "C04096-K1",
+        "C06026-K2",
+        "C07847-K1",
+        "C07871-K1",
+        "C08563-K1",
+        "C08943-K2"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "finding",
+      "key": "containment_plan",
+      "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 14-card ring has $42,760.11 at risk. Blocking 1 card(s) (C11663-K1) would cut 20.0% of it, and the other 13 would be monitored. Blocking every ring card would cut 100.0% but is expected to block 6.5 customer(s) who are not compromised, against 0.1 for this plan.",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:typology_scan(start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28, base_start=2016-10-03 20:31:28, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+      "entity_ids": [
+        "C11663-K1"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "assessment",
+      "p": 0.97,
+      "prior": 0.86,
+      "verdict": "fraud",
+      "pattern": "undocumented",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "escalating_ramp",
+          "family": "behaviour",
+          "lr": 30.0,
+          "delta_logodds": 3.401,
+          "note": ""
+        },
+        {
+          "key": "coordinated",
+          "family": "network",
+          "lr": 4.0,
+          "delta_logodds": 1.386,
+          "note": ""
+        },
+        {
+          "key": "containment_plan",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        }
+      ],
+      "exposure": 8551.47,
+      "initial": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L2",
+          "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L2",
+            "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "deny": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L2",
+            "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L2",
+            "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+          },
+          {
+            "action": "MONITOR_CONNECTED_CARDS",
+            "route": "auto",
+            "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793265014.72,
+      "kind": "decision",
+      "verdict": "fraud",
+      "p": 0.97,
+      "pattern": "undocumented",
+      "final": [
+        {
+          "action": "BLOCK_CARD",
+          "route": "L2",
+          "reason": "R2: the customer denies making the transaction; exposure $8,551.47 is over $2,500"
+        },
+        {
+          "action": "CREATE_CASE",
+          "route": "auto",
+          "reason": "Section 3a: fraud confirmed or strongly suspected; record the investigation and write it to the graph"
+        },
+        {
+          "action": "FILE_REPORT",
+          "route": "L2",
+          "reason": "R9 / section 3a: exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9)"
+        },
+        {
+          "action": "MONITOR_CONNECTED_CARDS",
+          "route": "auto",
+          "reason": "R9: 13 other card(s) show the same escalating-value ramp in the same 30 days"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R9: coordinated activity that fits no documented pattern; hand to an analyst with the evidence"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 8551.47,
+      "episode": [
+        "3660147",
+        "3660148",
+        "3660149",
+        "3660150",
+        "3660151",
+        "3660152",
+        "3660153"
+      ]
+    },
+    {
+      "t": 1793265036.58,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-2985",
+        "CC-3035",
+        "CC-2971",
+        "CC-2649",
+        "CC-4086",
+        "CC-3841"
+      ],
+      "knowledge": [
+        "The five known fraud patterns",
+        "The five known fraud patterns",
+        "Out-of-region use",
+        "Card-not-present fraud",
+        "Card testing",
+        "Undocumented pattern"
+      ]
+    },
+    {
+      "t": 1793265054.13,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "The action MONITOR_CONNECTED_CARDS cites R9, but R9 does not authorize this action (R6 does, but requires naming the shared origin, which is explicitly not done here).",
+        "The draft includes ESCALATE_TO_ANALYST, but Section 6 requires stopping the investigation because verification settles it (the customer explicitly denied the charges) and the probability is >= 0.85."
+      ],
+      "what_would_change_verdict": "Remove MONITOR_CONNECTED_CARDS and ESCALATE_TO_ANALYST, ensuring the case stops as dictated by Section 6."
+    },
+    {
+      "t": 1793265092.49,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-003",
+        "n_vertices": 12,
+        "n_edges": 41
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3660153)",
+      "params": {
+        "txn": "3660153"
+      },
+      "rows": 2,
+      "ms": 107.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11663-K1, start_ts=2017-01-17 17:31:28, end_ts=2017-01-31 20:31:28)",
+      "params": {
+        "card": "C11663-K1",
+        "start_ts": "2017-01-17 17:31:28",
+        "end_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 9,
+      "ms": 113.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C11663-K1, before_ts=2017-01-31 17:31:28, recent_days=30)",
+      "params": {
+        "card": "C11663-K1",
+        "before_ts": "2017-01-31 17:31:28",
+        "recent_days": 30
+      },
+      "rows": 57,
+      "ms": 101.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C11663-K1, amt=1800.0, tol=18.0, before_ts=2017-01-31 17:31:28)",
+      "params": {
+        "card": "C11663-K1",
+        "amt": 1800.0,
+        "tol": 18.0,
+        "before_ts": "2017-01-31 17:31:28"
+      },
+      "rows": 3,
+      "ms": 122.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3660153, lookback_days=200)",
+      "params": {
+        "txn": "3660153",
+        "lookback_days": 200
+      },
+      "rows": 1,
+      "ms": 107.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C11663-K1, before_ts=2017-01-31 20:31:28)",
+      "params": {
+        "card": "C11663-K1",
+        "before_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 1,
+      "ms": 122.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11663-K1, start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28)",
+      "params": {
+        "card": "C11663-K1",
+        "start_ts": "2017-01-01 20:31:28",
+        "end_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 9,
+      "ms": 108.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "typology_scan",
+      "ref": "query:typology_scan(start_ts=2017-01-01 20:31:28, end_ts=2017-01-31 20:31:28, base_start=2016-10-03 20:31:28, micro_max=10.0, min_micro=4, ramp_min=500.0)",
+      "params": {
+        "start_ts": "2017-01-01 20:31:28",
+        "end_ts": "2017-01-31 20:31:28",
+        "base_start": "2016-10-03 20:31:28",
+        "micro_max": 10.0,
+        "min_micro": 4,
+        "ramp_min": 500.0
+      },
+      "rows": 2147,
+      "ms": 1563.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 219.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C11663-K1, start_ts=2017-01-01 17:31:28, end_ts=2017-01-31 20:31:28)",
+      "params": {
+        "card": "C11663-K1",
+        "start_ts": "2017-01-01 17:31:28",
+        "end_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 9,
+      "ms": 136.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=315.0, start_ts=2017-01-17 17:31:28, end_ts=2017-01-31 20:31:28, max_cards=50)",
+      "params": {
+        "region": "315.0",
+        "start_ts": "2017-01-17 17:31:28",
+        "end_ts": "2017-01-31 20:31:28",
+        "max_cards": 50
+      },
+      "rows": 0,
+      "ms": 122.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C11663-K1'], k=6, pattern=, before_ts=2017-01-31 20:31:28)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C11663-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 17,
+      "ms": 263.8,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C11663-K1', 'C03040-K2', 'C03080-K2', 'C04096-K1', 'C06026-K2', 'C07847-K1', 'C07871-K1', 'C08563-K1', 'C08943-K2', 'C09026-K1', 'C09148-K1'], k=8, pattern=, before_ts=2017-01-31 20:31:28)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C11663-K1",
+          "C03040-K2",
+          "C03080-K2",
+          "C04096-K1",
+          "C06026-K2",
+          "C07847-K1",
+          "C07871-K1",
+          "C08563-K1",
+          "C08943-K2",
+          "C09026-K1",
+          "C09148-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 21,
+      "ms": 5326.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 276.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C11663-K1'], k=8, pattern=undocumented, before_ts=2017-01-31 20:31:28)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C11663-K1"
+        ],
+        "k": 8,
+        "pattern": "undocumented",
+        "before_ts": "2017-01-31 20:31:28"
+      },
+      "rows": 21,
+      "ms": 3967.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=['3660147', '3660148', '3660149', '3660150', '3660151', '3660152', '3660153'], card_ids=['C03040-K2', 'C03080-K2', 'C04096-K1', 'C06026-K2', 'C07847-K1', 'C07871-K1', 'C08563-K1', 'C08943-K2', 'C09026-K1', 'C09148-K1', 'C09274-K1', 'C09918-K1', 'C10320-K1'], case_ids=['CC-2985', 'CC-3035', 'CC-2971', 'CC-2649', 'CC-4086', 'CC-3841'], customer_ids=['C11663'])",
+      "params": {
+        "txn_ids": [
+          "3660147",
+          "3660148",
+          "3660149",
+          "3660150",
+          "3660151",
+          "3660152",
+          "3660153"
+        ],
+        "card_ids": [
+          "C03040-K2",
+          "C03080-K2",
+          "C04096-K1",
+          "C06026-K2",
+          "C07847-K1",
+          "C07871-K1",
+          "C08563-K1",
+          "C08943-K2",
+          "C09026-K1",
+          "C09148-K1",
+          "C09274-K1",
+          "C09918-K1",
+          "C10320-K1"
+        ],
+        "case_ids": [
+          "CC-2985",
+          "CC-3035",
+          "CC-2971",
+          "CC-2649",
+          "CC-4086",
+          "CC-3841"
+        ],
+        "customer_ids": [
+          "C11663"
+        ]
+      },
+      "rows": 27,
+      "ms": 421.1,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The customer reported transaction 3660153 as unauthorized. This transaction is part of a suspicious sequence of four identical $1800 online transactions (3660150, 3660151, 3660152, and 3660153) occurring within a six-day window, which represents a significant departure from the customer's historical baseline of mostly in-person transactions.",
+      "risk": "high",
+      "key_points": [
+        "The flagged transaction 3660153 ($1800) is the fourth in a rapid succession of identical $1800 online transactions, following 3660150, 3660151, and 3660152.",
+        "While the first three $1800 transactions used billing address area 327.0, the disputed transaction 3660153 shifted to 315.0, matching the address area of an earlier in-person transaction 3652063.",
+        "The transaction model and bank risk scores remained low (model_p of 0.000657 and risk_score of 0.09 for 3660153), failing to flag this high-velocity, high-value burst."
+      ],
+      "open_questions": [
+        "Are the previous three $1800 transactions (3660150, 3660151, 3660152) also disputed by the customer, or were they legitimate?",
+        "What specific products or services were purchased in these high-value online transactions?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "identity": {
+      "assessment": "The customer C11663 has reported unauthorized activity on card C11663-K1, specifically referencing transaction 3660153. The associated account has an extremely short history with only a single recorded transaction, and there is no device profile information available to link this activity to a known or trusted device.",
+      "risk": "high",
+      "key_points": [
+        "Customer C11663 reported unauthorized charges on card C11663-K1, referencing transaction 3660153.",
+        "The account C11663-K1|315.0|-18 has a history of only one transaction, which occurred on 2017-01-31.",
+        "No device profile, device type, or proxy information was captured for the transaction, leaving the device identity completely unresolved."
+      ],
+      "open_questions": [
+        "What are the specific details of transaction 3660153, such as the transaction amount and merchant?",
+        "Are there other transactions on this card that were not captured in the provided account history?"
+      ],
+      "suggested_pattern": "card_not_present_fraud"
+    },
+    "network": {
+      "assessment": "Customer C11663 reported unauthorized charges on transaction 3660153. Network analysis reveals no shared device profiles, connected cases, or suspicious new card patterns in the region, suggesting this is an isolated dispute rather than a coordinated ring.",
+      "risk": "low",
+      "key_points": [
+        "Customer C11663 disputed transaction 3660153, claiming they did not authorize the charges.",
+        "No device neighbors or shared device profiles were identified in connection with this activity.",
+        "There are no connected cases linked to this account or transaction.",
+        "The transaction region contains 270 active cards, but none are newly registered, indicating no localized card-testing or registration spikes."
+      ],
+      "open_questions": [
+        "What are the specific transaction details, such as amount, merchant, and entry method, for transaction 3660153?",
+        "Are there any other recent transactions on C11663's card that may also be unauthorized?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "precedent": {
+      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. Historical precedents show strong patterns of confirmed fraud involving either out-of-region card-present transactions or rapid, sub-threshold online purchases designed to evade detection.",
+      "risk": "high",
+      "key_points": [
+        "Prior cases CC-4124, CC-4086, CC-3748, and CC-3907 established a pattern of unauthorized online purchases kept just under a $500 authorization threshold within a short timeframe.",
+        "Cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where cardholders retained physical possession of their cards.",
+        "Autonomous case CASE-2016-AUTO-007 highlights previous card-not-present fraud involving shared rare device profiles across multiple accounts."
+      ],
+      "open_questions": [
+        "What are the specific transaction details, merchant category, and amount for transaction 3660153?",
+        "Was transaction 3660153 conducted online (card-not-present) or physically out-of-region?",
+        "Does the device profile or IP address used in transaction 3660153 link to any known fraudulent devices or prior cases?"
+      ],
+      "suggested_pattern": "undocumented"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The cardholder is a victim of account takeover (ATO) or card theft, and the escalating ramp pattern represents unauthorized fraud as reported by the customer.",
+      "The card is part of a coordinated multi-card fraud ring executing an escalating-value ramp signature across 14 different cards.",
+      "The transaction represents friendly fraud or first-party abuse where the customer authorized the escalating charges but is falsely claiming they are unauthorized."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To analyze the full transaction history on this card, including the other 6 transactions in the escalating ramp, and inspect device profiles or proxy indicators.",
+        "days_back": 30
+      },
+      {
+        "tool": "similar_cases_by_pattern",
+        "why": "To search for closed cases matching the escalating-value ramp signature to see if they were confirmed as organized fraud rings.",
+        "pattern": "escalating_ramp"
+      },
+      {
+        "tool": "region_activity",
+        "why": "To check if other cards in the billing region '315' are exhibiting similar new activity or have confirmed fraud cases.",
+        "days_back": 14
+      }
+    ],
+    "focus": "Investigating whether the escalating-value ramp pattern on this card and the 13 other coordinated cards represents an organized fraud ring or isolated account compromises."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "The action MONITOR_CONNECTED_CARDS cites R9, but R9 does not authorize this action (R6 does, but requires naming the shared origin, which is explicitly not done here).",
+      "The draft includes ESCALATE_TO_ANALYST, but Section 6 requires stopping the investigation because verification settles it (the customer explicitly denied the charges) and the probability is >= 0.85."
+    ],
+    "what_would_change_verdict": "Remove MONITOR_CONNECTED_CARDS and ESCALATE_TO_ANALYST, ensuring the case stops as dictated by Section 6."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-003",
+    "n_vertices": 12,
+    "n_edges": 41
+  }
+}

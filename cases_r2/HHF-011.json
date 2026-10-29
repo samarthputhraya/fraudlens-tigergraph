@@ -1,0 +1,177 @@
+{
+  "case_id": "HHF-011",
+  "case": {
+    "status": "escalated",
+    "verdict": "uncertain",
+    "fraud_probability": 0.03,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3640919"
+    ],
+    "first_suspicious_txn_id": "3640919",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 881.55,
+    "evidence": [
+      {
+        "claim": "$881.55 is in the top 3% of this card's purchase amounts",
+        "source": "graph",
+        "ref": "query:card_profile(card=C09241-K2, before_ts=2017-01-20 05:06:19, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.005, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3640919)",
+        "entity_ids": [
+          "3640919"
+        ],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "This card has 491 earlier purchases billed to region 494 (first on 2016-07-04)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C09241-K2, before_ts=2017-01-20 05:06:19, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1257; latest note: \"Case CC-1257: model scored a $24.99 transaction at 0.95. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
+        "source": "graph",
+        "ref": "query:prior_cases(card=C09241-K2, before_ts=2017-01-20 09:06:19)",
+        "entity_ids": [
+          "CC-1257"
+        ],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "The alert's score (0.71, as in the case record) differs from the score stored on the transaction (0.31). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3640919)",
+        "entity_ids": [
+          "3640919"
+        ],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "The case record names card C09241-K1, but the bank's transaction record puts transaction 3640919 on card C09241-K2, the card its closed cases also use. The investigation reads C09241-K2; the discrepancy goes to an analyst to reconcile",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3640919)",
+        "entity_ids": [
+          "3640919",
+          "C09241-K2"
+        ],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1779 (confirmed_fraud, card_not_present_fraud); CC-3022 (confirmed_fraud, out_of_region_use); CC-1257 (cleared, none); CC-3297 (confirmed_fraud, out_of_region_use)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=[], cards=['C09241-K2'], k=8, pattern=, before_ts=2017-01-20 09:06:19)",
+        "entity_ids": [
+          "CC-1779",
+          "CC-3022",
+          "CC-1257",
+          "CC-3297"
+        ],
+        "as_of": "2017-01-20 09:06:19"
+      },
+      {
+        "claim": "Fraud Policy rules applied to this case: R1, R8 (retrieved from the policy knowledge graph via GraphRAG)",
+        "source": "document",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R8",
+        "entity_ids": [],
+        "as_of": "2017-01-20 09:06:19"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-1779",
+      "CC-3022",
+      "CC-1257",
+      "CC-3297"
+    ],
+    "summary": "The alert was triggered because the bank's real-time model scored transaction 3640919 on card C09241-K2 at 0.71. Graph evidence showed that while the transaction amount was in the top 3% for the card, the card had 491 prior purchases in the same billing region, and the transaction model scored it very low. A data discrepancy was noted between the case record and the transaction record regarding the card ID. A simulated reply indicates an analyst was asked to reconcile the records but has not yet answered. The verdict is uncertain, and the final actions are CREATE_CASE, MONITOR_CARD, VERIFY_WITH_CUSTOMER, and ESCALATE_TO_ANALYST.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-011"
+  },
+  "evidence_requests": [
+    {
+      "type": "analyst_info",
+      "asked_after_step": 16,
+      "assumed_response": "Analyst asked to reconcile the case record's card with the bank's transaction record; no answer yet, so the case stays with the analyst"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+      },
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: confirm the purchase with the cardholder before any block"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+      }
+    ],
+    "final": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Section 3a: keep a record while the data discrepancy is resolved"
+      },
+      {
+        "action": "MONITOR_CARD",
+        "route": "auto",
+        "reason": "R8: raise monitoring for 72 hours while the card record is reconciled"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: confirm the purchase with the cardholder before any block"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R8: the evidence conflicts - the case record and the bank's transaction record name different cards; an analyst must reconcile them"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "On the bank's own record the activity scores a fraud probability of 0.03, but the case record names a different card or customer than the bank's record, so the case goes to an analyst under R8 instead of being guessed.",
+  "tool_calls": 19,
+  "tokens": 10719,
+  "latency_s": 62.9,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:29:00+0530",
+    "complete": true,
+    "failures": []
+  }
+}

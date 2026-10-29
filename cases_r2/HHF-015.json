@@ -1,0 +1,120 @@
+{
+  "case_id": "HHF-015",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.03,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.001, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3601725)",
+        "entity_ids": [
+          "3601725"
+        ],
+        "as_of": "2017-01-22 12:21:48"
+      },
+      {
+        "claim": "This card has 9 earlier purchases billed to region 485 (first on 2016-07-10)",
+        "source": "graph",
+        "ref": "query:card_profile(card=C00543-K1, before_ts=2017-01-22 09:21:48, recent_days=30)",
+        "entity_ids": [],
+        "as_of": "2017-01-22 12:21:48"
+      },
+      {
+        "claim": "The alert's score (0.71, as in the case record) differs from the score stored on the transaction (0.07). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+        "source": "graph",
+        "ref": "query:txn_context(txn=3601725)",
+        "entity_ids": [
+          "3601725"
+        ],
+        "as_of": "2017-01-22 12:21:48"
+      },
+      {
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-5411 (cleared, none); CC-4577 (cleared, none); CC-4235 (cleared, none); CC-4697 (cleared, none)",
+        "source": "graph",
+        "ref": "query:similar_cases(devices=[], cards=['C00543-K1'], k=8, pattern=, before_ts=2017-01-22 12:21:48)",
+        "entity_ids": [
+          "CC-5411",
+          "CC-4577",
+          "CC-4235",
+          "CC-4697",
+          "CC-1257",
+          "CC-1254"
+        ],
+        "as_of": "2017-01-22 12:21:48"
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-5411",
+      "CC-4577",
+      "CC-4235",
+      "CC-4697",
+      "CC-1257",
+      "CC-1254"
+    ],
+    "summary": "This alert was triggered because the bank's real-time model scored transaction 3601725 on card C00543-K1 at 0.71. Graph evidence showed that the $112.75 amount is typical for this card and that the card has a history of purchases in the same billing region. Furthermore, the transaction model scored this activity very low at 0.001. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-HHF-015"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Section 6: fraud probability 0.03 <= 0.15 on independent legitimate signals (model, region); contacting the cardholder would not change the decision.",
+  "tool_calls": 15,
+  "tokens": 7784,
+  "latency_s": 30.3,
+  "run": {
+    "graph": "tigergraph-mcp",
+    "official": true,
+    "data": "round 2: July 2016 - January 2017",
+    "models": {
+      "reasoning": "gemini-3.1-pro-preview",
+      "fast": "gemini-3.5-flash",
+      "embedding": "text-embedding-005"
+    },
+    "started_at": "2026-10-29T14:31:46+0530",
+    "complete": true,
+    "failures": []
+  }
+}

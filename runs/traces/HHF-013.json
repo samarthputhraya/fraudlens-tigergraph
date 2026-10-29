@@ -1,0 +1,708 @@
+{
+  "case_id": "HHF-013",
+  "events": [
+    {
+      "t": 1793264536.47,
+      "kind": "trigger",
+      "case_id": "HHF-013",
+      "trigger_type": "risk_score",
+      "text": "Real-time model scored transaction 3626720 ($409.30) at 0.69. Review and decide.",
+      "opened_at": "2017-01-26 20:40:00"
+    },
+    {
+      "t": 1793264536.47,
+      "kind": "stage",
+      "stage": "gather",
+      "agent": "lead",
+      "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
+    },
+    {
+      "t": 1793264541.08,
+      "kind": "plan",
+      "agent": "lead",
+      "hypotheses": [
+        "The flagged transaction is a legitimate purchase by the cardholder, as the amount is typical and the billing region is well-established in the card's history.",
+        "The card has been compromised as part of a recipient surge scheme, indicated by other online transactions on this card going to a suspicious email domain shared with multiple other cards."
+      ],
+      "calls": [
+        {
+          "tool": "card_window",
+          "why": "To review the full timeline of transactions on this card, specifically comparing the flagged transaction against the suspicious online purchases to sc.rr.com.",
+          "days_back": 30
+        },
+        {
+          "tool": "similar_cases_by_pattern",
+          "why": "To identify closed fraud cases matching the recipient surge pattern or involving the sc.rr.com domain.",
+          "pattern": "recipient surge"
+        }
+      ]
+    },
+    {
+      "t": 1793264543.26,
+      "kind": "stage",
+      "stage": "specialists",
+      "agent": "lead",
+      "msg": "Four specialist analysts reviewing their evidence in parallel"
+    },
+    {
+      "t": 1793264548.05,
+      "kind": "specialist",
+      "agent": "transaction",
+      "risk": "low",
+      "assessment": "The flagged transaction 3626720 is an in-person purchase of $409.30, which is well within the card's historical baseline of 83 transactions and a maximum amount of $2945.01. Both the real-time risk score of 0.11 and the transaction model score of 0.002035 are low, indicating no significant deviation from normal behavior.",
+      "key_points": [
+        "Transaction 3626720 ($409.30) is consistent with the customer's established preference for in-person 'W' product transactions.",
+        "The transaction amount is far below the historical maximum of $2945.01 observed in the card's baseline.",
+        "The transaction model score (model_p) of 0.002035 and real-time risk score of 0.11 both indicate very low risk, contradicting the untrusted alert text."
+      ]
+    },
+    {
+      "t": 1793264548.05,
+      "kind": "specialist",
+      "agent": "identity",
+      "risk": "medium",
+      "assessment": "The flagged transaction 3626720 was marked high risk by the real-time model at 0.69. The associated account C06115-K1|203.0|187 has a very sparse history, containing only one prior transaction from several weeks earlier which was low risk. Because device and location data are completely missing for both transactions, we cannot perform device verification or link this activity to known patterns.",
+      "key_points": [
+        "Transaction 3626720 was flagged with a real-time risk score of 0.69 for an amount of $409.30.",
+        "The account C06115-K1|203.0|187 has only one prior recorded transaction (ID 3660311) on 2017-01-05, which had a low risk score of 0.1 and a transaction model probability of 0.006964.",
+        "No device profile, IP, or proxy data is available for either the flagged transaction or the historical transaction."
+      ]
+    },
+    {
+      "t": 1793264548.05,
+      "kind": "specialist",
+      "agent": "network",
+      "risk": "low",
+      "assessment": "The transaction was flagged by the real-time risk model, but network analysis shows no evidence of shared devices, connected fraud cases, or suspicious card-linking. The region has 23 active cards with no recent new card additions, suggesting stable regional activity rather than a coordinated attack.",
+      "key_points": [
+        "Transaction 3626720 was flagged with a real-time risk score of 0.69.",
+        "No device neighbors or shared device profiles were identified in the network queries.",
+        "The region associated with the transaction has 23 existing cards and zero new cards.",
+        "There are no connected cases linked to this transaction or device."
+      ]
+    },
+    {
+      "t": 1793264548.05,
+      "kind": "specialist",
+      "agent": "precedent",
+      "risk": "low",
+      "assessment": "The alert was triggered by a real-time risk score of 0.69 on transaction 3626720 for $409.30. Historical precedents show a strong pattern of similar high-scoring alerts being cleared as legitimate, often due to cardholders traveling to the billing region in question or using new devices.",
+      "key_points": [
+        "Multiple historical cases, including CC-4230, CC-4199, CC-5203, CC-0252, CC-2354, and CC-1153, were cleared after cardholders confirmed travel to the billing region in question.",
+        "Prior investigations like CASE-2016-013 and CASE-2016-017 demonstrate that transactions flagged by the real-time risk score are frequently confirmed as legitimate upon cardholder contact."
+      ]
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "finding",
+      "key": "model_score",
+      "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
+      "lr": 0.5,
+      "family": "model",
+      "ref": "query:txn_context(txn=3626720)",
+      "entity_ids": [
+        "3626720"
+      ],
+      "in_model": false,
+      "model_p": 0.002035
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "finding",
+      "key": "trigger_mismatch",
+      "claim": "The alert's score (0.69, as in the case record) differs from the score stored on the transaction (0.11). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:txn_context(txn=3626720)",
+      "entity_ids": [
+        "3626720"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "finding",
+      "key": "amount_typical",
+      "claim": "$409.30 is a typical amount for this card (percentile 77%)",
+      "lr": 1.0,
+      "family": "amount",
+      "ref": "query:card_profile(card=C06115-K1, before_ts=2017-01-26 16:40:00, recent_days=30)",
+      "entity_ids": [
+        "3626720"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "finding",
+      "key": "region_known",
+      "claim": "This card has 5 earlier purchases billed to region 203 (first on 2016-08-27)",
+      "lr": 0.65,
+      "family": "region",
+      "ref": "query:card_profile(card=C06115-K1, before_ts=2017-01-26 16:40:00, recent_days=30)",
+      "entity_ids": [
+        "3626720"
+      ],
+      "in_model": true
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "finding",
+      "key": "card_other_typology",
+      "claim": "Other charges on this card, not the flagged transaction, match the recipient surge pattern: This card's online purchase(s) ($181.16, $140.59) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient. They go to an analyst as a separate concern and don't change the assessment of the flagged transaction",
+      "lr": 1.0,
+      "family": "integrity",
+      "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-27 20:40:00, end_ts=2017-01-26 20:40:00, base_start=2016-06-30 20:40:00, max_detail=200)",
+      "entity_ids": [
+        "3660311",
+        "3660312"
+      ],
+      "in_model": false
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "assessment",
+      "p": 0.03,
+      "prior": 0.034,
+      "verdict": "legitimate",
+      "pattern": "none",
+      "contributions": [
+        {
+          "key": "model_score",
+          "family": "model",
+          "lr": 0.5,
+          "delta_logodds": -0.693,
+          "note": "starting point"
+        },
+        {
+          "key": "trigger_mismatch",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        },
+        {
+          "key": "amount_typical",
+          "family": "amount",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": "in model score"
+        },
+        {
+          "key": "region_known",
+          "family": "region",
+          "lr": 0.65,
+          "delta_logodds": -0.431,
+          "note": "in model score"
+        },
+        {
+          "key": "card_other_typology",
+          "family": "integrity",
+          "lr": 1.0,
+          "delta_logodds": 0.0,
+          "note": ""
+        }
+      ],
+      "exposure": 409.3,
+      "initial": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        },
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+        }
+      ],
+      "branches": {
+        "confirm": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+          }
+        ],
+        "deny": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+          }
+        ],
+        "no_reply": [
+          {
+            "action": "ALLOW_TRANSACTION",
+            "route": "auto",
+            "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+          },
+          {
+            "action": "CLOSE_NO_FRAUD",
+            "route": "auto",
+            "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+          },
+          {
+            "action": "MONITOR_CARD",
+            "route": "auto",
+            "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+          }
+        ]
+      }
+    },
+    {
+      "t": 1793264548.06,
+      "kind": "decision",
+      "verdict": "legitimate",
+      "p": 0.03,
+      "pattern": "none",
+      "final": [
+        {
+          "action": "ALLOW_TRANSACTION",
+          "route": "auto",
+          "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        },
+        {
+          "action": "CLOSE_NO_FRAUD",
+          "route": "auto",
+          "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        },
+        {
+          "action": "MONITOR_CARD",
+          "route": "auto",
+          "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+        },
+        {
+          "action": "ESCALATE_TO_ANALYST",
+          "route": "auto",
+          "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+        }
+      ],
+      "status": "escalated",
+      "exposure": 0.0,
+      "episode": []
+    },
+    {
+      "t": 1793264548.56,
+      "kind": "memory",
+      "agent": "precedent",
+      "similar": [
+        "CC-4235",
+        "CC-5224",
+        "CC-0573",
+        "CC-2105",
+        "CC-4205",
+        "CC-4021",
+        "CC-5203"
+      ],
+      "knowledge": [
+        "Glossary",
+        "No fraud",
+        "R3 Customer confirms the transaction",
+        "R5 Card testing",
+        "Things to know",
+        "Notes"
+      ]
+    },
+    {
+      "t": 1793264563.19,
+      "kind": "review",
+      "agent": "compliance",
+      "agree": false,
+      "issues": [
+        "R6 requires CREATE_CASE, FILE_REPORT, and MONITOR_CONNECTED_CARDS when a shared origin across cards is identified. The draft incorrectly recommends MONITOR_CARD and omits the required case and report actions.",
+        "The draft recommends contradictory actions: CLOSE_NO_FRAUD and ESCALATE_TO_ANALYST cannot be applied simultaneously."
+      ],
+      "what_would_change_verdict": "Evidence linking the flagged transaction itself to the suspicious recipient surge pattern, or a customer dispute confirming the transaction as unauthorized."
+    },
+    {
+      "t": 1793264577.07,
+      "kind": "final",
+      "problems": [],
+      "written": {
+        "ok": true,
+        "graph_case_id": "CASE-2016-HHF-013",
+        "n_vertices": 10,
+        "n_edges": 21
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "txn_context",
+      "ref": "query:txn_context(txn=3626720)",
+      "params": {
+        "txn": "3626720"
+      },
+      "rows": 2,
+      "ms": 111.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C06115-K1, start_ts=2017-01-12 16:40:00, end_ts=2017-01-26 20:40:00)",
+      "params": {
+        "card": "C06115-K1",
+        "start_ts": "2017-01-12 16:40:00",
+        "end_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 6,
+      "ms": 155.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_profile",
+      "ref": "query:card_profile(card=C06115-K1, before_ts=2017-01-26 16:40:00, recent_days=30)",
+      "params": {
+        "card": "C06115-K1",
+        "before_ts": "2017-01-26 16:40:00",
+        "recent_days": 30
+      },
+      "rows": 83,
+      "ms": 171.4,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recurring_match",
+      "ref": "query:recurring_match(card=C06115-K1, amt=409.3, tol=4.09, before_ts=2017-01-26 16:40:00)",
+      "params": {
+        "card": "C06115-K1",
+        "amt": 409.3,
+        "tol": 4.09,
+        "before_ts": "2017-01-26 16:40:00"
+      },
+      "rows": 0,
+      "ms": 112.9,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "identity",
+      "tool": "tigergraph__run_installed_query",
+      "query": "account_history",
+      "ref": "query:account_history(txn=3626720, lookback_days=200)",
+      "params": {
+        "txn": "3626720",
+        "lookback_days": 200
+      },
+      "rows": 2,
+      "ms": 123.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "region_activity",
+      "ref": "query:region_activity(region=203.0, start_ts=2017-01-23 16:40:00, end_ts=2017-01-26 20:40:00, max_cards=50)",
+      "params": {
+        "region": "203.0",
+        "start_ts": "2017-01-23 16:40:00",
+        "end_ts": "2017-01-26 20:40:00",
+        "max_cards": 50
+      },
+      "rows": 0,
+      "ms": 171.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "prior_cases",
+      "ref": "query:prior_cases(card=C06115-K1, before_ts=2017-01-26 20:40:00)",
+      "params": {
+        "card": "C06115-K1",
+        "before_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 1,
+      "ms": 114.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C06115-K1, start_ts=2016-12-27 20:40:00, end_ts=2017-01-26 20:40:00)",
+      "params": {
+        "card": "C06115-K1",
+        "start_ts": "2016-12-27 20:40:00",
+        "end_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 12,
+      "ms": 196.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "network",
+      "tool": "tigergraph__run_installed_query",
+      "query": "recipient_activity",
+      "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-27 20:40:00, end_ts=2017-01-26 20:40:00, base_start=2016-06-30 20:40:00, max_detail=200)",
+      "params": {
+        "dom": "sc.rr.com",
+        "start_ts": "2016-12-27 20:40:00",
+        "end_ts": "2017-01-26 20:40:00",
+        "base_start": "2016-06-30 20:40:00",
+        "max_detail": 200
+      },
+      "rows": 52,
+      "ms": 123.2,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__get_query_description",
+      "query": "describe_queries",
+      "ref": "query:describe_queries(query_name=all)",
+      "params": {
+        "query_name": "all"
+      },
+      "rows": 21,
+      "ms": 259.5,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "transaction",
+      "tool": "tigergraph__run_installed_query",
+      "query": "card_window",
+      "ref": "query:card_window(card=C06115-K1, start_ts=2016-12-27 16:40:00, end_ts=2017-01-26 20:40:00)",
+      "params": {
+        "card": "C06115-K1",
+        "start_ts": "2016-12-27 16:40:00",
+        "end_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 12,
+      "ms": 128.0,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C06115-K1'], k=6, pattern=, before_ts=2017-01-26 20:40:00)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C06115-K1"
+        ],
+        "k": 6,
+        "pattern": "",
+        "before_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 17,
+      "ms": 226.3,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "similar_cases",
+      "ref": "query:similar_cases(devices=[], cards=['C06115-K1'], k=8, pattern=, before_ts=2017-01-26 20:40:00)",
+      "params": {
+        "devices": [],
+        "cards": [
+          "C06115-K1"
+        ],
+        "k": 8,
+        "pattern": "",
+        "before_ts": "2017-01-26 20:40:00"
+      },
+      "rows": 21,
+      "ms": 216.1,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "precedent",
+      "tool": "tigergraph__run_installed_query",
+      "query": "search_knowledge",
+      "ref": "query:search_knowledge(k=6)",
+      "params": {
+        "k": 6
+      },
+      "rows": 6,
+      "ms": 217.6,
+      "via": "mcp",
+      "ok": true
+    },
+    {
+      "agent": "lead",
+      "tool": "tigergraph__run_installed_query",
+      "query": "ids_exist",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-4235', 'CC-5224', 'CC-0573', 'CC-2105', 'CC-4205', 'CC-4021', 'CC-5203'], customer_ids=['C06115'])",
+      "params": {
+        "txn_ids": [],
+        "card_ids": [],
+        "case_ids": [
+          "CC-4235",
+          "CC-5224",
+          "CC-0573",
+          "CC-2105",
+          "CC-4205",
+          "CC-4021",
+          "CC-5203"
+        ],
+        "customer_ids": [
+          "C06115"
+        ]
+      },
+      "rows": 8,
+      "ms": 306.8,
+      "via": "mcp",
+      "ok": true
+    }
+  ],
+  "specialists": {
+    "transaction": {
+      "assessment": "The flagged transaction 3626720 is an in-person purchase of $409.30, which is well within the card's historical baseline of 83 transactions and a maximum amount of $2945.01. Both the real-time risk score of 0.11 and the transaction model score of 0.002035 are low, indicating no significant deviation from normal behavior.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3626720 ($409.30) is consistent with the customer's established preference for in-person 'W' product transactions.",
+        "The transaction amount is far below the historical maximum of $2945.01 observed in the card's baseline.",
+        "The transaction model score (model_p) of 0.002035 and real-time risk score of 0.11 both indicate very low risk, contradicting the untrusted alert text."
+      ],
+      "open_questions": [
+        "Why did the upstream alert text claim a real-time score of 0.69 when the actual recorded risk score is 0.11?"
+      ],
+      "suggested_pattern": "none"
+    },
+    "identity": {
+      "assessment": "The flagged transaction 3626720 was marked high risk by the real-time model at 0.69. The associated account C06115-K1|203.0|187 has a very sparse history, containing only one prior transaction from several weeks earlier which was low risk. Because device and location data are completely missing for both transactions, we cannot perform device verification or link this activity to known patterns.",
+      "risk": "medium",
+      "key_points": [
+        "Transaction 3626720 was flagged with a real-time risk score of 0.69 for an amount of $409.30.",
+        "The account C06115-K1|203.0|187 has only one prior recorded transaction (ID 3660311) on 2017-01-05, which had a low risk score of 0.1 and a transaction model probability of 0.006964.",
+        "No device profile, IP, or proxy data is available for either the flagged transaction or the historical transaction."
+      ],
+      "open_questions": [
+        "What are the device and location details for transaction 3626720 to help verify the cardholder's identity?",
+        "Why is there a gap in the account history, given that n_txn is 2 but only one prior transaction is detailed?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "network": {
+      "assessment": "The transaction was flagged by the real-time risk model, but network analysis shows no evidence of shared devices, connected fraud cases, or suspicious card-linking. The region has 23 active cards with no recent new card additions, suggesting stable regional activity rather than a coordinated attack.",
+      "risk": "low",
+      "key_points": [
+        "Transaction 3626720 was flagged with a real-time risk score of 0.69.",
+        "No device neighbors or shared device profiles were identified in the network queries.",
+        "The region associated with the transaction has 23 existing cards and zero new cards.",
+        "There are no connected cases linked to this transaction or device."
+      ],
+      "open_questions": [
+        "What specific non-network features triggered the real-time risk score of 0.69?",
+        "Are there any specific merchant or cardholder history details that explain the alert?"
+      ],
+      "suggested_pattern": "undocumented"
+    },
+    "precedent": {
+      "assessment": "The alert was triggered by a real-time risk score of 0.69 on transaction 3626720 for $409.30. Historical precedents show a strong pattern of similar high-scoring alerts being cleared as legitimate, often due to cardholders traveling to the billing region in question or using new devices.",
+      "risk": "low",
+      "key_points": [
+        "Multiple historical cases, including CC-4230, CC-4199, CC-5203, CC-0252, CC-2354, and CC-1153, were cleared after cardholders confirmed travel to the billing region in question.",
+        "Prior investigations like CASE-2016-013 and CASE-2016-017 demonstrate that transactions flagged by the real-time risk score are frequently confirmed as legitimate upon cardholder contact."
+      ],
+      "open_questions": [
+        "Is the cardholder currently traveling or has their billing region recently changed?",
+        "What is the transaction model's score for transaction 3626720?"
+      ],
+      "suggested_pattern": "none"
+    }
+  },
+  "lead": {
+    "hypotheses": [
+      "The flagged transaction is a legitimate purchase by the cardholder, as the amount is typical and the billing region is well-established in the card's history.",
+      "The card has been compromised as part of a recipient surge scheme, indicated by other online transactions on this card going to a suspicious email domain shared with multiple other cards."
+    ],
+    "extra_calls": [
+      {
+        "tool": "card_window",
+        "why": "To review the full timeline of transactions on this card, specifically comparing the flagged transaction against the suspicious online purchases to sc.rr.com.",
+        "days_back": 30
+      },
+      {
+        "tool": "similar_cases_by_pattern",
+        "why": "To identify closed fraud cases matching the recipient surge pattern or involving the sc.rr.com domain.",
+        "pattern": "recipient surge"
+      }
+    ],
+    "focus": "Investigating whether the card's association with the suspicious sc.rr.com recipient domain indicates a broader compromise affecting the flagged transaction."
+  },
+  "critic": {
+    "agree": false,
+    "issues": [
+      "R6 requires CREATE_CASE, FILE_REPORT, and MONITOR_CONNECTED_CARDS when a shared origin across cards is identified. The draft incorrectly recommends MONITOR_CARD and omits the required case and report actions.",
+      "The draft recommends contradictory actions: CLOSE_NO_FRAUD and ESCALATE_TO_ANALYST cannot be applied simultaneously."
+    ],
+    "what_would_change_verdict": "Evidence linking the flagged transaction itself to the suspicious recipient surge pattern, or a customer dispute confirming the transaction as unauthorized."
+  },
+  "problems": [],
+  "written": {
+    "ok": true,
+    "graph_case_id": "CASE-2016-HHF-013",
+    "n_vertices": 10,
+    "n_edges": 21
+  }
+}
