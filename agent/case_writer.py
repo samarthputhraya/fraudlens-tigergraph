@@ -105,13 +105,26 @@ def write_case(ans: dict, r: dict, opened_at: str, dry: bool = False) -> dict:
                                "decided_at": now}))
     if acts:
         # a human decision already stored in the graph is never reset by re-running the case
-        existing = retry(lambda: cx.getVerticesById("ActionRecord", [aid for aid, _ in acts])) or []
+        existing = existing_vertices(cx, "ActionRecord", [aid for aid, _ in acts], retry)
         decided = {v["v_id"] for v in existing if not str(v["attributes"].get("status", "")).startswith(("pending", "executed", "superseded"))}
         acts = [(aid, a) for aid, a in acts if aid not in decided]
     if acts:
         nv += retry(lambda: cx.upsertVertices("ActionRecord", acts))
         ne += retry(lambda: cx.upsertEdges("InvestigationCase", "CASE_ACTION", "ActionRecord", [(gid, aid, {}) for aid, _ in acts]))
     return {"ok": True, "graph_case_id": gid, "n_vertices": nv, "n_edges": ne}
+
+
+def existing_vertices(cx, vtype: str, ids: list[str], retry) -> list[dict]:
+    """The vertices among `ids` that exist. TigerGraph answers a lookup that includes an unknown id with error 601
+    ("not a valid vertex id"), so a first-time case, whose actions don't exist yet, is looked up one id at a time."""
+    found = []
+    for vid in ids:
+        try:
+            found += retry(lambda: cx.getVerticesById(vtype, vid)) or []
+        except Exception as e:  # noqa: BLE001 - pyTigerGraph raises TigerGraphException with the REST code in the text
+            if "601" not in str(e) and "not a valid vertex id" not in str(e):
+                raise
+    return found
 
 
 def action_id(gid: str, stage: str, i: int, action: str) -> str:
