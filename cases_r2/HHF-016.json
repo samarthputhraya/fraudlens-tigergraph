@@ -75,16 +75,16 @@
         "as_of": "2017-01-01 03:07:47"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3496 (confirmed_fraud, out_of_region_use); CC-3787 (confirmed_fraud, out_of_region_use); CC-2869 (confirmed_fraud, out_of_region_use); CC-5323 (confirmed_fraud, out_of_region_use)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-3496 (confirmed_fraud, out_of_region_use); CC-3787 (confirmed_fraud, out_of_region_use); CC-5153 (confirmed_fraud, out_of_region_use); CC-5323 (confirmed_fraud, out_of_region_use)",
         "source": "graph",
         "ref": "query:similar_cases(devices=[], cards=['C02502-K2'], k=8, pattern=, before_ts=2017-01-01 03:07:47)",
         "entity_ids": [
           "CC-3496",
           "CC-3787",
-          "CC-2869",
+          "CC-5153",
           "CC-5323",
-          "CC-1232",
-          "CC-1233"
+          "CC-1203",
+          "CC-1232"
         ],
         "as_of": "2017-01-01 03:07:47"
       }
@@ -92,14 +92,14 @@
     "similar_prior_cases": [
       "CC-3496",
       "CC-3787",
-      "CC-2869",
+      "CC-5153",
       "CC-5323",
-      "CC-1232",
-      "CC-1233",
       "CC-1203",
-      "CC-1257"
+      "CC-1232",
+      "CC-1257",
+      "CC-1261"
     ],
-    "summary": "The alert was triggered because the bank's real-time model scored transaction 3611043 for $3,008.76 on card C02502-K2 at 0.79, and included untrusted customer text with instructions that were ignored. Graph evidence showed that while the amount was in the top 3% of the card's history and there was a weak escalating-value ramp pattern on earlier charges, the card had 1,431 prior purchases in the same billing region and a previous false alarm. The transaction model scored the event at a low 0.005, supporting a verdict of legitimate. The final actions taken were ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "The alert was triggered when the bank's real-time model scored transaction 3611043 on card C02502-K2 at 0.79, accompanied by untrusted customer instructions to approve and close the case which were ignored. While the $3,008.76 charge is in the top 3% of the card's purchase amounts and other recent charges show a weak escalating-value ramp pattern, the card has a strong history of 1,431 prior purchases in the same billing region and a previously cleared false alarm. The transaction model scored the event at a very low 0.005, confirming the activity is normal. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-016"
   },
@@ -141,8 +141,8 @@
   },
   "stop_reason": "Section 6: fraud probability 0.03 <= 0.15 on independent legitimate signals (model, region); contacting the cardholder would not change the decision.",
   "tool_calls": 20,
-  "tokens": 10199,
-  "latency_s": 51.8,
+  "tokens": 10427,
+  "latency_s": 42.7,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -152,7 +152,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:21:25+0530",
+    "started_at": "2026-10-30T11:36:36+0530",
     "complete": true,
     "failures": []
   }

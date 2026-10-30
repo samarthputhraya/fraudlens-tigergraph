@@ -57,16 +57,16 @@
         "as_of": "2017-01-14 15:57:30"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2248 (confirmed_fraud, card_testing); CC-2394 (confirmed_fraud, card_testing); CC-4501 (confirmed_fraud, card_testing); CC-2247 (confirmed_fraud, card_testing)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4501 (confirmed_fraud, card_testing); CC-2247 (confirmed_fraud, card_testing); CC-2248 (confirmed_fraud, card_testing); CC-1242 (confirmed_fraud, card_testing)",
         "source": "graph",
         "ref": "query:similar_cases(devices=[], cards=['C09582-K1'], k=8, pattern=, before_ts=2017-01-14 15:57:30)",
         "entity_ids": [
-          "CC-2248",
-          "CC-2394",
           "CC-4501",
           "CC-2247",
+          "CC-2248",
           "CC-1242",
-          "CC-1645"
+          "CC-2643",
+          "CC-2394"
         ],
         "as_of": "2017-01-14 15:57:30"
       },
@@ -88,14 +88,15 @@
       }
     ],
     "similar_prior_cases": [
-      "CC-2248",
-      "CC-2394",
       "CC-4501",
       "CC-2247",
+      "CC-2248",
       "CC-1242",
+      "CC-2643",
+      "CC-2394",
       "CC-1645"
     ],
-    "summary": "This alert was triggered by a customer message stating 'I never made this $236.28 purchase. Please check my card.' regarding transaction 3660350 on card C09582-K1. Graph evidence shows a clear card testing pattern, with four online authorizations under $5 occurring within an hour before the flagged $236.28 online purchase. Additionally, this card is almost exclusively used in person, with only 5 of 708 prior transactions occurring online. The final verdict is fraud with a 0.97 probability, and the case is closed as fraud. The final actions include automatically creating a case and recommending a card block awaiting L1 human approval, with no suspicious activity report recommended.",
+    "summary": "The alert was triggered when customer C09582 reported an unrecognized $236.28 purchase on card C09582-K1, referring to transaction 3660350. Graph evidence shows a classic card testing pattern with four online authorizations under $5 occurring within an hour, immediately followed by the flagged $236.28 online purchase. This online activity is highly anomalous, as the card has historically been used almost exclusively in person. The system reached a final verdict of fraud with a 0.97 probability, closing the case under the card testing pattern. The final actions are to automatically create a case and to recommend blocking the card, which awaits L1 human approval, with no suspicious activity report recommended.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-007"
   },
@@ -137,8 +138,8 @@
   },
   "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (behaviour) support a defensible decision at probability 0.97; further queries would not change the actions.",
   "tool_calls": 15,
-  "tokens": 10034,
-  "latency_s": 47.1,
+  "tokens": 9926,
+  "latency_s": 37.5,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -148,7 +149,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:25:54+0530",
+    "started_at": "2026-10-30T11:40:17+0530",
     "complete": true,
     "failures": []
   }

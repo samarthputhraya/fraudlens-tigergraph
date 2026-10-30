@@ -67,10 +67,10 @@ Keep the Round 1 `InvestigationCase` memory; **don't run `reset_memory`**. The b
 ```bash
 .venv/Scripts/python run_cases.py                 # writes cases_r2/*.json, runs/traces/*, audit entries; case memory to TigerGraph
 ```
-- **Expected verdicts:** they should match the mirror run in `runs/v10/` (`runs/v10_run.log`):
+- **Expected verdicts** (mirror run of 30 Oct, `runs/dev_all/`):
   - fraud: HHF-001 to HHF-007
-  - uncertain: HHF-011
-  - legitimate: the other 10
+  - uncertain, at 0.5: HHF-011 (the records disagree) and HHF-013 (a clean purchase on a card in the sc.rr.com ring)
+  - legitimate: the other 9
 - **Exit code:**
   - 0: all answers complete;
   - 3: a model step failed, so read the INCOMPLETE lines and rerun those cases;
@@ -82,6 +82,7 @@ Keep the Round 1 `InvestigationCase` memory; **don't run `reset_memory`**. The b
 mkdir -p runs/grade/official/fraudlens && cp cases_r2/HHF-*.json runs/grade/official/fraudlens/
 .venv/Scripts/python data/raw_r2/share/grader/grade.py --teams-dir runs/grade/official --case-pack data/raw_r2/share/cases/case_pack_final.csv --transactions data/raw_r2/share/transactions_2017q1.csv --out runs/grade/official.json
 .venv/Scripts/python eval/attest_check.py cases_r2 --graph
+.venv/Scripts/python eval/casebook.py              # no card cleared in one case and reported in another (exit 1 if so)
 .venv/Scripts/python eval/attack_suite.py
 .venv/Scripts/python eval/drills.py --official
 .venv/Scripts/python -m pytest tests -q

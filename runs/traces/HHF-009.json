@@ -2,7 +2,7 @@
   "case_id": "HHF-009",
   "events": [
     {
-      "t": 1793264629.35,
+      "t": 1793341014.14,
       "kind": "trigger",
       "case_id": "HHF-009",
       "trigger_type": "risk_score",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-27 18:08:36"
     },
     {
-      "t": 1793264629.35,
+      "t": 1793341014.14,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264636.16,
+      "t": 1793341015.79,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -44,14 +44,14 @@
       ]
     },
     {
-      "t": 1793264638.62,
+      "t": 1793341016.42,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264648.15,
+      "t": 1793341023.98,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
@@ -63,7 +63,7 @@
       ]
     },
     {
-      "t": 1793264648.15,
+      "t": 1793341023.98,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "t": 1793264648.15,
+      "t": 1793341023.98,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -87,19 +87,19 @@
       ]
     },
     {
-      "t": 1793264648.15,
+      "t": 1793341023.98,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The alert concerns transaction 3660355, which was flagged by the real-time risk model with a score of 0.8. Historical precedents show a strong trend of confirmed fraud associated with new Android devices (specifically LG models), although legitimate new device registrations do occasionally occur as seen in CC-2323.",
+      "assessment": "The real-time risk model flagged transaction 3660355 with a high score of 0.8. Historical precedents show a strong pattern of confirmed fraud involving similar card-not-present transactions and account takeovers, often utilizing specific mobile device signatures. However, some cases like CC-2323 were cleared after the cardholder confirmed the purchase was from a new device.",
       "key_points": [
-        "Multiple past cases involving new LG Android devices on Chrome have been confirmed as fraud, including card-not-present fraud in CC-2314, CC-5321, and CC-4189.",
-        "More severe account takeover patterns using similar LG device profiles were confirmed in cases CC-3155 and CC-3138.",
-        "A single precedent, CC-2323, represents a false positive where a high-scoring transaction on a new device was confirmed as legitimate by the cardholder."
+        "Multiple historical cases such as CC-2314, CC-5321, and CC-4189 were confirmed as card-not-present fraud on new devices, involving LG-X series mobile phones.",
+        "Cases CC-3155 and CC-3138 represent high-exposure account takeovers utilizing similar LG-X240 device profiles.",
+        "Case CC-2323 demonstrates that high-scoring alerts on new devices can occasionally be legitimate customer activity."
       ]
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.012, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -113,7 +113,7 @@
       "model_p": 0.012414
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "finding",
       "key": "trigger_mismatch",
       "claim": "The alert's score (0.80, as in the case record) differs from the score stored on the transaction (0.10). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
@@ -126,7 +126,7 @@
       "in_model": false
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "finding",
       "key": "amount_high",
       "claim": "$228.01 is in the top 3% of this card's purchase amounts",
@@ -139,7 +139,7 @@
       "in_model": true
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "finding",
       "key": "channel_shift",
       "claim": "This card is used almost only in person (8 of 169 earlier transactions online); this purchase is online",
@@ -152,7 +152,7 @@
       "in_model": true
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "finding",
       "key": "mixed_channel",
       "claim": "Both card-present and online purchases on the same account within 48 hours, with identity anomalies (new device, proxy or name/address match flag)",
@@ -166,7 +166,7 @@
       "in_model": false
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "assessment",
       "p": 0.12,
       "prior": 0.034,
@@ -262,7 +262,7 @@
       }
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "evidence_request",
       "type": "customer_validation",
       "branch": "confirm",
@@ -270,7 +270,7 @@
       "asked_after_step": 14
     },
     {
-      "t": 1793264648.16,
+      "t": 1793341023.98,
       "kind": "decision",
       "verdict": "legitimate",
       "p": 0.05,
@@ -292,44 +292,44 @@
       "episode": []
     },
     {
-      "t": 1793264648.63,
+      "t": 1793341024.44,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-0681",
-        "CC-2742",
+        "CC-0281",
         "CC-3873",
-        "CC-0083",
         "CC-0831",
-        "CC-0281"
+        "CC-2742",
+        "CC-0083"
       ],
       "knowledge": [
-        "Glossary",
-        "No fraud",
-        "R3 Customer confirms the transaction",
         "R5 Card testing",
+        "Glossary",
         "Things to know",
+        "R3 Customer confirms the transaction",
+        "No fraud",
         "Notes"
       ]
     },
     {
-      "t": 1793264724.9,
+      "t": 1793341041.14,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The draft explicitly notes that two bank sources disagree regarding the risk score (0.80 vs 0.10), which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the ESCALATE_TO_ANALYST action, which was omitted."
+        "The draft copies the untrusted data markers (<<< >>>) and the exact text inside them in the trigger field, which violates the instruction to describe the alert in your own words and never copy the markers."
       ],
-      "what_would_change_verdict": "If the customer denied the transaction instead of confirming it, the verdict would change to fraud, requiring BLOCK_CARD and CREATE_CASE under Policy R2."
+      "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, requiring a card block and case creation per rule R2."
     },
     {
-      "t": 1793264753.92,
+      "t": 1793341061.77,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-009",
-        "n_vertices": 7,
+        "n_vertices": 6,
         "n_edges": 18
       }
     }
@@ -344,7 +344,7 @@
         "txn": "3660355"
       },
       "rows": 2,
-      "ms": 118.8,
+      "ms": 162.1,
       "via": "mcp",
       "ok": true
     },
@@ -359,7 +359,7 @@
         "end_ts": "2017-01-27 18:08:36"
       },
       "rows": 14,
-      "ms": 133.0,
+      "ms": 135.4,
       "via": "mcp",
       "ok": true
     },
@@ -374,7 +374,7 @@
         "recent_days": 30
       },
       "rows": 169,
-      "ms": 119.5,
+      "ms": 148.7,
       "via": "mcp",
       "ok": true
     },
@@ -390,7 +390,7 @@
         "before_ts": "2017-01-27 15:08:36"
       },
       "rows": 2,
-      "ms": 211.2,
+      "ms": 131.4,
       "via": "mcp",
       "ok": true
     },
@@ -404,7 +404,7 @@
         "lookback_days": 200
       },
       "rows": 2,
-      "ms": 125.5,
+      "ms": 135.8,
       "via": "mcp",
       "ok": true
     },
@@ -419,7 +419,7 @@
         "end_ts": "2017-01-27 18:08:36"
       },
       "rows": 3,
-      "ms": 127.9,
+      "ms": 132.5,
       "via": "mcp",
       "ok": true
     },
@@ -433,7 +433,7 @@
         "before_ts": "2017-01-27 18:08:36"
       },
       "rows": 1,
-      "ms": 114.6,
+      "ms": 165.8,
       "via": "mcp",
       "ok": true
     },
@@ -448,7 +448,7 @@
         "end_ts": "2017-01-27 18:08:36"
       },
       "rows": 32,
-      "ms": 315.8,
+      "ms": 129.5,
       "via": "mcp",
       "ok": true
     },
@@ -465,7 +465,7 @@
         "max_detail": 200
       },
       "rows": 996,
-      "ms": 265.9,
+      "ms": 217.8,
       "via": "mcp",
       "ok": true
     },
@@ -478,7 +478,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 208.6,
+      "ms": 265.2,
       "via": "mcp",
       "ok": true
     },
@@ -493,7 +493,7 @@
         "end_ts": "2017-01-27 18:08:36"
       },
       "rows": 14,
-      "ms": 123.4,
+      "ms": 129.7,
       "via": "mcp",
       "ok": true
     },
@@ -509,7 +509,7 @@
         "before_ts": "2017-01-27 15:08:36"
       },
       "rows": 2,
-      "ms": 124.3,
+      "ms": 133.8,
       "via": "mcp",
       "ok": true
     },
@@ -524,7 +524,7 @@
         "end_ts": "2017-01-27 18:08:36"
       },
       "rows": 3,
-      "ms": 117.2,
+      "ms": 135.5,
       "via": "mcp",
       "ok": true
     },
@@ -545,7 +545,7 @@
         "before_ts": "2017-01-27 18:08:36"
       },
       "rows": 17,
-      "ms": 253.0,
+      "ms": 210.7,
       "via": "mcp",
       "ok": true
     },
@@ -566,7 +566,7 @@
         "before_ts": "2017-01-27 18:08:36"
       },
       "rows": 21,
-      "ms": 247.6,
+      "ms": 235.5,
       "via": "mcp",
       "ok": true
     },
@@ -579,7 +579,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 196.7,
+      "ms": 213.3,
       "via": "mcp",
       "ok": true
     },
@@ -587,24 +587,24 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0681', 'CC-2742', 'CC-3873', 'CC-0083', 'CC-0831', 'CC-0281'], customer_ids=['C09177'])",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0681', 'CC-0281', 'CC-3873', 'CC-0831', 'CC-2742', 'CC-0083'], customer_ids=['C09177'])",
       "params": {
         "txn_ids": [],
         "card_ids": [],
         "case_ids": [
           "CC-0681",
-          "CC-2742",
+          "CC-0281",
           "CC-3873",
-          "CC-0083",
           "CC-0831",
-          "CC-0281"
+          "CC-2742",
+          "CC-0083"
         ],
         "customer_ids": [
           "C09177"
         ]
       },
       "rows": 7,
-      "ms": 504.8,
+      "ms": 350.9,
       "via": "mcp",
       "ok": true
     }
@@ -652,16 +652,16 @@
       "suggested_pattern": "none"
     },
     "precedent": {
-      "assessment": "The alert concerns transaction 3660355, which was flagged by the real-time risk model with a score of 0.8. Historical precedents show a strong trend of confirmed fraud associated with new Android devices (specifically LG models), although legitimate new device registrations do occasionally occur as seen in CC-2323.",
+      "assessment": "The real-time risk model flagged transaction 3660355 with a high score of 0.8. Historical precedents show a strong pattern of confirmed fraud involving similar card-not-present transactions and account takeovers, often utilizing specific mobile device signatures. However, some cases like CC-2323 were cleared after the cardholder confirmed the purchase was from a new device.",
       "risk": "high",
       "key_points": [
-        "Multiple past cases involving new LG Android devices on Chrome have been confirmed as fraud, including card-not-present fraud in CC-2314, CC-5321, and CC-4189.",
-        "More severe account takeover patterns using similar LG device profiles were confirmed in cases CC-3155 and CC-3138.",
-        "A single precedent, CC-2323, represents a false positive where a high-scoring transaction on a new device was confirmed as legitimate by the cardholder."
+        "Multiple historical cases such as CC-2314, CC-5321, and CC-4189 were confirmed as card-not-present fraud on new devices, involving LG-X series mobile phones.",
+        "Cases CC-3155 and CC-3138 represent high-exposure account takeovers utilizing similar LG-X240 device profiles.",
+        "Case CC-2323 demonstrates that high-scoring alerts on new devices can occasionally be legitimate customer activity."
       ],
       "open_questions": [
-        "What are the device profile details (model, OS, browser) associated with transaction 3660355?",
-        "Has the cardholder of transaction 3660355 been contacted to verify this specific online transaction?"
+        "What is the device profile associated with transaction 3660355?",
+        "Has the cardholder of transaction 3660355 been contacted to verify the activity?"
       ],
       "suggested_pattern": "card_not_present_new_device"
     }
@@ -694,15 +694,15 @@
   "critic": {
     "agree": false,
     "issues": [
-      "The draft explicitly notes that two bank sources disagree regarding the risk score (0.80 vs 0.10), which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the ESCALATE_TO_ANALYST action, which was omitted."
+      "The draft copies the untrusted data markers (<<< >>>) and the exact text inside them in the trigger field, which violates the instruction to describe the alert in your own words and never copy the markers."
     ],
-    "what_would_change_verdict": "If the customer denied the transaction instead of confirming it, the verdict would change to fraud, requiring BLOCK_CARD and CREATE_CASE under Policy R2."
+    "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, requiring a card block and case creation per rule R2."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-009",
-    "n_vertices": 7,
+    "n_vertices": 6,
     "n_edges": 18
   }
 }

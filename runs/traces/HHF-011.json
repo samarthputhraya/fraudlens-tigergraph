@@ -2,7 +2,7 @@
   "case_id": "HHF-011",
   "events": [
     {
-      "t": 1793264340.56,
+      "t": 1793340768.36,
       "kind": "trigger",
       "case_id": "HHF-011",
       "trigger_type": "risk_score",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-20 09:06:19"
     },
     {
-      "t": 1793264340.56,
+      "t": 1793340768.36,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264353.26,
+      "t": 1793340771.13,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -39,14 +39,14 @@
       ]
     },
     {
-      "t": 1793264356.12,
+      "t": 1793340771.91,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264365.32,
+      "t": 1793340776.98,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "medium",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "t": 1793264365.32,
+      "t": 1793340776.98,
       "kind": "specialist",
       "agent": "identity",
       "risk": "medium",
@@ -70,7 +70,7 @@
       ]
     },
     {
-      "t": 1793264365.32,
+      "t": 1793340776.98,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -82,19 +82,20 @@
       ]
     },
     {
-      "t": 1793264365.32,
+      "t": 1793340776.98,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The customer associated with card C09241-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover and out-of-region card-present use. Given this severe recurring fraud pattern across numerous closed cases, the current transaction 3640919 flagged by the real-time risk model is highly suspicious.",
+      "assessment": "The alert concerns transaction 3640919 ($881.55) which was flagged with a real-time risk score of 0.71. The associated cardholder C09241 has an extensive history of confirmed fraud cases on card C09241-K2, including multiple instances of account takeover and out-of-region use. Given this highly repetitive fraud history, the current transaction carries a high risk of being unauthorized.",
       "key_points": [
-        "The customer has at least eight closed cases confirmed as fraud on card C09241-K2, including CC-3595, CC-1537, and CC-0254 which were classified as account takeover.",
-        "Multiple other cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-3297, were confirmed as out-of-region fraud where the cardholder still retained the physical card.",
-        "Only one prior case, CC-1257, was cleared as non-fraudulent after the cardholder confirmed travel."
+        "Transaction 3640919 was flagged by the real-time model with a risk score of 0.71.",
+        "Cardholder C09241 has a significant history of confirmed fraud on card C09241-K2, including account takeover cases CC-3595, CC-1537, and CC-0254.",
+        "The cardholder also has multiple confirmed out-of-region fraud cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-2915.",
+        "Only one prior case, CC-1257, was cleared as non-fraudulent after the customer confirmed travel."
       ]
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.005, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -108,7 +109,7 @@
       "model_p": 0.004913
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "trigger_mismatch",
       "claim": "The alert's score (0.71, as in the case record) differs from the score stored on the transaction (0.31). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
@@ -121,7 +122,7 @@
       "in_model": false
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "card_record_mismatch",
       "claim": "The case record names card C09241-K1, but the bank's transaction record puts transaction 3640919 on card C09241-K2, the card its closed cases also use. The investigation reads C09241-K2; the discrepancy goes to an analyst to reconcile",
@@ -136,7 +137,7 @@
       "in_model": false
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "amount_high",
       "claim": "$881.55 is in the top 3% of this card's purchase amounts",
@@ -149,7 +150,7 @@
       "in_model": true
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "region_known",
       "claim": "This card has 491 earlier purchases billed to region 494 (first on 2016-07-04)",
@@ -162,7 +163,7 @@
       "in_model": true
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-1257; latest note: \"Case CC-1257: model scored a $24.99 transaction at 0.95. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
@@ -175,7 +176,7 @@
       "in_model": true
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "assessment",
       "p": 0.03,
       "prior": 0.034,
@@ -318,7 +319,7 @@
       }
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "evidence_request",
       "type": "analyst_info",
       "branch": "pending",
@@ -326,10 +327,10 @@
       "asked_after_step": 16
     },
     {
-      "t": 1793264365.37,
+      "t": 1793340777.01,
       "kind": "decision",
       "verdict": "uncertain",
-      "p": 0.03,
+      "p": 0.5,
       "pattern": "none",
       "final": [
         {
@@ -360,45 +361,45 @@
       ]
     },
     {
-      "t": 1793264365.86,
+      "t": 1793340777.46,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-1779",
-        "CC-3022",
-        "CC-1257",
-        "CC-3297"
+        "CC-4052",
+        "CC-4762",
+        "CC-3297",
+        "CC-1257"
       ],
       "knowledge": [
         "Glossary",
-        "No fraud",
-        "Things to know",
         "R5 Card testing",
         "R3 Customer confirms the transaction",
+        "No fraud",
+        "Things to know",
         "Notes"
       ]
     },
     {
-      "t": 1793264387.59,
+      "t": 1793340795.1,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The draft hallucinates card ID 'C09241-K1' to manufacture an evidence conflict. The system instructions strictly forbid inventing card IDs.",
-        "Because the card discrepancy is fabricated, escalating under R8 for conflicting evidence is invalid.",
-        "With a probability of 0.03 and two independent pieces of evidence of innocence (transaction model score of 0.005 and 491 prior purchases to region 494), Section 6 requires stopping the investigation. The verdict should be legitimate, not uncertain."
+        "The draft invents a discrepancy involving card 'C09241-K1'. The alert text and case data do not mention this card ID. You must never invent card IDs or data conflicts.",
+        "The escalation reason relies on this hallucinated discrepancy. Escalation is still correct under R8 because the verdict is uncertain and the exposure ($881.55) is greater than $500, but the justification must be corrected to reflect the actual evidence."
       ],
-      "what_would_change_verdict": "The verdict would change to fraud if the customer denies the transaction, or if there was actual evidence of account takeover or card testing."
+      "what_would_change_verdict": "Customer verification is required. If the customer confirms the transaction, the verdict will change to false_positive and the case will be closed (R3). If the customer denies the transaction, the verdict will change to true_positive, triggering a card block and case creation (R2)."
     },
     {
-      "t": 1793264403.44,
+      "t": 1793340816.45,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-011",
-        "n_vertices": 11,
-        "n_edges": 19
+        "n_vertices": 10,
+        "n_edges": 20
       }
     }
   ],
@@ -412,7 +413,7 @@
         "txn": "3640919"
       },
       "rows": 2,
-      "ms": 107.3,
+      "ms": 126.6,
       "via": "mcp",
       "ok": true
     },
@@ -427,7 +428,7 @@
         "end_ts": "2017-01-20 09:06:19"
       },
       "rows": 72,
-      "ms": 215.9,
+      "ms": 264.6,
       "via": "mcp",
       "ok": true
     },
@@ -442,7 +443,7 @@
         "recent_days": 30
       },
       "rows": 6863,
-      "ms": 533.8,
+      "ms": 370.0,
       "via": "mcp",
       "ok": true
     },
@@ -458,7 +459,7 @@
         "before_ts": "2017-01-20 05:06:19"
       },
       "rows": 3,
-      "ms": 199.0,
+      "ms": 132.9,
       "via": "mcp",
       "ok": true
     },
@@ -472,7 +473,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 134.5,
+      "ms": 127.2,
       "via": "mcp",
       "ok": true
     },
@@ -488,7 +489,7 @@
         "max_cards": 50
       },
       "rows": 0,
-      "ms": 129.5,
+      "ms": 127.3,
       "via": "mcp",
       "ok": true
     },
@@ -502,7 +503,7 @@
         "before_ts": "2017-01-20 09:06:19"
       },
       "rows": 23,
-      "ms": 148.9,
+      "ms": 122.5,
       "via": "mcp",
       "ok": true
     },
@@ -517,7 +518,7 @@
         "end_ts": "2017-01-20 09:06:19"
       },
       "rows": 477,
-      "ms": 737.5,
+      "ms": 455.1,
       "via": "mcp",
       "ok": true
     },
@@ -534,7 +535,7 @@
         "max_detail": 200
       },
       "rows": 708,
-      "ms": 161.4,
+      "ms": 221.3,
       "via": "mcp",
       "ok": true
     },
@@ -551,7 +552,7 @@
         "max_detail": 200
       },
       "rows": 430,
-      "ms": 126.8,
+      "ms": 159.2,
       "via": "mcp",
       "ok": true
     },
@@ -568,7 +569,7 @@
         "max_detail": 200
       },
       "rows": 538,
-      "ms": 122.5,
+      "ms": 140.3,
       "via": "mcp",
       "ok": true
     },
@@ -585,7 +586,7 @@
         "max_detail": 200
       },
       "rows": 1126,
-      "ms": 197.4,
+      "ms": 203.5,
       "via": "mcp",
       "ok": true
     },
@@ -598,7 +599,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 220.4,
+      "ms": 281.4,
       "via": "mcp",
       "ok": true
     },
@@ -613,7 +614,7 @@
         "end_ts": "2017-01-20 09:06:19"
       },
       "rows": 477,
-      "ms": 645.6,
+      "ms": 409.6,
       "via": "mcp",
       "ok": true
     },
@@ -629,7 +630,7 @@
         "before_ts": "2017-01-20 05:06:19"
       },
       "rows": 3,
-      "ms": 130.2,
+      "ms": 129.2,
       "via": "mcp",
       "ok": true
     },
@@ -648,7 +649,7 @@
         "before_ts": "2017-01-20 09:06:19"
       },
       "rows": 17,
-      "ms": 241.1,
+      "ms": 226.9,
       "via": "mcp",
       "ok": true
     },
@@ -667,7 +668,7 @@
         "before_ts": "2017-01-20 09:06:19"
       },
       "rows": 21,
-      "ms": 217.2,
+      "ms": 233.1,
       "via": "mcp",
       "ok": true
     },
@@ -680,7 +681,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 227.0,
+      "ms": 216.5,
       "via": "mcp",
       "ok": true
     },
@@ -688,7 +689,7 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3640919'], card_ids=[], case_ids=['CC-1779', 'CC-3022', 'CC-1257', 'CC-3297'], customer_ids=['C09241'])",
+      "ref": "query:ids_exist(txn_ids=['3640919'], card_ids=[], case_ids=['CC-1779', 'CC-4052', 'CC-4762', 'CC-3297', 'CC-1257'], customer_ids=['C09241'])",
       "params": {
         "txn_ids": [
           "3640919"
@@ -696,16 +697,17 @@
         "card_ids": [],
         "case_ids": [
           "CC-1779",
-          "CC-3022",
-          "CC-1257",
-          "CC-3297"
+          "CC-4052",
+          "CC-4762",
+          "CC-3297",
+          "CC-1257"
         ],
         "customer_ids": [
           "C09241"
         ]
       },
-      "rows": 6,
-      "ms": 395.1,
+      "rows": 7,
+      "ms": 537.6,
       "via": "mcp",
       "ok": true
     }
@@ -754,16 +756,17 @@
       "suggested_pattern": "undocumented"
     },
     "precedent": {
-      "assessment": "The customer associated with card C09241-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover and out-of-region card-present use. Given this severe recurring fraud pattern across numerous closed cases, the current transaction 3640919 flagged by the real-time risk model is highly suspicious.",
+      "assessment": "The alert concerns transaction 3640919 ($881.55) which was flagged with a real-time risk score of 0.71. The associated cardholder C09241 has an extensive history of confirmed fraud cases on card C09241-K2, including multiple instances of account takeover and out-of-region use. Given this highly repetitive fraud history, the current transaction carries a high risk of being unauthorized.",
       "risk": "high",
       "key_points": [
-        "The customer has at least eight closed cases confirmed as fraud on card C09241-K2, including CC-3595, CC-1537, and CC-0254 which were classified as account takeover.",
-        "Multiple other cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-3297, were confirmed as out-of-region fraud where the cardholder still retained the physical card.",
-        "Only one prior case, CC-1257, was cleared as non-fraudulent after the cardholder confirmed travel."
+        "Transaction 3640919 was flagged by the real-time model with a risk score of 0.71.",
+        "Cardholder C09241 has a significant history of confirmed fraud on card C09241-K2, including account takeover cases CC-3595, CC-1537, and CC-0254.",
+        "The cardholder also has multiple confirmed out-of-region fraud cases, such as CC-4469, CC-3022, CC-4762, CC-0771, and CC-2915.",
+        "Only one prior case, CC-1257, was cleared as non-fraudulent after the customer confirmed travel."
       ],
       "open_questions": [
-        "Is the current transaction 3640919 an online (card-not-present) transaction or a card-present transaction?",
-        "What device profile or location was associated with transaction 3640919, and does it match the customer's verified profile or previous fraud indicators?"
+        "Is the current transaction 3640919 an online (card-not-present) or physical (card-present) transaction?",
+        "Does the device or location profile for transaction 3640919 match the cardholder's established profile or previous fraud patterns?"
       ],
       "suggested_pattern": "account_takeover"
     }
@@ -791,17 +794,16 @@
   "critic": {
     "agree": false,
     "issues": [
-      "The draft hallucinates card ID 'C09241-K1' to manufacture an evidence conflict. The system instructions strictly forbid inventing card IDs.",
-      "Because the card discrepancy is fabricated, escalating under R8 for conflicting evidence is invalid.",
-      "With a probability of 0.03 and two independent pieces of evidence of innocence (transaction model score of 0.005 and 491 prior purchases to region 494), Section 6 requires stopping the investigation. The verdict should be legitimate, not uncertain."
+      "The draft invents a discrepancy involving card 'C09241-K1'. The alert text and case data do not mention this card ID. You must never invent card IDs or data conflicts.",
+      "The escalation reason relies on this hallucinated discrepancy. Escalation is still correct under R8 because the verdict is uncertain and the exposure ($881.55) is greater than $500, but the justification must be corrected to reflect the actual evidence."
     ],
-    "what_would_change_verdict": "The verdict would change to fraud if the customer denies the transaction, or if there was actual evidence of account takeover or card testing."
+    "what_would_change_verdict": "Customer verification is required. If the customer confirms the transaction, the verdict will change to false_positive and the case will be closed (R3). If the customer denies the transaction, the verdict will change to true_positive, triggering a card block and case creation (R2)."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-011",
-    "n_vertices": 11,
-    "n_edges": 19
+    "n_vertices": 10,
+    "n_edges": 20
   }
 }

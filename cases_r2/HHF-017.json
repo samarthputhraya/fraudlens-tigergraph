@@ -49,14 +49,14 @@
         "as_of": "2017-01-01 02:02:06"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0026 (cleared, none); CC-4809 (confirmed_fraud, account_takeover); CC-3715 (confirmed_fraud, out_of_region_use); CC-4281 (confirmed_fraud, card_not_present_fraud)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0026 (cleared, none); CC-2978 (confirmed_fraud, card_not_present_fraud); CC-3715 (confirmed_fraud, out_of_region_use); CC-3378 (confirmed_fraud, out_of_region_use)",
         "source": "graph",
         "ref": "query:similar_cases(devices=['Windows | Windows 7 | chrome 61.0 | 1680x1050'], cards=['C08842-K2'], k=8, pattern=, before_ts=2017-01-01 02:02:06)",
         "entity_ids": [
           "CC-0026",
-          "CC-4809",
+          "CC-2978",
           "CC-3715",
-          "CC-4281",
+          "CC-3378",
           "CC-3931",
           "CC-4259"
         ],
@@ -81,15 +81,15 @@
     ],
     "similar_prior_cases": [
       "CC-0026",
-      "CC-4809",
+      "CC-2978",
       "CC-3715",
-      "CC-4281",
+      "CC-3378",
       "CC-3931",
       "CC-4259",
       "CC-4697",
-      "CC-4899"
+      "CC-0997"
     ],
-    "summary": "The alert was triggered when the bank's real-time model scored transaction 3638829 on card C08842-K2 at 0.55. Graph evidence showed that the transaction model scored the event at 0.000, even though the session was routed through an anonymous proxy. The card also had a previous alert cleared as a false alarm. In a simulated response, the customer confirmed they made the purchase. The verdict is legitimate, resulting in the final actions ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "This case was opened because the bank's real-time model flagged transaction 3638829 for $43.92 on card C08842-K2 with an elevated risk score. Graph evidence showed that the transaction model scored the event at 0.000, despite the session being routed through an anonymous proxy, and noted a previous false alarm on this card. A simulated customer outreach resulted in an assumed reply confirming that the cardholder made the purchase. Consequently, the verdict is legitimate. The final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-017"
   },
@@ -137,8 +137,8 @@
   },
   "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
   "tool_calls": 19,
-  "tokens": 9748,
-  "latency_s": 69.8,
+  "tokens": 9363,
+  "latency_s": 51.6,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -148,7 +148,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:20:15+0530",
+    "started_at": "2026-10-30T11:35:45+0530",
     "complete": true,
     "failures": []
   }

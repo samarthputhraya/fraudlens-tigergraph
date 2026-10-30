@@ -62,14 +62,14 @@
         "as_of": "2017-01-21 13:23:58"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2763 (cleared, none); CC-0270 (cleared, none); CC-2636 (confirmed_fraud, card_not_present_new_device); CC-1638 (confirmed_fraud, out_of_region_use)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2763 (cleared, none); CC-0270 (cleared, none); CC-0593 (cleared, none); CC-1396 (cleared, none)",
         "source": "graph",
         "ref": "query:similar_cases(devices=['Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1280x1024'], cards=['C07871-K1'], k=8, pattern=, before_ts=2017-01-21 13:23:58)",
         "entity_ids": [
           "CC-2763",
           "CC-0270",
-          "CC-2636",
-          "CC-1638",
+          "CC-0593",
+          "CC-1396",
           "CC-0807",
           "CC-3107"
         ],
@@ -95,14 +95,14 @@
     "similar_prior_cases": [
       "CC-2763",
       "CC-0270",
-      "CC-2636",
-      "CC-1638",
+      "CC-0593",
+      "CC-1396",
       "CC-0807",
       "CC-3107",
       "CC-2770",
       "CC-0735"
     ],
-    "summary": "The alert was triggered when the bank's real-time model scored transaction 3660353 on card C07871-K1 at 0.81. Graph evidence showed a prior cleared alert for this card and an escalating-value ramp pattern on recent charges, though the transaction model scored the flagged event very low at 0.012. A simulated customer reply confirmed that the cardholder made the purchase in billing region 087. Based on this confirmation, the verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "This alert was triggered because the real-time model flagged transaction 3660353 on card C07871-K1 with a high risk score. Graph evidence showed the transaction amount was typical for the card, and the transaction model scored it very low at 0.012, despite a weak escalating-value ramp pattern seen in earlier charges. A simulated customer reply confirmed that the cardholder made the purchase in billing region 087. As a result, the final verdict is legitimate, and the automated final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-008"
   },
@@ -150,8 +150,8 @@
   },
   "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
   "tool_calls": 21,
-  "tokens": 10786,
-  "latency_s": 102.5,
+  "tokens": 11298,
+  "latency_s": 52.8,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -161,7 +161,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:30:03+0530",
+    "started_at": "2026-10-30T11:43:36+0530",
     "complete": true,
     "failures": []
   }

@@ -27,6 +27,7 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
 | One command, one case | `python run_cases.py HHF-007` (setup: [Run it](#run-it), then [the morning runbook](docs/MORNING_RUNBOOK.md)) |
 | Resilience statement | [docs/RESILIENCE.md](docs/RESILIENCE.md) |
 | Innovation claim | [docs/INNOVATION.md](docs/INNOVATION.md): finding the fraud no model can see |
+| Diagrams | [architecture](docs/diagrams/architecture.png) and [sequence](docs/diagrams/sequence.png) |
 
 **What the agent does differently now:**
 
@@ -46,6 +47,7 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
 
   Across 14 reproducible attacks ([`eval/attack_suite.py`](eval/attack_suite.py)): 0 decisions changed, 14 detected, 0 tip-offs.
 - **Data-quality detective.** HHF-011's case record names a different card from the bank's own transaction record. The agent investigates the real card, records the discrepancy, and escalates instead of guessing.
+- **Case-book consistency (challenge 14).** [`eval/casebook.py`](eval/casebook.py) reads all the answers as one book: no card may be cleared in one case while another case reports it or plans to block it. On the 29 Oct freeze it found 1 such error (HHF-013 cleared a card that HHF-006 reports). The fix is a general R8 rule: a clean purchase on a card whose own charges carry a high-precision ring signature is `uncertain` and escalated, never closed or blocked. Uncertain verdicts that come from conflicting evidence report 0.5.
 - **Fail closed:**
   - A graph or tool failure stops the case: no answer, a stale answer moved aside, exit 2.
   - A model failure keeps the coded decision but marks the answer incomplete and escalates it (exit 3).
@@ -54,14 +56,14 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
 - **Attested claims.** Every evidence item cites only IDs its own query returns. [`eval/attest_check.py`](eval/attest_check.py) re-runs every claim backed by a read query (vector searches can't be replayed without their embedding): 77 of 77 reproduce.
 - **Step-by-step replay.** `python eval/replay.py HHF-007 --rerun` prints one investigation the way an auditor would read it: the alert, each finding with its weight, the decision, every tool call in order and, with `--rerun`, whether each query still returns the same number of rows on the offline mirror.
 
-Offline-mirror results tonight: the organisers' grader (`grader/grade.py` in the round's dataset) reports **18/18 clean (0 hard, 0 policy, 0 warnings)**. The official TigerGraph run follows the [morning runbook](docs/MORNING_RUNBOOK.md).
+**Official run on TigerGraph Savanna (30 Oct, every read through the MCP server):** 7 fraud, 2 uncertain at 0.5 (HHF-011, HHF-013), 9 legitimate. The organisers' grader reports **18/18 clean (0 hard, 0 policy, 0 warnings)**; all 77 re-runnable query claims reproduce on TigerGraph (0 mismatches); the case-book gate finds 0 decision errors; 13/13 resilience drills pass; 14 injection attacks change 0 decisions. Setup from scratch: the [morning runbook](docs/MORNING_RUNBOOK.md).
 
 ---
 
 ## What it does in 30 seconds
 
 1. **Trigger.** A case from the case pack, an analyst request in the UI, or the autonomous monitor.
-2. **Investigate.** Four specialist agents query TigerGraph through the official **TigerGraph MCP** server, using 18 installed GSQL queries:
+2. **Investigate.** Four specialist agents query TigerGraph through the official **TigerGraph MCP** server, using 20 installed GSQL queries:
    - the transaction window;
    - the card baseline;
    - the resolved cardholder account;
@@ -217,7 +219,7 @@ python rag/embed_cases.py                           # case-memory embeddings for
 # TigerGraph: graph/setup.py load / queries / describe / scores / vectors (docs/MORNING_RUNBOOK.md, steps 1-5)
 python run_cases.py HHF-007                         # one case; no argument runs all 18 -> cases_r2/
 python run_cases.py --mirror --no-write HHF-007     # the same, on the offline mirror (labelled not official)
-python -m pytest tests -q                           # 177 tests: fail-closed, approvals, audit attacks, injection, writer guard, policy, answers
+python -m pytest tests -q                           # 187 tests: fail-closed, approvals, audit attacks, injection, writer guard, policy, answers
 ```
 
 ### Round 1

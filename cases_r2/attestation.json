@@ -1,0 +1,140 @@
+{
+ "graph": "tigergraph-mcp",
+ "totals": {
+  "claims": 122,
+  "attested": 77,
+  "mismatched": 0,
+  "not_a_query": 27,
+  "not_rerunnable": 18
+ },
+ "attested_share_of_query_claims": 0.811,
+ "per_case": {
+  "HHF-001": {
+   "claims": 6,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-002": {
+   "claims": 9,
+   "attested": 7,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-003": {
+   "claims": 7,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 2,
+   "not_rerunnable": 1
+  },
+  "HHF-004": {
+   "claims": 8,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 3,
+   "not_rerunnable": 1
+  },
+  "HHF-005": {
+   "claims": 8,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 3,
+   "not_rerunnable": 1
+  },
+  "HHF-006": {
+   "claims": 5,
+   "attested": 3,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-007": {
+   "claims": 7,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 2,
+   "not_rerunnable": 1
+  },
+  "HHF-008": {
+   "claims": 8,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 3,
+   "not_rerunnable": 1
+  },
+  "HHF-009": {
+   "claims": 8,
+   "attested": 5,
+   "mismatched": 0,
+   "not_a_query": 2,
+   "not_rerunnable": 1
+  },
+  "HHF-010": {
+   "claims": 6,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-011": {
+   "claims": 8,
+   "attested": 6,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-012": {
+   "claims": 4,
+   "attested": 3,
+   "mismatched": 0,
+   "not_a_query": 0,
+   "not_rerunnable": 1
+  },
+  "HHF-013": {
+   "claims": 6,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-014": {
+   "claims": 6,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-015": {
+   "claims": 4,
+   "attested": 3,
+   "mismatched": 0,
+   "not_a_query": 0,
+   "not_rerunnable": 1
+  },
+  "HHF-016": {
+   "claims": 8,
+   "attested": 6,
+   "mismatched": 0,
+   "not_a_query": 1,
+   "not_rerunnable": 1
+  },
+  "HHF-017": {
+   "claims": 7,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 2,
+   "not_rerunnable": 1
+  },
+  "HHF-018": {
+   "claims": 7,
+   "attested": 4,
+   "mismatched": 0,
+   "not_a_query": 2,
+   "not_rerunnable": 1
+  }
+ },
+ "failures": []
+}

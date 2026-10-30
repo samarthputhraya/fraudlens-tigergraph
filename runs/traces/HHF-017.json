@@ -2,7 +2,7 @@
   "case_id": "HHF-017",
   "events": [
     {
-      "t": 1793263815.23,
+      "t": 1793340345.35,
       "kind": "trigger",
       "case_id": "HHF-017",
       "trigger_type": "risk_score",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-01 02:02:06"
     },
     {
-      "t": 1793263815.23,
+      "t": 1793340345.35,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793263818.86,
+      "t": 1793340348.93,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -39,14 +39,14 @@
       ]
     },
     {
-      "t": 1793263820.61,
+      "t": 1793340349.51,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793263839.58,
+      "t": 1793340358.31,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "low",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "t": 1793263839.58,
+      "t": 1793340358.31,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
@@ -70,7 +70,7 @@
       ]
     },
     {
-      "t": 1793263839.58,
+      "t": 1793340358.31,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -82,20 +82,19 @@
       ]
     },
     {
-      "t": 1793263839.58,
+      "t": 1793340358.31,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The customer associated with card C08842-K2 has an extensive history of confirmed fraud alerts spanning several months in 2016. Given the recurring nature of these compromised events across multiple patterns, the current transaction flagged by the real-time model carries a elevated risk of being unauthorized.",
+      "assessment": "The customer associated with card C08842-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover, card-not-present fraud, and out-of-region use. Given this severe historical compromise, any new alert on this card must be treated with high suspicion.",
       "key_points": [
-        "The cardholder has multiple confirmed fraud cases involving account takeover, including CC-1496, CC-3242, and CC-4809.",
-        "Card-not-present fraud was previously confirmed on this card in cases CC-2978 and CC-4281.",
-        "Out-of-region card-present fraud was also established in cases CC-3378, CC-3715, and CC-3815.",
-        "Only one prior case, CC-0026, was cleared as non-fraudulent after customer verification."
+        "The customer has nine closed cases, eight of which were confirmed fraud, including account takeovers (CC-4809, CC-1496, CC-3242) and card-not-present fraud (CC-2978, CC-4281).",
+        "Prior fraud patterns on this card also include out-of-region use (CC-3715, CC-3378, CC-3815), indicating a broad range of unauthorized activity.",
+        "Only one historical case (CC-0026) was cleared as legitimate travel, while all subsequent cases resulted in confirmed fraud and card blocks."
       ]
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.000, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -109,7 +108,7 @@
       "model_p": 0.000279
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "finding",
       "key": "trigger_mismatch",
       "claim": "The alert's score (0.55, as in the case record) differs from the score stored on the transaction (0.01). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
@@ -122,7 +121,7 @@
       "in_model": false
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "finding",
       "key": "proxy",
       "claim": "The session was routed through an anonymous proxy",
@@ -135,7 +134,7 @@
       "in_model": true
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0026; latest note: \"Case CC-0026: model scored a $200.07 transaction at 0.99. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
@@ -148,7 +147,7 @@
       "in_model": true
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "assessment",
       "p": 0.04,
       "prior": 0.034,
@@ -237,7 +236,7 @@
       }
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "evidence_request",
       "type": "customer_validation",
       "branch": "confirm",
@@ -245,7 +244,7 @@
       "asked_after_step": 16
     },
     {
-      "t": 1793263839.61,
+      "t": 1793340358.32,
       "kind": "decision",
       "verdict": "legitimate",
       "p": 0.04,
@@ -267,41 +266,41 @@
       "episode": []
     },
     {
-      "t": 1793263840.29,
+      "t": 1793340358.85,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-0026",
-        "CC-4809",
+        "CC-2978",
         "CC-3715",
-        "CC-4281",
+        "CC-3378",
         "CC-3931",
         "CC-4259",
         "CC-4697",
-        "CC-4899"
+        "CC-0997"
       ],
       "knowledge": [
         "Glossary",
         "No fraud",
+        "Things to know",
         "R3 Customer confirms the transaction",
         "R5 Card testing",
-        "Things to know",
         "Notes"
       ]
     },
     {
-      "t": 1793263858.69,
+      "t": 1793340374.55,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The draft explicitly states in the evidence that 'Two bank sources disagree', which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the action ESCALATE_TO_ANALYST, which was not applied.",
-        "The draft cites R3 to justify ALLOW_TRANSACTION, but R3 only explicitly mandates CLOSE_NO_FRAUD."
+        "The draft copies the untrusted data markers in the trigger field, violating the instruction to never copy them.",
+        "The draft includes the instruction 'Review and decide' from the untrusted text, which should be ignored and not quoted."
       ],
-      "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, triggering R2 (BLOCK_CARD and CREATE_CASE)."
+      "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the outcome would change to fraud and require blocking the card per rule R2."
     },
     {
-      "t": 1793263884.99,
+      "t": 1793340396.9,
       "kind": "final",
       "problems": [],
       "written": {
@@ -322,7 +321,7 @@
         "txn": "3638829"
       },
       "rows": 2,
-      "ms": 721.0,
+      "ms": 652.2,
       "via": "mcp",
       "ok": true
     },
@@ -337,7 +336,7 @@
         "end_ts": "2017-01-01 02:02:06"
       },
       "rows": 33,
-      "ms": 312.8,
+      "ms": 345.8,
       "via": "mcp",
       "ok": true
     },
@@ -352,7 +351,7 @@
         "recent_days": 30
       },
       "rows": 784,
-      "ms": 228.1,
+      "ms": 131.8,
       "via": "mcp",
       "ok": true
     },
@@ -368,7 +367,7 @@
         "before_ts": "2017-01-01 00:02:06"
       },
       "rows": 7,
-      "ms": 277.6,
+      "ms": 107.6,
       "via": "mcp",
       "ok": true
     },
@@ -382,7 +381,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 122.0,
+      "ms": 163.1,
       "via": "mcp",
       "ok": true
     },
@@ -397,7 +396,7 @@
         "end_ts": "2017-01-01 02:02:06"
       },
       "rows": 2,
-      "ms": 116.3,
+      "ms": 161.5,
       "via": "mcp",
       "ok": true
     },
@@ -411,7 +410,7 @@
         "before_ts": "2017-01-01 02:02:06"
       },
       "rows": 11,
-      "ms": 204.7,
+      "ms": 205.1,
       "via": "mcp",
       "ok": true
     },
@@ -426,7 +425,7 @@
         "end_ts": "2017-01-01 02:02:06"
       },
       "rows": 105,
-      "ms": 418.3,
+      "ms": 509.1,
       "via": "mcp",
       "ok": true
     },
@@ -443,7 +442,7 @@
         "max_detail": 200
       },
       "rows": 451,
-      "ms": 140.9,
+      "ms": 152.9,
       "via": "mcp",
       "ok": true
     },
@@ -460,7 +459,7 @@
         "max_detail": 200
       },
       "rows": 1372,
-      "ms": 199.2,
+      "ms": 253.9,
       "via": "mcp",
       "ok": true
     },
@@ -477,7 +476,7 @@
         "max_detail": 200
       },
       "rows": 454,
-      "ms": 196.5,
+      "ms": 196.7,
       "via": "mcp",
       "ok": true
     },
@@ -494,7 +493,7 @@
         "max_detail": 200
       },
       "rows": 2,
-      "ms": 130.3,
+      "ms": 210.5,
       "via": "mcp",
       "ok": true
     },
@@ -507,7 +506,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 487.8,
+      "ms": 447.7,
       "via": "mcp",
       "ok": true
     },
@@ -522,7 +521,7 @@
         "end_ts": "2017-01-01 02:02:06"
       },
       "rows": 105,
-      "ms": 907.0,
+      "ms": 162.1,
       "via": "mcp",
       "ok": true
     },
@@ -538,7 +537,7 @@
         "before_ts": "2017-01-01 00:02:06"
       },
       "rows": 7,
-      "ms": 222.4,
+      "ms": 127.6,
       "via": "mcp",
       "ok": true
     },
@@ -559,7 +558,7 @@
         "before_ts": "2017-01-01 02:02:06"
       },
       "rows": 17,
-      "ms": 588.5,
+      "ms": 279.1,
       "via": "mcp",
       "ok": true
     },
@@ -580,7 +579,7 @@
         "before_ts": "2017-01-01 02:02:06"
       },
       "rows": 21,
-      "ms": 462.5,
+      "ms": 274.1,
       "via": "mcp",
       "ok": true
     },
@@ -593,7 +592,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 216.5,
+      "ms": 248.9,
       "via": "mcp",
       "ok": true
     },
@@ -601,26 +600,26 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0026', 'CC-4809', 'CC-3715', 'CC-4281', 'CC-3931', 'CC-4259', 'CC-4697', 'CC-4899'], customer_ids=['C08842'])",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0026', 'CC-2978', 'CC-3715', 'CC-3378', 'CC-3931', 'CC-4259', 'CC-4697', 'CC-0997'], customer_ids=['C08842'])",
       "params": {
         "txn_ids": [],
         "card_ids": [],
         "case_ids": [
           "CC-0026",
-          "CC-4809",
+          "CC-2978",
           "CC-3715",
-          "CC-4281",
+          "CC-3378",
           "CC-3931",
           "CC-4259",
           "CC-4697",
-          "CC-4899"
+          "CC-0997"
         ],
         "customer_ids": [
           "C08842"
         ]
       },
       "rows": 9,
-      "ms": 411.8,
+      "ms": 881.8,
       "via": "mcp",
       "ok": true
     }
@@ -669,17 +668,16 @@
       "suggested_pattern": "none"
     },
     "precedent": {
-      "assessment": "The customer associated with card C08842-K2 has an extensive history of confirmed fraud alerts spanning several months in 2016. Given the recurring nature of these compromised events across multiple patterns, the current transaction flagged by the real-time model carries a elevated risk of being unauthorized.",
+      "assessment": "The customer associated with card C08842-K2 has an extensive history of confirmed fraud, including multiple instances of account takeover, card-not-present fraud, and out-of-region use. Given this severe historical compromise, any new alert on this card must be treated with high suspicion.",
       "risk": "high",
       "key_points": [
-        "The cardholder has multiple confirmed fraud cases involving account takeover, including CC-1496, CC-3242, and CC-4809.",
-        "Card-not-present fraud was previously confirmed on this card in cases CC-2978 and CC-4281.",
-        "Out-of-region card-present fraud was also established in cases CC-3378, CC-3715, and CC-3815.",
-        "Only one prior case, CC-0026, was cleared as non-fraudulent after customer verification."
+        "The customer has nine closed cases, eight of which were confirmed fraud, including account takeovers (CC-4809, CC-1496, CC-3242) and card-not-present fraud (CC-2978, CC-4281).",
+        "Prior fraud patterns on this card also include out-of-region use (CC-3715, CC-3378, CC-3815), indicating a broad range of unauthorized activity.",
+        "Only one historical case (CC-0026) was cleared as legitimate travel, while all subsequent cases resulted in confirmed fraud and card blocks."
       ],
       "open_questions": [
-        "Has the card C08842-K2 been successfully replaced and secured since the last confirmed fraud case CC-4809?",
-        "Does the device or location profile for the new transaction 3638829 match the customer's verified profile or the previous fraud patterns?"
+        "Why was card C08842-K2 repeatedly reissued or kept active if multiple cases resulted in a 'BLOCK_CARD' action?",
+        "What are the device and location characteristics of the current transaction 3638829 compared to previous fraud cases?"
       ],
       "suggested_pattern": "account_takeover"
     }
@@ -707,10 +705,10 @@
   "critic": {
     "agree": false,
     "issues": [
-      "The draft explicitly states in the evidence that 'Two bank sources disagree', which constitutes conflicting evidence. Under Policy R8, conflicting evidence requires the action ESCALATE_TO_ANALYST, which was not applied.",
-      "The draft cites R3 to justify ALLOW_TRANSACTION, but R3 only explicitly mandates CLOSE_NO_FRAUD."
+      "The draft copies the untrusted data markers in the trigger field, violating the instruction to never copy them.",
+      "The draft includes the instruction 'Review and decide' from the untrusted text, which should be ignored and not quoted."
     ],
-    "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, triggering R2 (BLOCK_CARD and CREATE_CASE)."
+    "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the outcome would change to fraud and require blocking the card per rule R2."
   },
   "problems": [],
   "written": {

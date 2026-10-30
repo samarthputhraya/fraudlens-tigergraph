@@ -3,7 +3,7 @@
   "case": {
     "status": "escalated",
     "verdict": "uncertain",
-    "fraud_probability": 0.03,
+    "fraud_probability": 0.5,
     "pattern": "none",
     "pattern_description": "",
     "affected_txn_ids": [
@@ -66,14 +66,15 @@
         "as_of": "2017-01-20 09:06:19"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1779 (confirmed_fraud, card_not_present_fraud); CC-3022 (confirmed_fraud, out_of_region_use); CC-1257 (cleared, none); CC-3297 (confirmed_fraud, out_of_region_use)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-1779 (confirmed_fraud, card_not_present_fraud); CC-4052 (confirmed_fraud, out_of_region_use); CC-4762 (confirmed_fraud, out_of_region_use); CC-3297 (confirmed_fraud, out_of_region_use)",
         "source": "graph",
         "ref": "query:similar_cases(devices=[], cards=['C09241-K2'], k=8, pattern=, before_ts=2017-01-20 09:06:19)",
         "entity_ids": [
           "CC-1779",
-          "CC-3022",
-          "CC-1257",
-          "CC-3297"
+          "CC-4052",
+          "CC-4762",
+          "CC-3297",
+          "CC-1257"
         ],
         "as_of": "2017-01-20 09:06:19"
       },
@@ -87,11 +88,12 @@
     ],
     "similar_prior_cases": [
       "CC-1779",
-      "CC-3022",
-      "CC-1257",
-      "CC-3297"
+      "CC-4052",
+      "CC-4762",
+      "CC-3297",
+      "CC-1257"
     ],
-    "summary": "The alert was triggered because the bank's real-time model scored transaction 3640919 on card C09241-K2 at 0.71. Graph evidence showed that while the transaction amount was in the top 3% for the card, the card had 491 prior purchases in the same billing region, and the transaction model scored it very low. A data discrepancy was noted between the case record and the transaction record regarding the card ID. A simulated reply indicates an analyst was asked to reconcile the records but has not yet answered. The verdict is uncertain, and the final actions are CREATE_CASE, MONITOR_CARD, VERIFY_WITH_CUSTOMER, and ESCALATE_TO_ANALYST.",
+    "summary": "This alert was triggered by the message: \"Real-time model scored transaction 3640919 ($881.55) at 0.71. Review and decide.\" on card C09241-K2. Graph evidence showed that while the transaction amount is in the top 3 percent for this card, the card has 491 prior purchases in the same billing region, and the transaction model scored it very low at 0.005. However, a data discrepancy exists because the case record and the bank transaction record name different cards. A simulated reply indicates an analyst was asked to reconcile the card records but has not answered yet. The verdict is uncertain, and the final actions are CREATE_CASE, MONITOR_CARD, VERIFY_WITH_CUSTOMER, and ESCALATE_TO_ANALYST.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-011"
   },
@@ -157,10 +159,10 @@
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "On the bank's own record the activity scores a fraud probability of 0.03, but the case record names a different card or customer than the bank's record, so the case goes to an analyst under R8 instead of being guessed.",
+  "stop_reason": "On the bank's own record the activity scores a fraud probability of 0.03, but the case record names a different card or customer than the bank's record, so the case goes to an analyst under R8 instead of being guessed; the probability is reported as 0.50 because we can't tell which record is right.",
   "tool_calls": 19,
-  "tokens": 10719,
-  "latency_s": 62.9,
+  "tokens": 9933,
+  "latency_s": 48.1,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -170,7 +172,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:29:00+0530",
+    "started_at": "2026-10-30T11:42:48+0530",
     "complete": true,
     "failures": []
   }

@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern involves the use of a spoofed device fingerprint that presents contradictory hardware and software information, such as an Android device reporting an iOS operating system, while operating behind an anonymous proxy. This pattern affects multiple unrelated customers and was discovered through graph analysis linking the impossible device signature across five different cards within a 30-day window, revealing a coordinated fraud ring.",
+    "pattern_description": "This undocumented pattern involves the use of a spoofed device fingerprint that impossibly combines an Android hardware identifier with an iOS operating system, routed through anonymous proxies. It affects multiple unrelated customers, having been discovered by scanning for this specific impossible device signature across the network. The scan revealed coordinated abuse across five different cards within a 30-day window.",
     "affected_txn_ids": [
       "3660125",
       "3660126",
@@ -121,7 +121,7 @@
       "CC-2649",
       "CC-0815"
     ],
-    "summary": "An analyst requested a review of transaction 3660127 on card C06220-K1 to identify commonalities across several cards showing losses. Graph evidence revealed that the transaction was part of a sequence of online purchases made from a spoofed device fingerprint routed through an anonymous proxy, a signature shared by four other cards in the past 30 days. The policy engine reached a final verdict of fraud. The system automatically executed CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while recommending BLOCK_CARD (awaiting L1 approval) and FILE_REPORT (awaiting L2 approval).",
+    "summary": "An analyst requested a review of transaction 3660127 on card C06220-K1 to identify commonalities among affected cards. Graph evidence revealed that the transaction originated from a spoofed device fingerprint behind an anonymous proxy, a signature shared across four other cards. The final verdict is fraud. The system automatically executed CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while recommending BLOCK_CARD for L1 approval and FILE_REPORT for L2 approval.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-002"
   },
@@ -186,7 +186,7 @@
   "sar": {
     "file": true,
     "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $2,166.71 exceeds $1,000; the pattern is undocumented and coordinated across 5 cards (R9).",
-    "narrative": "This report details suspicious online activity involving customer C06220 and card C06220-K1. Between January 17 and January 19, 2017, three unauthorized online transactions were attempted. The transactions are: ID 3660125 on 2017-01-17 for $637.13, ID 3660126 on 2017-01-18 for $758.80, and ID 3660127 on 2017-01-19 for $770.78. These purchases were conducted using a device profile marked as new for this account and routed through an anonymous proxy. The activity is highly suspicious because the device fingerprint is spoofed, presenting itself as an Android handset (SM-J700T1) while simultaneously reporting Apple iOS operating systems (iOS 11.1.1 and 11.1.2) or blank fields. This impossible device signature has been linked to four other cards (C05061-K1, C05704-K2, C07925-K1, C11309-K1) within the same 30-day period, indicating a coordinated fraud ring. The total exposure for this card is $2,166.71.",
+    "narrative": "This report concerns fraudulent online activity on card C06220-K1 belonging to customer C06220. Between January 17 and January 19, 2017, three unauthorized online purchases were made. The sequence includes transaction 3660125 on 2017-01-17 for $637.13, transaction 3660126 on 2017-01-18 for $758.80, and transaction 3660127 on 2017-01-19 for $770.78. These purchases were routed through an anonymous proxy using a device profile marked as new to the account. The activity is highly suspicious because the device fingerprint is spoofed, presenting an impossible configuration of an Android handset (SM-J700T1) running Apple iOS or leaving the OS blank. This exact spoofed device signature was detected on four other cards within a 30-day period, indicating a coordinated fraud ring rather than an isolated incident. The total exposure for this card is $2,166.71.",
     "subjects": [
       "C06220",
       "C06220-K1",
@@ -203,8 +203,8 @@
   },
   "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (device, network); further queries would not change the actions.",
   "tool_calls": 21,
-  "tokens": 13925,
-  "latency_s": 71.6,
+  "tokens": 14157,
+  "latency_s": 37.4,
   "containment": {
     "ring_size": 5,
     "ring_exposure_usd": 7610.94,
@@ -308,7 +308,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:27:48+0530",
+    "started_at": "2026-10-30T11:42:10+0530",
     "complete": true,
     "failures": []
   }

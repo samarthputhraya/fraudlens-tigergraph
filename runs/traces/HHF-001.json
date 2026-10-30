@@ -2,7 +2,7 @@
   "case_id": "HHF-001",
   "events": [
     {
-      "t": 1793264201.47,
+      "t": 1793340655.38,
       "kind": "trigger",
       "case_id": "HHF-001",
       "trigger_type": "analyst_request",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-15 01:25:19"
     },
     {
-      "t": 1793264201.47,
+      "t": 1793340655.39,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264210.89,
+      "t": 1793340658.62,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -39,14 +39,14 @@
       ]
     },
     {
-      "t": 1793264223.08,
+      "t": 1793340659.14,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264229.72,
+      "t": 1793340663.64,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "t": 1793264229.72,
+      "t": 1793340663.64,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
@@ -70,7 +70,7 @@
       ]
     },
     {
-      "t": 1793264229.72,
+      "t": 1793340663.64,
       "kind": "specialist",
       "agent": "network",
       "risk": "medium",
@@ -82,19 +82,19 @@
       ]
     },
     {
-      "t": 1793264229.72,
+      "t": 1793340663.64,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present transactions on new devices and out-of-region card-present use. This suggests the card details have been compromised repeatedly or across different channels, aligning with broader patterns of card-not-present fraud seen on other cards in the system.",
+      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present fraud via new devices and out-of-region card-present transactions. While the specific transaction 3660108 is not detailed in the provided data, the recurring compromise of this card suggests a high risk of ongoing exposure.",
       "key_points": [
-        "Card C05061-K1 has been associated with three separate confirmed fraud cases: CC-2420 (card-not-present on a new Windows/Chrome 55.0 device), CC-2674 (out-of-region card-present), and CC-4210 (out-of-region card-present).",
-        "Similar card-not-present fraud patterns on new devices have been confirmed on other cards recently, such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2), indicating a potential broader compromise vector.",
-        "Case CC-0889 was previously cleared as non-fraudulent after the cardholder confirmed travel, but subsequent activity has been heavily fraudulent."
+        "Card C05061-K1 was compromised in confirmed fraud cases CC-2420 (card-not-present on a new Windows Chrome 55.0 device), CC-2674, and CC-4210 (both out-of-region card-present fraud).",
+        "Similar card-not-present fraud patterns on new devices are observed in other cases such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2).",
+        "The cardholder previously had one cleared alert (CC-0889) due to confirmed travel, but subsequent activity was confirmed as unauthorized."
       ]
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.292, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -108,7 +108,7 @@
       "model_p": 0.291815
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "finding",
       "key": "proxy",
       "claim": "The session was routed through an anonymous proxy",
@@ -121,7 +121,7 @@
       "in_model": true
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0889; latest note: \"Case CC-0889: model scored a $99.93 transaction at 0.84. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
@@ -134,7 +134,7 @@
       "in_model": true
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "finding",
       "key": "spoofed_device",
       "claim": "3 online purchase(s) ($850.28, $890.79, $447.95) from a device that reports itself as 'RCT6303W87M7 Build/MRA58K', an Android handset, but with operating system(s) Windows 10, Windows 7: a fingerprint no real device produces, marked New for this account, 3 behind an anonymising proxy",
@@ -149,7 +149,7 @@
       "in_model": false
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "assessment",
       "p": 0.97,
       "prior": 0.45,
@@ -278,7 +278,7 @@
       }
     },
     {
-      "t": 1793264229.73,
+      "t": 1793340663.65,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -314,43 +314,44 @@
       ]
     },
     {
-      "t": 1793264230.52,
+      "t": 1793340665.47,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
         "CC-2985",
-        "CC-2971",
         "CC-3035",
+        "CC-2971",
         "CC-2649",
         "CC-0889"
       ],
       "knowledge": [
         "The five known fraud patterns",
+        "Card-not-present fraud",
+        "Undocumented pattern",
         "The five known fraud patterns",
         "Card testing",
-        "Undocumented pattern",
-        "Card-not-present fraud",
         "Out-of-region use"
       ]
     },
     {
-      "t": 1793264244.22,
+      "t": 1793340698.87,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in the initial and final actions lists. The policy explicitly states that 'Only auto actions may be executed by the agent', meaning the agent cannot execute these actions directly."
+        "The draft copies the untrusted data markers <<< >>> in the trigger field, which directly violates the instruction to never copy them.",
+        "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in its action lists. The policy strictly states that only 'auto' actions may be executed by the agent."
       ],
-      "what_would_change_verdict": "Remove the L1 and L2 actions from the agent's execution lists, leaving only the auto actions (CREATE_CASE, ESCALATE_TO_ANALYST), or route the L1/L2 actions appropriately for human approval rather than executing them."
+      "what_would_change_verdict": "Removing the <<< >>> markers from the trigger text, summarizing the untrusted data in the agent's own words, and restricting the executed actions to only those in the 'auto' route."
     },
     {
-      "t": 1793264268.74,
+      "t": 1793340730.87,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-001",
-        "n_vertices": 10,
+        "n_vertices": 9,
         "n_edges": 22
       }
     }
@@ -365,7 +366,7 @@
         "txn": "3660108"
       },
       "rows": 2,
-      "ms": 109.8,
+      "ms": 132.6,
       "via": "mcp",
       "ok": true
     },
@@ -380,7 +381,7 @@
         "end_ts": "2017-01-15 01:25:19"
       },
       "rows": 10,
-      "ms": 128.6,
+      "ms": 145.9,
       "via": "mcp",
       "ok": true
     },
@@ -395,7 +396,7 @@
         "recent_days": 30
       },
       "rows": 119,
-      "ms": 113.9,
+      "ms": 135.1,
       "via": "mcp",
       "ok": true
     },
@@ -411,7 +412,7 @@
         "before_ts": "2017-01-14 20:25:19"
       },
       "rows": 0,
-      "ms": 107.2,
+      "ms": 139.8,
       "via": "mcp",
       "ok": true
     },
@@ -425,7 +426,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 122.0,
+      "ms": 135.7,
       "via": "mcp",
       "ok": true
     },
@@ -440,7 +441,7 @@
         "end_ts": "2017-01-15 01:25:19"
       },
       "rows": 3,
-      "ms": 110.0,
+      "ms": 134.3,
       "via": "mcp",
       "ok": true
     },
@@ -454,7 +455,7 @@
         "before_ts": "2017-01-15 01:25:19"
       },
       "rows": 5,
-      "ms": 142.1,
+      "ms": 139.7,
       "via": "mcp",
       "ok": true
     },
@@ -469,7 +470,7 @@
         "end_ts": "2017-01-15 01:25:19"
       },
       "rows": 19,
-      "ms": 113.1,
+      "ms": 134.5,
       "via": "mcp",
       "ok": true
     },
@@ -486,7 +487,7 @@
         "max_detail": 200
       },
       "rows": 1214,
-      "ms": 294.0,
+      "ms": 207.2,
       "via": "mcp",
       "ok": true
     },
@@ -503,7 +504,7 @@
         "max_detail": 200
       },
       "rows": 57,
-      "ms": 105.9,
+      "ms": 132.8,
       "via": "mcp",
       "ok": true
     },
@@ -520,7 +521,7 @@
         "max_detail": 200
       },
       "rows": 448,
-      "ms": 131.8,
+      "ms": 330.7,
       "via": "mcp",
       "ok": true
     },
@@ -537,7 +538,7 @@
         "max_detail": 200
       },
       "rows": 750,
-      "ms": 134.0,
+      "ms": 184.3,
       "via": "mcp",
       "ok": true
     },
@@ -555,7 +556,7 @@
         "ramp_min": 500.0
       },
       "rows": 1751,
-      "ms": 1934.2,
+      "ms": 1008.8,
       "via": "mcp",
       "ok": true
     },
@@ -568,7 +569,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 464.4,
+      "ms": 253.1,
       "via": "mcp",
       "ok": true
     },
@@ -583,7 +584,7 @@
         "end_ts": "2017-01-15 01:25:19"
       },
       "rows": 3,
-      "ms": 102.6,
+      "ms": 148.9,
       "via": "mcp",
       "ok": true
     },
@@ -598,7 +599,7 @@
         "end_ts": "2017-01-15 01:25:19"
       },
       "rows": 19,
-      "ms": 130.9,
+      "ms": 143.0,
       "via": "mcp",
       "ok": true
     },
@@ -619,7 +620,7 @@
         "before_ts": "2017-01-15 01:25:19"
       },
       "rows": 15,
-      "ms": 224.5,
+      "ms": 221.7,
       "via": "mcp",
       "ok": true
     },
@@ -640,7 +641,7 @@
         "before_ts": "2017-01-15 01:25:19"
       },
       "rows": 17,
-      "ms": 202.9,
+      "ms": 297.0,
       "via": "mcp",
       "ok": true
     },
@@ -653,7 +654,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 243.2,
+      "ms": 406.9,
       "via": "mcp",
       "ok": true
     },
@@ -674,7 +675,7 @@
         "before_ts": "2017-01-15 01:25:19"
       },
       "rows": 17,
-      "ms": 243.9,
+      "ms": 1114.3,
       "via": "mcp",
       "ok": true
     },
@@ -682,7 +683,7 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3660106', '3660107', '3660108'], card_ids=[], case_ids=['CC-2985', 'CC-2971', 'CC-3035', 'CC-2649', 'CC-0889'], customer_ids=['C05061'])",
+      "ref": "query:ids_exist(txn_ids=['3660106', '3660107', '3660108'], card_ids=[], case_ids=['CC-2985', 'CC-3035', 'CC-2971', 'CC-2649', 'CC-0889'], customer_ids=['C05061'])",
       "params": {
         "txn_ids": [
           "3660106",
@@ -692,8 +693,8 @@
         "card_ids": [],
         "case_ids": [
           "CC-2985",
-          "CC-2971",
           "CC-3035",
+          "CC-2971",
           "CC-2649",
           "CC-0889"
         ],
@@ -702,7 +703,7 @@
         ]
       },
       "rows": 9,
-      "ms": 675.8,
+      "ms": 596.1,
       "via": "mcp",
       "ok": true
     }
@@ -751,18 +752,18 @@
       "suggested_pattern": "card_not_present_new_device"
     },
     "precedent": {
-      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present transactions on new devices and out-of-region card-present use. This suggests the card details have been compromised repeatedly or across different channels, aligning with broader patterns of card-not-present fraud seen on other cards in the system.",
+      "assessment": "The card C05061-K1 has a significant history of confirmed fraud across multiple distinct patterns, including card-not-present fraud via new devices and out-of-region card-present transactions. While the specific transaction 3660108 is not detailed in the provided data, the recurring compromise of this card suggests a high risk of ongoing exposure.",
       "risk": "high",
       "key_points": [
-        "Card C05061-K1 has been associated with three separate confirmed fraud cases: CC-2420 (card-not-present on a new Windows/Chrome 55.0 device), CC-2674 (out-of-region card-present), and CC-4210 (out-of-region card-present).",
-        "Similar card-not-present fraud patterns on new devices have been confirmed on other cards recently, such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2), indicating a potential broader compromise vector.",
-        "Case CC-0889 was previously cleared as non-fraudulent after the cardholder confirmed travel, but subsequent activity has been heavily fraudulent."
+        "Card C05061-K1 was compromised in confirmed fraud cases CC-2420 (card-not-present on a new Windows Chrome 55.0 device), CC-2674, and CC-4210 (both out-of-region card-present fraud).",
+        "Similar card-not-present fraud patterns on new devices are observed in other cases such as CC-4699 (card C04709-K2) and CC-4977 (card C08391-K2).",
+        "The cardholder previously had one cleared alert (CC-0889) due to confirmed travel, but subsequent activity was confirmed as unauthorized."
       ],
       "open_questions": [
-        "What are the specific merchant or transaction details of transaction 3660108 on card C05061-K1?",
-        "Is there a common point of purchase (CPP) or merchant breach that links card C05061-K1 with cards C04709-K2 and C08391-K2?"
+        "What are the specific transaction details, merchant information, and device signatures associated with transaction 3660108?",
+        "Is there a common point of compromise (such as a specific merchant or ATM) linking card C05061-K1 with cards C04709-K2 and C08391-K2?"
       ],
-      "suggested_pattern": "card_not_present_fraud"
+      "suggested_pattern": "card_not_present_new_device"
     }
   },
   "lead": {
@@ -788,15 +789,16 @@
   "critic": {
     "agree": false,
     "issues": [
-      "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in the initial and final actions lists. The policy explicitly states that 'Only auto actions may be executed by the agent', meaning the agent cannot execute these actions directly."
+      "The draft copies the untrusted data markers <<< >>> in the trigger field, which directly violates the instruction to never copy them.",
+      "The draft includes L1 (BLOCK_CARD) and L2 (FILE_REPORT) actions in its action lists. The policy strictly states that only 'auto' actions may be executed by the agent."
     ],
-    "what_would_change_verdict": "Remove the L1 and L2 actions from the agent's execution lists, leaving only the auto actions (CREATE_CASE, ESCALATE_TO_ANALYST), or route the L1/L2 actions appropriately for human approval rather than executing them."
+    "what_would_change_verdict": "Removing the <<< >>> markers from the trigger text, summarizing the untrusted data in the agent's own words, and restricting the executed actions to only those in the 'auto' route."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-001",
-    "n_vertices": 10,
+    "n_vertices": 9,
     "n_edges": 22
   }
 }

@@ -100,14 +100,25 @@ def test_gate_links_reports_that_name_the_same_card():
                        "action": "continuing activity: B should cite A's report"}]
 
 
-def test_frozen_answers_carry_exactly_one_decision_error():
+FREEZE_29_OCT = "1bbc617"   # the first Final Round freeze, before the case-book gate existed
+
+
+def test_the_29_oct_freeze_had_one_decision_error_and_the_answers_now_have_none(tmp_path):
+    import subprocess
     root = Path(__file__).resolve().parents[1]
     from agent.paths import CASE_PACK_CSV
-    answers, pack = casebook.load(root / "cases_r2", CASE_PACK_CSV)
-    if len(answers) != 18 or answers["HHF-013"]["case"]["verdict"] != "legitimate":
-        pytest.skip("cases_r2 no longer holds the 29 Oct freeze")
-    s = casebook.summary(casebook.check(answers, pack))
-    assert s["high_seen_at_open"] == 1
+    for i in range(1, 19):
+        cid = f"HHF-{i:03d}"
+        try:
+            blob = subprocess.run(["git", "show", f"{FREEZE_29_OCT}:cases_r2/{cid}.json"], cwd=root, capture_output=True,
+                                  check=True).stdout
+        except (OSError, subprocess.CalledProcessError):
+            pytest.skip("git history with the 29 Oct freeze is not available")
+        (tmp_path / f"{cid}.json").write_bytes(blob)
+    old = casebook.summary(casebook.check(*casebook.load(tmp_path, CASE_PACK_CSV)))
+    assert old["high_seen_at_open"] == 1
+    now = casebook.summary(casebook.check(*casebook.load(root / "cases_r2", CASE_PACK_CSV)))
+    assert now["high_seen_at_open"] == 0
 
 
 # ---- audit writes survive a briefly locked file (Windows sync clients) -----------------------------------------------

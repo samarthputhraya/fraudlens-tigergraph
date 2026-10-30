@@ -2,15 +2,35 @@
   "case_id": "HHF-013",
   "case": {
     "status": "escalated",
-    "verdict": "legitimate",
-    "fraud_probability": 0.03,
+    "verdict": "uncertain",
+    "fraud_probability": 0.5,
     "pattern": "none",
     "pattern_description": "",
-    "affected_txn_ids": [],
-    "first_suspicious_txn_id": "",
-    "connected_card_ids": [],
+    "affected_txn_ids": [
+      "3660311",
+      "3660312"
+    ],
+    "first_suspicious_txn_id": "3660311",
+    "connected_card_ids": [
+      "C00534-K2",
+      "C01357-K1",
+      "C01507-K1",
+      "C01594-K1",
+      "C01727-K2",
+      "C02167-K2",
+      "C03060-K1",
+      "C04146-K1",
+      "C04668-K1",
+      "C05610-K1",
+      "C06639-K1",
+      "C08384-K1",
+      "C10350-K1",
+      "C11617-K1",
+      "C11743-K2",
+      "C11940-K1"
+    ],
     "connected_device_profiles": [],
-    "exposure_usd": 0.0,
+    "exposure_usd": 321.75,
     "evidence": [
       {
         "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -38,7 +58,7 @@
         "as_of": "2017-01-26 20:40:00"
       },
       {
-        "claim": "Other charges on this card, not the flagged transaction, match the recipient surge pattern: This card's online purchase(s) ($181.16, $140.59) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient. They go to an analyst as a separate concern and don't change the assessment of the flagged transaction",
+        "claim": "Other charges on this card, not the flagged transaction, match the recipient surge pattern: This card's online purchase(s) ($181.16, $140.59) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient. This signature never touched a cleared customer in July-December, so it conflicts with the clean flagged purchase: the case goes to an analyst under R8 instead of being closed",
         "source": "graph",
         "ref": "query:recipient_activity(dom=sc.rr.com, start_ts=2016-12-27 20:40:00, end_ts=2017-01-26 20:40:00, base_start=2016-06-30 20:40:00, max_detail=200)",
         "entity_ids": [
@@ -48,100 +68,111 @@
         "as_of": "2017-01-26 20:40:00"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-4235 (cleared, none); CC-5224 (cleared, none); CC-0573 (cleared, none); CC-2105 (cleared, none)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-0681 (cleared, none); CC-0610 (cleared, none); CC-4908 (confirmed_fraud, card_not_present_new_device); CC-0723 (confirmed_fraud, account_takeover)",
         "source": "graph",
-        "ref": "query:similar_cases(devices=[], cards=['C06115-K1'], k=8, pattern=, before_ts=2017-01-26 20:40:00)",
+        "ref": "query:similar_cases(devices=[], cards=['C06115-K1', 'C00534-K2', 'C01357-K1', 'C01507-K1', 'C01594-K1', 'C01727-K2', 'C02167-K2', 'C03060-K1', 'C04146-K1', 'C04668-K1', 'C05610-K1'], k=8, pattern=, before_ts=2017-01-26 20:40:00)",
         "entity_ids": [
-          "CC-4235",
-          "CC-5224",
-          "CC-0573",
-          "CC-2105",
-          "CC-4205",
-          "CC-4021"
+          "CC-0681",
+          "CC-0610",
+          "CC-4908",
+          "CC-0723"
         ],
         "as_of": "2017-01-26 20:40:00"
       },
       {
-        "claim": "Fraud Policy rules applied to this case: R6, R8 (retrieved from the policy knowledge graph via GraphRAG)",
+        "claim": "Fraud Policy rules applied to this case: R1, R6, R8 (retrieved from the policy knowledge graph via GraphRAG)",
         "source": "document",
-        "ref": "document:Fraud Policy v1.0 section 3 R6/R8",
+        "ref": "document:Fraud Policy v1.0 section 3 R1/R6/R8",
         "entity_ids": [],
         "as_of": "2017-01-26 20:40:00"
       }
     ],
     "similar_prior_cases": [
-      "CC-4235",
-      "CC-5224",
-      "CC-0573",
-      "CC-2105",
-      "CC-4205",
-      "CC-4021",
-      "CC-5203"
+      "CC-0681",
+      "CC-0610",
+      "CC-4908",
+      "CC-0723"
     ],
-    "summary": "The alert was triggered because the real-time model scored transaction 3626720 on card C06115-K1 at 0.69. Graph evidence showed that the transaction amount is typical for the card and the billing region has been used previously, while the transaction model returned a low score of 0.002. Although other charges on the card went to a suspicious recipient domain associated with a surge, the flagged transaction itself appears clean. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION, CLOSE_NO_FRAUD, MONITOR_CARD, and ESCALATE_TO_ANALYST.",
+    "summary": "This case was triggered when the real-time model scored transaction 3626720 on card C06115-K1 at 0.69. While the flagged transaction appears typical for the card, graph evidence shows that other recent charges on this card went to the recipient email domain sc.rr.com, which was paid by 17 different cards in the last 30 days. A simulated analyst request to review these other charges against the ring evidence has not yet received an answer, leaving the verdict uncertain. The final actions taken are CREATE_CASE, VERIFY_WITH_CUSTOMER, MONITOR_CARD, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-013"
   },
-  "evidence_requests": [],
+  "evidence_requests": [
+    {
+      "type": "analyst_info",
+      "asked_after_step": 12,
+      "assumed_response": "Analyst asked to review this card's other charges (3660311, 3660312) against the ring evidence; no answer yet, so the case stays with the analyst"
+    }
+  ],
   "next_best_actions": {
     "initial": [
       {
-        "action": "ALLOW_TRANSACTION",
+        "action": "CREATE_CASE",
         "route": "auto",
-        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        "reason": "Section 3a: evidence is being requested and the card carries a fraud-ring signature; record the investigation and write it to the graph"
       },
       {
-        "action": "CLOSE_NO_FRAUD",
+        "action": "VERIFY_WITH_CUSTOMER",
         "route": "auto",
-        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        "reason": "R1: ask the cardholder about the other charges (3660311, 3660312) before any block"
       },
       {
         "action": "MONITOR_CARD",
         "route": "auto",
-        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares; raise monitoring for 72 hours"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: 16 other card(s) share recipient email sc.rr.com in the same 30 days"
       },
       {
         "action": "ESCALATE_TO_ANALYST",
         "route": "auto",
-        "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+        "reason": "R8: the evidence conflicts - the flagged purchase is clean on its own, but the card's other charges carry a fraud-ring signature; an analyst decides with the evidence"
       }
     ],
     "final": [
       {
-        "action": "ALLOW_TRANSACTION",
+        "action": "CREATE_CASE",
         "route": "auto",
-        "reason": "Section 6: probability <= 0.15 on two or more independent legitimate signals"
+        "reason": "Section 3a: evidence is being requested and the card carries a fraud-ring signature; record the investigation and write it to the graph"
       },
       {
-        "action": "CLOSE_NO_FRAUD",
+        "action": "VERIFY_WITH_CUSTOMER",
         "route": "auto",
-        "reason": "Section 6: the evidence settles the alert as legitimate; further steps would not change the decision"
+        "reason": "R1: ask the cardholder about the other charges (3660311, 3660312) before any block"
       },
       {
         "action": "MONITOR_CARD",
         "route": "auto",
-        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares (recipient surge on 3660311, 3660312); raise monitoring for 72 hours"
+        "reason": "R6: other charges on this card went to recipient email sc.rr.com, which a fraud ring shares; raise monitoring for 72 hours"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: 16 other card(s) share recipient email sc.rr.com in the same 30 days"
       },
       {
         "action": "ESCALATE_TO_ANALYST",
         "route": "auto",
-        "reason": "R8: the evidence conflicts - the flagged purchase is clean but other charges on the card are suspicious; hand those to an analyst with the evidence"
+        "reason": "R8: the evidence conflicts - the flagged purchase is clean on its own, but the card's other charges carry a fraud-ring signature; an analyst decides with the evidence"
       }
     ],
     "what_changed": "nothing"
   },
   "sar": {
     "file": false,
-    "reason": "Section 3a: no report required - the activity is legitimate.",
+    "reason": "Section 3a: no report required - fraud is not confirmed or strongly suspected.",
     "narrative": "",
     "subjects": [],
     "total_amount_usd": 0,
     "activity_dates": []
   },
-  "stop_reason": "Section 6: fraud probability 0.03 <= 0.15 on independent legitimate signals (model, region); contacting the cardholder would not change the decision.",
+  "stop_reason": "The evidence conflicts: on its own the flagged purchase scores a fraud probability of 0.03, but this card's other charges (3660311, 3660312) carry a fraud-ring signature. Further queries would not resolve which side is right, so the case goes to an analyst under R8 instead of being guessed, and the probability is reported as 0.50.",
   "tool_calls": 15,
-  "tokens": 9945,
-  "latency_s": 40.6,
+  "tokens": 10765,
+  "latency_s": 44.1,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -151,7 +182,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:32:16+0530",
+    "started_at": "2026-10-30T11:45:08+0530",
     "complete": true,
     "failures": []
   }

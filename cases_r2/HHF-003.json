@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern involves an escalating-value ramp signature where online purchases steadily climb in amount to probe the card's limit before repeating the maximum successful charge. This coordinated activity affects 14 cards in total over a 30-day period. It was discovered through a typology scan that identified the same escalating purchase behavior across multiple unrelated customers.",
+    "pattern_description": "The undocumented pattern consists of an escalating-value ramp where online purchases climb rapidly over a few days to probe the card's limit, followed by repeated charges at that maximum amount. It affects customer C11663 and 13 other monitored cards in a coordinated ring. This was discovered by scanning the graph for similar escalating purchase signatures across multiple customers within the same 30-day period.",
     "affected_txn_ids": [
       "3660147",
       "3660148",
@@ -97,8 +97,8 @@
           "CC-3035",
           "CC-2971",
           "CC-2649",
-          "CC-4086",
-          "CC-3841"
+          "CC-3841",
+          "CC-4086"
         ],
         "as_of": "2017-01-31 20:31:28"
       },
@@ -124,10 +124,11 @@
       "CC-3035",
       "CC-2971",
       "CC-2649",
+      "CC-3841",
       "CC-4086",
-      "CC-3841"
+      "CC-3748"
     ],
-    "summary": "This alert was triggered when customer C11663 reported unauthorized charges, specifically referencing transaction 3660153 on card C11663-K1. Graph evidence revealed an escalating-value ramp signature across seven online purchases, a pattern also observed on 13 other cards, indicating coordinated limit-probing activity. The policy engine reached a final verdict of fraud. The final actions are to automatically CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while the recommendations to BLOCK_CARD and FILE_REPORT are routed to L2 awaiting a human's approval.",
+    "summary": "The alert was triggered by a message from customer C11663 stating, 'I did not make these charges on my card. Please look into it.' regarding transaction 3660153 on card C11663-K1. Graph evidence revealed an escalating-value ramp signature probing the card's limit, a pattern shared by 13 other cards in a coordinated ring. The policy engine's final verdict is fraud. The automated actions taken are CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, alongside recommendations awaiting L2 human approval to BLOCK_CARD and FILE_REPORT.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-003"
   },
@@ -192,7 +193,7 @@
   "sar": {
     "file": true,
     "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $8,551.47 exceeds $1,000; the pattern is undocumented and coordinated across 14 cards (R9).",
-    "narrative": "This Suspicious Activity Report details unauthorized online transactions on card C11663-K1 belonging to customer C11663. Between January 22 and January 31, 2017, seven online purchases were made, escalating in value to probe the card's limit. The sequence began with transaction 3660147 on 2017-01-22 for $181.73, followed by 3660148 on 2017-01-23 for $357.82, and 3660149 on 2017-01-24 for $811.92. The activity then capped at $1,800.00 for the remaining four transactions: 3660150 on 2017-01-26, 3660151 on 2017-01-27, 3660152 on 2017-01-28, and 3660153 on 2017-01-31. The customer explicitly denied making these charges. This activity is suspicious because it demonstrates a clear escalating-value ramp signature designed to test the card's maximum limit, a pattern found across multiple customers. The total exposure for this compromised card is $8,551.47.",
+    "narrative": "This report concerns fraudulent online activity on card C11663-K1 belonging to customer C11663. Between January 22 and January 31, 2017, a series of seven online transactions occurred, escalating rapidly in value. The sequence began with transaction 3660147 on 2017-01-22 for $181.73, followed by 3660148 on 2017-01-23 for $357.82, and 3660149 on 2017-01-24 for $811.92. The charges then hit a ceiling with four consecutive transactions of $1,800.00 each: 3660150 on 2017-01-26, 3660151 on 2017-01-27, 3660152 on 2017-01-28, and 3660153 on 2017-01-31. The customer explicitly denied making these charges. This activity is highly suspicious as it demonstrates a systematic probing of the card's limit, culminating in repeated maximum-value charges. Furthermore, this specific escalating ramp signature was identified across 13 other cards during the same 30-day period, indicating a coordinated fraud ring. The total exposure for this customer's card is $8,551.47.",
     "subjects": [
       "C11663",
       "C11663-K1"
@@ -205,8 +206,8 @@
   },
   "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (behaviour, network) support a defensible decision at probability 0.97; further queries would not change the actions.",
   "tool_calls": 16,
-  "tokens": 12319,
-  "latency_s": 102.5,
+  "tokens": 12499,
+  "latency_s": 74.2,
   "containment": {
     "ring_size": 14,
     "ring_exposure_usd": 42760.11,
@@ -422,7 +423,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:39:50+0530",
+    "started_at": "2026-10-30T11:49:03+0530",
     "complete": true,
     "failures": []
   }

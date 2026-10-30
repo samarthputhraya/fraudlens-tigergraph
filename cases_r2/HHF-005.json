@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern involves a slow sequence of online micro-charges under $10 spread across several weeks, designed to stay below standard alerting thresholds. It was discovered via a typology scan that linked this specific micro-charge signature across 23 different customer cards in the same 30-day window, revealing a coordinated fraud effort rather than isolated card testing.",
+    "pattern_description": "The undocumented pattern consists of a prolonged run of online micro-charges under $10 spread across multiple days, designed to evade standard amount thresholds. It was discovered by scanning for similar micro-charge signatures, revealing that the activity affects 23 different cards in a coordinated manner over a 30-day period.",
     "affected_txn_ids": [
       "3660245",
       "3660246",
@@ -141,7 +141,7 @@
       "CC-2971",
       "CC-2649"
     ],
-    "summary": "The alert was triggered when customer C00348 reported unrecognized activity, specifically flagging transaction 3660250 on card C00348-K1. Graph evidence revealed a sudden sequence of six online micro-charges under $10, a behavior completely absent from the card's previous 90 days, which was also found to be coordinated across 22 other cards. The policy engine reached a verdict of fraud. The system automatically executed CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, while recommending BLOCK_CARD for L1 approval and FILE_REPORT for L2 approval.",
+    "summary": "The alert was triggered by a customer message denying online transaction 3660250 on card C00348-K1. Graph evidence revealed a coordinated micro-charge run signature across 23 cards in the last 30 days, with this specific card experiencing 6 small charges under $10 after having none in the prior 90 days. The policy engine reached a final verdict of fraud. The automated final actions taken are CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, alongside recommendations awaiting human approval for BLOCK_CARD (L1) and FILE_REPORT (L2).",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-005"
   },
@@ -206,7 +206,7 @@
   "sar": {
     "file": true,
     "reason": "Section 3a: fraud confirmed or strongly suspected and the pattern is undocumented and coordinated across 23 cards (R9).",
-    "narrative": "This report details suspicious online activity involving customer C00348 and their card C00348-K1. The customer contacted the institution to deny recent charges, prompting a review that uncovered a series of unauthorized online micro-charges. The suspicious transactions are: 3660245 on 2017-01-07 for $4.30, 3660246 on 2017-01-15 for $5.08, 3660247 on 2017-01-16 for $2.70, 3660248 on 2017-01-18 for $4.94, 3660249 on 2017-01-20 for $2.10, and 3660250 on 2017-01-28 for $4.05. This activity is suspicious because the cardholder had zero similar charges in the preceding 90 days, and the charges are small enough to evade standard amount thresholds. Furthermore, a typology scan identified the exact same micro-charge signature occurring across 22 other cards during the same 30-day period, indicating a coordinated network. Although the transaction model scored the final transaction low, this was deemed weak evidence of innocence because the model had not yet been trained on this new January pattern. The total exposure for this compromised card is $23.17.",
+    "narrative": "This report details suspicious online activity involving customer C00348 and their card C00348-K1. Between January 7 and January 28, 2017, the card was subjected to a series of six small online charges, totaling $23.17. The customer explicitly denied authorizing these transactions in a message to the bank. The specific unauthorized transactions are: 3660245 on 2017-01-07 for $4.30, 3660246 on 2017-01-15 for $5.08, 3660247 on 2017-01-16 for $2.70, 3660248 on 2017-01-18 for $4.94, 3660249 on 2017-01-20 for $2.10, and 3660250 on 2017-01-28 for $4.05. This activity is highly suspicious because the cardholder had zero similar micro-charges in the preceding 90 days, and the charges are small enough to evade standard amount thresholds. Furthermore, this exact micro-charge run signature was observed across 22 other cards during the same 30-day period, indicating a coordinated fraud ring. The total exposure for this specific card is $23.17, while the broader ring has an estimated $634.95 at risk.",
     "subjects": [
       "C00348",
       "C00348-K1"
@@ -219,8 +219,8 @@
   },
   "stop_reason": "Section 6: the customer's denial (R2) plus independent graph evidence (behaviour, network) support a defensible decision at probability 0.97; further queries would not change the actions.",
   "tool_calls": 20,
-  "tokens": 12711,
-  "latency_s": 93.4,
+  "tokens": 12705,
+  "latency_s": 53.2,
   "containment": {
     "ring_size": 23,
     "ring_exposure_usd": 634.95,
@@ -564,7 +564,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:38:16+0530",
+    "started_at": "2026-10-30T11:48:10+0530",
     "complete": true,
     "failures": []
   }

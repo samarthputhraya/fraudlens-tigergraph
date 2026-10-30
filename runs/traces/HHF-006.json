@@ -2,7 +2,7 @@
   "case_id": "HHF-006",
   "events": [
     {
-      "t": 1793264753.97,
+      "t": 1793341061.79,
       "kind": "trigger",
       "case_id": "HHF-006",
       "trigger_type": "analyst_request",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-28 10:59:42"
     },
     {
-      "t": 1793264753.97,
+      "t": 1793341061.79,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264763.56,
+      "t": 1793341063.55,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -44,14 +44,14 @@
       ]
     },
     {
-      "t": 1793264765.87,
+      "t": 1793341064.1,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264773.27,
+      "t": 1793341068.71,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "medium",
@@ -63,7 +63,7 @@
       ]
     },
     {
-      "t": 1793264773.27,
+      "t": 1793341068.71,
       "kind": "specialist",
       "agent": "identity",
       "risk": "medium",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "t": 1793264773.27,
+      "t": 1793341068.71,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -87,19 +87,19 @@
       ]
     },
     {
-      "t": 1793264773.27,
+      "t": 1793341068.71,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
-      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, primarily categorized as account takeover and card-not-present fraud on a new device. Multiple historical cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) have already resulted in card blocks, customer reimbursements, and regulatory reports.",
+      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, with five closed cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) spanning from July to October 2016. These cases were primarily classified as account takeover and card-not-present fraud, involving unauthorized mixed-channel activity and new devices. Because the specific details of transaction 3660263 are missing from the current evidence, we cannot directly analyze its attributes or compare them to other affected cards.",
       "key_points": [
-        "Card C01727-K2 was compromised multiple times between July and October 2016, resulting in five confirmed fraud cases: CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908.",
-        "The majority of the historical fraud cases on this card were classified as account takeover, involving both credential and card data compromise.",
-        "Case CC-4908 involved card-not-present fraud utilizing a new ZTE-Z956 device, which was inconsistent with the cardholder's established history."
+        "Card C01727-K2 has been associated with five prior confirmed fraud cases (CC-0723, CC-1501, CC-1833, CC-1975, CC-4908) totaling over $5,900 in losses.",
+        "Four of the historical cases were classified as account takeover involving compromised credentials and card data, while the most recent case (CC-4908) was classified as card-not-present fraud from a new ZTE-Z956 device.",
+        "All historical cases resulted in the card being blocked and reissued, and the customer reimbursed."
       ]
     },
     {
-      "t": 1793264773.28,
+      "t": 1793341068.72,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.067, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -113,7 +113,7 @@
       "model_p": 0.066546
     },
     {
-      "t": 1793264773.28,
+      "t": 1793341068.72,
       "kind": "finding",
       "key": "recipient_surge",
       "claim": "This card's online purchase(s) ($305.41, $366.35, $295.92) went to recipient e-mail domain sc.rr.com, which 17 different cards paid in the 30 days before this case, against a median of 2 card(s) a month in the earlier months it was paid at all: many cards paying one recipient",
@@ -128,7 +128,7 @@
       "in_model": false
     },
     {
-      "t": 1793264773.28,
+      "t": 1793341068.72,
       "kind": "finding",
       "key": "containment_plan",
       "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 17-card ring has $7,612.44 at risk. Blocking 16 card(s) (C01727-K2, C04668-K1, C01357-K1, C02167-K2, C05610-K1, C01594-K1, C03060-K1, C11617-K1, ...) would cut 98.4% of it, and the other 1 would be monitored. Blocking every ring card would cut 100.0% but is expected to block 3.5 customer(s) who are not compromised, against 3.0 for this plan. Blocked at under 0.9 confidence, named for review: C04668-K1, C01357-K1, C02167-K2, C05610-K1, C01594-K1, C03060-K1, C11617-K1, C00534-K2, C10350-K1, C01507-K1, C06115-K1, C06639-K1, C11940-K1, C04146-K1, C08384-K1.",
@@ -148,7 +148,7 @@
       "in_model": false
     },
     {
-      "t": 1793264773.28,
+      "t": 1793341068.72,
       "kind": "assessment",
       "p": 0.97,
       "prior": 0.45,
@@ -290,7 +290,7 @@
       }
     },
     {
-      "t": 1793264773.28,
+      "t": 1793341068.72,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -331,7 +331,7 @@
       ]
     },
     {
-      "t": 1793264774.02,
+      "t": 1793341069.56,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
@@ -342,15 +342,15 @@
       ],
       "knowledge": [
         "The five known fraud patterns",
+        "The five known fraud patterns",
+        "Undocumented pattern",
         "Card-not-present fraud",
         "Card testing",
-        "Undocumented pattern",
-        "The five known fraud patterns",
         "Out-of-region use"
       ]
     },
     {
-      "t": 1793264875.18,
+      "t": 1793341069.57,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
@@ -360,13 +360,13 @@
       "what_would_change_verdict": "A second independent piece of evidence of fraud would justify the Section 6 stop rule, or verification with the customer could confirm the fraud."
     },
     {
-      "t": 1793264896.53,
+      "t": 1793341090.2,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-006",
-        "n_vertices": 12,
+        "n_vertices": 11,
         "n_edges": 39
       }
     }
@@ -381,7 +381,7 @@
         "txn": "3660263"
       },
       "rows": 2,
-      "ms": 103.7,
+      "ms": 127.8,
       "via": "mcp",
       "ok": true
     },
@@ -396,7 +396,7 @@
         "end_ts": "2017-01-28 10:59:42"
       },
       "rows": 10,
-      "ms": 120.4,
+      "ms": 135.5,
       "via": "mcp",
       "ok": true
     },
@@ -411,7 +411,7 @@
         "recent_days": 30
       },
       "rows": 121,
-      "ms": 110.0,
+      "ms": 159.7,
       "via": "mcp",
       "ok": true
     },
@@ -427,7 +427,7 @@
         "before_ts": "2017-01-28 07:59:42"
       },
       "rows": 0,
-      "ms": 130.9,
+      "ms": 125.2,
       "via": "mcp",
       "ok": true
     },
@@ -441,7 +441,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 114.9,
+      "ms": 140.8,
       "via": "mcp",
       "ok": true
     },
@@ -454,8 +454,8 @@
         "card": "C01727-K2",
         "before_ts": "2017-01-28 10:59:42"
       },
-      "rows": 7,
-      "ms": 110.4,
+      "rows": 8,
+      "ms": 173.4,
       "via": "mcp",
       "ok": true
     },
@@ -470,7 +470,7 @@
         "end_ts": "2017-01-28 10:59:42"
       },
       "rows": 21,
-      "ms": 128.5,
+      "ms": 157.3,
       "via": "mcp",
       "ok": true
     },
@@ -487,7 +487,7 @@
         "max_detail": 200
       },
       "rows": 55,
-      "ms": 121.9,
+      "ms": 123.4,
       "via": "mcp",
       "ok": true
     },
@@ -504,7 +504,7 @@
         "max_detail": 200
       },
       "rows": 411,
-      "ms": 183.7,
+      "ms": 165.9,
       "via": "mcp",
       "ok": true
     },
@@ -521,7 +521,7 @@
         "max_detail": 200
       },
       "rows": 185,
-      "ms": 443.5,
+      "ms": 167.2,
       "via": "mcp",
       "ok": true
     },
@@ -534,7 +534,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 241.9,
+      "ms": 255.6,
       "via": "mcp",
       "ok": true
     },
@@ -549,7 +549,7 @@
         "end_ts": "2017-01-28 10:59:42"
       },
       "rows": 21,
-      "ms": 124.1,
+      "ms": 125.1,
       "via": "mcp",
       "ok": true
     },
@@ -565,7 +565,7 @@
         "max_cards": 50
       },
       "rows": 0,
-      "ms": 136.0,
+      "ms": 148.3,
       "via": "mcp",
       "ok": true
     },
@@ -584,7 +584,7 @@
         "before_ts": "2017-01-28 10:59:42"
       },
       "rows": 16,
-      "ms": 211.7,
+      "ms": 259.2,
       "via": "mcp",
       "ok": true
     },
@@ -613,7 +613,7 @@
         "before_ts": "2017-01-28 10:59:42"
       },
       "rows": 21,
-      "ms": 220.5,
+      "ms": 313.4,
       "via": "mcp",
       "ok": true
     },
@@ -626,7 +626,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 237.7,
+      "ms": 211.4,
       "via": "mcp",
       "ok": true
     },
@@ -645,7 +645,7 @@
         "before_ts": "2017-01-28 10:59:42"
       },
       "rows": 18,
-      "ms": 248.1,
+      "ms": 296.4,
       "via": "mcp",
       "ok": true
     },
@@ -689,7 +689,7 @@
         ]
       },
       "rows": 24,
-      "ms": 591.0,
+      "ms": 568.9,
       "via": "mcp",
       "ok": true
     }
@@ -738,16 +738,17 @@
       "suggested_pattern": "undocumented"
     },
     "precedent": {
-      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, primarily categorized as account takeover and card-not-present fraud on a new device. Multiple historical cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) have already resulted in card blocks, customer reimbursements, and regulatory reports.",
+      "assessment": "The card C01727-K2 has a significant history of confirmed fraud, with five closed cases (CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908) spanning from July to October 2016. These cases were primarily classified as account takeover and card-not-present fraud, involving unauthorized mixed-channel activity and new devices. Because the specific details of transaction 3660263 are missing from the current evidence, we cannot directly analyze its attributes or compare them to other affected cards.",
       "risk": "high",
       "key_points": [
-        "Card C01727-K2 was compromised multiple times between July and October 2016, resulting in five confirmed fraud cases: CC-0723, CC-1501, CC-1833, CC-1975, and CC-4908.",
-        "The majority of the historical fraud cases on this card were classified as account takeover, involving both credential and card data compromise.",
-        "Case CC-4908 involved card-not-present fraud utilizing a new ZTE-Z956 device, which was inconsistent with the cardholder's established history."
+        "Card C01727-K2 has been associated with five prior confirmed fraud cases (CC-0723, CC-1501, CC-1833, CC-1975, CC-4908) totaling over $5,900 in losses.",
+        "Four of the historical cases were classified as account takeover involving compromised credentials and card data, while the most recent case (CC-4908) was classified as card-not-present fraud from a new ZTE-Z956 device.",
+        "All historical cases resulted in the card being blocked and reissued, and the customer reimbursed."
       ],
       "open_questions": [
-        "What are the specific details of transaction 3660263, and does it share common merchant, location, or digital identifiers with other compromised cards?",
-        "Are there common points of compromise (such as a shared merchant or data breach) linking card C01727-K2 to the other affected cards mentioned in the analyst request?"
+        "What are the transaction details, device profile, and IP address for transaction 3660263?",
+        "Which other cards are experiencing losses this month, and what are their transaction histories?",
+        "Is there a common merchant, point of compromise, or processor link between card C01727-K2 and the other affected cards?"
       ],
       "suggested_pattern": "account_takeover"
     }
@@ -788,7 +789,7 @@
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-006",
-    "n_vertices": 12,
+    "n_vertices": 11,
     "n_edges": 39
   }
 }

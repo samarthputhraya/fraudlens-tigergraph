@@ -46,7 +46,7 @@
           "CC-4577",
           "CC-4235",
           "CC-4697",
-          "CC-1257",
+          "CC-4735",
           "CC-1254"
         ],
         "as_of": "2017-01-22 12:21:48"
@@ -57,10 +57,11 @@
       "CC-4577",
       "CC-4235",
       "CC-4697",
-      "CC-1257",
-      "CC-1254"
+      "CC-4735",
+      "CC-1254",
+      "CC-0575"
     ],
-    "summary": "This alert was triggered because the bank's real-time model scored transaction 3601725 on card C00543-K1 at 0.71. Graph evidence showed that the $112.75 amount is typical for this card and that the card has a history of purchases in the same billing region. Furthermore, the transaction model scored this activity very low at 0.001. The verdict is legitimate, and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "This alert was triggered because the bank's real-time risk score flagged transaction 3601725 for $112.75 on card C00543-K1. Graph and historical evidence showed that the transaction amount is typical for this card and the customer has a history of purchases in the same billing region. Additionally, the transaction model scored the event very low, indicating minimal risk based on unnamed model features and past account behavior. The verdict is legitimate, and the final actions are to allow the transaction and close the case with no fraud.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-015"
   },
@@ -102,8 +103,8 @@
   },
   "stop_reason": "Section 6: fraud probability 0.03 <= 0.15 on independent legitimate signals (model, region); contacting the cardholder would not change the decision.",
   "tool_calls": 15,
-  "tokens": 7784,
-  "latency_s": 30.3,
+  "tokens": 8806,
+  "latency_s": 39.1,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -113,7 +114,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:31:46+0530",
+    "started_at": "2026-10-30T11:44:29+0530",
     "complete": true,
     "failures": []
   }

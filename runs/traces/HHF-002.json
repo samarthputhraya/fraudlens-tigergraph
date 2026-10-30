@@ -2,7 +2,7 @@
   "case_id": "HHF-002",
   "events": [
     {
-      "t": 1793264268.82,
+      "t": 1793340730.91,
       "kind": "trigger",
       "case_id": "HHF-002",
       "trigger_type": "analyst_request",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-19 23:18:58"
     },
     {
-      "t": 1793264268.82,
+      "t": 1793340730.91,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264277.84,
+      "t": 1793340734.16,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -38,14 +38,14 @@
       ]
     },
     {
-      "t": 1793264280.09,
+      "t": 1793340734.74,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264290.69,
+      "t": 1793340734.77,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
@@ -57,7 +57,7 @@
       ]
     },
     {
-      "t": 1793264290.69,
+      "t": 1793340734.77,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
@@ -69,7 +69,7 @@
       ]
     },
     {
-      "t": 1793264290.69,
+      "t": 1793340734.77,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -81,7 +81,7 @@
       ]
     },
     {
-      "t": 1793264290.69,
+      "t": 1793340734.77,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "high",
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.012, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -107,7 +107,7 @@
       "model_p": 0.012414
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "new_device",
       "claim": "The purchase came from a device profile marked New for this account and never seen on this card before (SM-J700T1 |  |  | )",
@@ -120,7 +120,7 @@
       "in_model": true
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "proxy",
       "claim": "The session was routed through an anonymous proxy",
@@ -133,7 +133,7 @@
       "in_model": true
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-0815; latest note: \"Case CC-0815: model scored a $74.91 transaction at 0.92. Cardholder confirmed the purchase from a new phone. Device added to profile. Alert cleared.\")",
@@ -146,7 +146,7 @@
       "in_model": true
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "spoofed_device",
       "claim": "3 online purchase(s) ($637.13, $758.80, $770.78) from a device that reports itself as 'SM-J700T1', an Android handset, but with operating system(s) (blank), iOS 11.1.1, iOS 11.1.2: a fingerprint no real device produces, marked New for this account, 3 behind an anonymising proxy",
@@ -161,7 +161,7 @@
       "in_model": false
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "coordinated",
       "claim": "The same spoofed device fingerprint signature appears on 4 other card(s) in the same 30 days (C05061-K1, C05704-K2, C07925-K1, C11309-K1): coordinated activity across customers, not one cardholder's habit",
@@ -177,7 +177,7 @@
       "in_model": false
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "finding",
       "key": "containment_plan",
       "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 5-card ring has $7,610.94 at risk. Every ring card clears the 0.7 confidence bar on its own evidence, so the plan blocks all 5 (C06220-K1, C05061-K1, C11309-K1, C07925-K1, C05704-K2), cutting 100% of it; an expected 0.7 of them could still belong to customers who are not compromised. Blocked at under 0.9 confidence, named for review: C05061-K1, C11309-K1, C07925-K1, C05704-K2.",
@@ -194,7 +194,7 @@
       "in_model": false
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "assessment",
       "p": 0.97,
       "prior": 0.45,
@@ -364,7 +364,7 @@
       }
     },
     {
-      "t": 1793264290.73,
+      "t": 1793340734.78,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -405,7 +405,7 @@
       ]
     },
     {
-      "t": 1793264291.37,
+      "t": 1793340735.46,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
@@ -418,14 +418,14 @@
       "knowledge": [
         "The five known fraud patterns",
         "Card-not-present fraud",
+        "Card testing",
         "Undocumented pattern",
         "The five known fraud patterns",
-        "Card testing",
         "Out-of-region use"
       ]
     },
     {
-      "t": 1793264313.66,
+      "t": 1793340735.47,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
@@ -435,13 +435,13 @@
       "what_would_change_verdict": "Update the reason for the MONITOR_CONNECTED_CARDS action to cite R6 instead of R9."
     },
     {
-      "t": 1793264340.47,
+      "t": 1793340768.33,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-002",
-        "n_vertices": 12,
+        "n_vertices": 11,
         "n_edges": 28
       }
     }
@@ -456,7 +456,7 @@
         "txn": "3660127"
       },
       "rows": 2,
-      "ms": 109.3,
+      "ms": 142.5,
       "via": "mcp",
       "ok": true
     },
@@ -471,7 +471,7 @@
         "end_ts": "2017-01-19 23:18:58"
       },
       "rows": 31,
-      "ms": 184.8,
+      "ms": 237.2,
       "via": "mcp",
       "ok": true
     },
@@ -486,7 +486,7 @@
         "recent_days": 30
       },
       "rows": 366,
-      "ms": 232.5,
+      "ms": 141.0,
       "via": "mcp",
       "ok": true
     },
@@ -502,7 +502,7 @@
         "before_ts": "2017-01-19 18:18:58"
       },
       "rows": 0,
-      "ms": 118.4,
+      "ms": 125.0,
       "via": "mcp",
       "ok": true
     },
@@ -516,7 +516,7 @@
         "lookback_days": 200
       },
       "rows": 2,
-      "ms": 117.7,
+      "ms": 139.1,
       "via": "mcp",
       "ok": true
     },
@@ -531,7 +531,7 @@
         "end_ts": "2017-01-19 23:18:58"
       },
       "rows": 2,
-      "ms": 114.1,
+      "ms": 137.7,
       "via": "mcp",
       "ok": true
     },
@@ -545,7 +545,7 @@
         "before_ts": "2017-01-19 23:18:58"
       },
       "rows": 7,
-      "ms": 118.7,
+      "ms": 147.8,
       "via": "mcp",
       "ok": true
     },
@@ -560,7 +560,7 @@
         "end_ts": "2017-01-19 23:18:58"
       },
       "rows": 57,
-      "ms": 191.4,
+      "ms": 138.9,
       "via": "mcp",
       "ok": true
     },
@@ -577,7 +577,7 @@
         "max_detail": 200
       },
       "rows": 705,
-      "ms": 146.9,
+      "ms": 164.2,
       "via": "mcp",
       "ok": true
     },
@@ -594,7 +594,7 @@
         "max_detail": 200
       },
       "rows": 84,
-      "ms": 110.0,
+      "ms": 168.1,
       "via": "mcp",
       "ok": true
     },
@@ -611,7 +611,7 @@
         "max_detail": 200
       },
       "rows": 429,
-      "ms": 132.3,
+      "ms": 172.1,
       "via": "mcp",
       "ok": true
     },
@@ -628,7 +628,7 @@
         "max_detail": 200
       },
       "rows": 1134,
-      "ms": 172.4,
+      "ms": 209.1,
       "via": "mcp",
       "ok": true
     },
@@ -646,7 +646,7 @@
         "ramp_min": 500.0
       },
       "rows": 1998,
-      "ms": 1579.8,
+      "ms": 1028.5,
       "via": "mcp",
       "ok": true
     },
@@ -659,7 +659,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 427.3,
+      "ms": 275.1,
       "via": "mcp",
       "ok": true
     },
@@ -674,7 +674,7 @@
         "end_ts": "2017-01-19 23:18:58"
       },
       "rows": 2,
-      "ms": 99.4,
+      "ms": 169.5,
       "via": "mcp",
       "ok": true
     },
@@ -689,7 +689,7 @@
         "end_ts": "2017-01-19 23:18:58"
       },
       "rows": 57,
-      "ms": 146.1,
+      "ms": 172.2,
       "via": "mcp",
       "ok": true
     },
@@ -710,7 +710,7 @@
         "before_ts": "2017-01-19 23:18:58"
       },
       "rows": 17,
-      "ms": 169.0,
+      "ms": 224.2,
       "via": "mcp",
       "ok": true
     },
@@ -735,7 +735,7 @@
         "before_ts": "2017-01-19 23:18:58"
       },
       "rows": 21,
-      "ms": 208.5,
+      "ms": 233.9,
       "via": "mcp",
       "ok": true
     },
@@ -748,7 +748,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 186.4,
+      "ms": 207.3,
       "via": "mcp",
       "ok": true
     },
@@ -769,7 +769,7 @@
         "before_ts": "2017-01-19 23:18:58"
       },
       "rows": 19,
-      "ms": 217.2,
+      "ms": 230.3,
       "via": "mcp",
       "ok": true
     },
@@ -802,7 +802,7 @@
         ]
       },
       "rows": 13,
-      "ms": 292.6,
+      "ms": 362.4,
       "via": "mcp",
       "ok": true
     }
@@ -895,7 +895,7 @@
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-002",
-    "n_vertices": 12,
+    "n_vertices": 11,
     "n_edges": 28
   }
 }

@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern consists of multiple unrelated cards being used to make online purchases directed to a single recipient email domain, sc.rr.com. This pattern affects 17 different cards and indicates a coordinated fraud ring funneling funds to a common destination. It was discovered by analyzing recipient activity, which showed an abnormal spike in the number of unique cards paying this domain over a 30-day period.",
+    "pattern_description": "The undocumented pattern involves multiple unrelated cards making online purchases directed to a single recipient email domain, sc.rr.com. It affects at least 17 different cards that share no common devices but are linked by this shared recipient. This coordinated abuse was discovered through graph analysis showing a sudden spike in cards paying this domain compared to historical baselines.",
     "affected_txn_ids": [
       "3660261",
       "3660262",
@@ -102,7 +102,7 @@
       "CC-3035",
       "CC-2649"
     ],
-    "summary": "This alert was triggered by an analyst request to review transaction 3660263 on card C01727-K2 and identify commonalities among affected cards. Graph evidence revealed that 17 different cards made payments to the same recipient email domain, sc.rr.com, within a 30-day period. The policy engine reached a verdict of fraud. Final actions include automatically creating a case, monitoring connected cards, and escalating to an analyst, along with an L1 recommendation to block the card and an L2 recommendation to file a suspicious activity report.",
+    "summary": "An alert was triggered by an analyst request to review transaction 3660263 on card C01727-K2 and identify commonalities among affected cards. Graph evidence revealed that this card, along with 16 others, made payments to the recipient email domain sc.rr.com, indicating a coordinated ring. The policy engine reached a final verdict of fraud. The final actions are CREATE_CASE, MONITOR_CONNECTED_CARDS, and ESCALATE_TO_ANALYST, along with recommendations for BLOCK_CARD (L1) and FILE_REPORT (L2) which await a human's approval.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-006"
   },
@@ -167,7 +167,7 @@
   "sar": {
     "file": true,
     "reason": "Section 3a: fraud confirmed or strongly suspected and activity connects to recipient email sc.rr.com; the pattern is undocumented and coordinated across 17 cards (R9).",
-    "narrative": "This report details suspicious online activity involving customer C01727 and their card C01727-K2. Between 2017-01-17 and 2017-01-28, the card was used for three online purchases totaling $967.68. The transactions occurred as follows: transaction 3660261 on 2017-01-17 for $305.41, transaction 3660262 on 2017-01-18 for $366.35, and transaction 3660263 on 2017-01-28 for $295.92. All of these transactions were directed to the recipient email domain sc.rr.com. This activity is highly suspicious because graph analysis indicates that 17 different cards have made payments to this specific email domain in the past 30 days, compared to a historical median of just 2 cards per month. This sudden concentration of unrelated cards paying a single recipient domain strongly suggests a coordinated fraud ring. The total exposure for this specific card is $967.68, while the broader ring poses a risk of $7,612.44.",
+    "narrative": "This Suspicious Activity Report details suspected coordinated fraud involving customer C01727 and card C01727-K2. Between January 17 and January 28, 2017, the card was used for three online transactions totaling $967.68. The transactions occurred on 2017-01-17 for $305.41 (ID 3660261), on 2017-01-18 for $366.35 (ID 3660262), and on 2017-01-28 for $295.92 (ID 3660263). All transactions were routed through the online channel to billing address 231. The activity is suspicious because the payments were directed to the recipient email domain sc.rr.com, which received payments from 17 different cards in the past 30 days, far exceeding its historical median of 2 cards per month. This indicates a coordinated scheme where multiple compromised cards are used to pay a single recipient. The total exposure for this card is $967.68, while the broader ring poses a risk of $7,612.44. The transaction model scored the final transaction at 0.067, but the graph evidence of a multi-card ring strongly supports the fraud determination.",
     "subjects": [
       "C01727",
       "C01727-K2",
@@ -195,8 +195,8 @@
   },
   "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (model, network); further queries would not change the actions.",
   "tool_calls": 18,
-  "tokens": 11563,
-  "latency_s": 142.6,
+  "tokens": 11469,
+  "latency_s": 28.4,
   "containment": {
     "ring_size": 17,
     "ring_exposure_usd": 7612.44,
@@ -478,7 +478,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:35:53+0530",
+    "started_at": "2026-10-30T11:47:41+0530",
     "complete": true,
     "failures": []
   }

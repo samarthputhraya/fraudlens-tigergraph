@@ -2,7 +2,7 @@
   "case_id": "HHF-018",
   "events": [
     {
-      "t": 1793263987.13,
+      "t": 1793340481.29,
       "kind": "trigger",
       "case_id": "HHF-018",
       "trigger_type": "risk_score",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-01 18:29:48"
     },
     {
-      "t": 1793263987.13,
+      "t": 1793340481.29,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793263989.41,
+      "t": 1793340483.31,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -38,14 +38,14 @@
       ]
     },
     {
-      "t": 1793263990.0,
+      "t": 1793340483.92,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264003.7,
+      "t": 1793340489.92,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "medium",
@@ -57,7 +57,7 @@
       ]
     },
     {
-      "t": 1793264003.7,
+      "t": 1793340489.92,
       "kind": "specialist",
       "agent": "identity",
       "risk": "medium",
@@ -69,7 +69,7 @@
       ]
     },
     {
-      "t": 1793264003.7,
+      "t": 1793340489.92,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -81,19 +81,19 @@
       ]
     },
     {
-      "t": 1793264003.7,
+      "t": 1793340489.92,
       "kind": "specialist",
       "agent": "precedent",
       "risk": "medium",
-      "assessment": "The alert concerns transaction 3612011 ($34.22) flagged with a real-time risk score of 0.8. The customer (C02753) has a mixed history, including two confirmed fraud cases (CC-1739 and CC-4010) involving out-of-region card-present use on card C02753-K1, as well as a cleared high-value alert (CC-4570) where travel was confirmed. Given the customer's history of both genuine out-of-region travel and confirmed card-present fraud, further verification is required to determine if this transaction is legitimate.",
+      "assessment": "The alert flags transaction 3612011 for $34.22 with a real-time risk score of 0.8. The customer has a mixed history of both confirmed out-of-region fraud and cleared travel-related alerts on the same card, making verification necessary to determine if this is another unauthorized out-of-region transaction or legitimate travel.",
       "key_points": [
-        "Customer C02753 has two prior confirmed fraud cases (CC-1739 and CC-4010) on card C02753-K1, both involving unauthorized card-present transactions in an unfamiliar billing region.",
-        "The customer also has a cleared case (CC-4570) where a high-value transaction of $1,962.05 was confirmed as legitimate travel.",
-        "Prior similar alerts in the bank's memory (such as CC-0848, CC-0399, and CC-0037) were frequently cleared after the cardholder confirmed travel to the billing region in question."
+        "The customer's card C02753-K1 has been associated with two prior confirmed fraud cases, CC-1739 and CC-4010, both involving unauthorized card-present transactions in unfamiliar billing regions.",
+        "The same card was also involved in case CC-4570, which was cleared after the cardholder confirmed legitimate travel to the billing region in question.",
+        "Prior case CASE-2016-013 shows a similar scenario where a transaction flagged by the real-time risk score was ultimately determined to be legitimate."
       ]
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.002, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -107,7 +107,7 @@
       "model_p": 0.002035
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "finding",
       "key": "trigger_mismatch",
       "claim": "The alert's score (0.80, as in the case record) differs from the score stored on the transaction (0.03). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
@@ -120,7 +120,7 @@
       "in_model": false
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "finding",
       "key": "proxy",
       "claim": "The session was routed through an anonymous proxy",
@@ -133,7 +133,7 @@
       "in_model": true
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "finding",
       "key": "card_prior_cleared",
       "claim": "This card has 1 earlier alert(s) that were cleared as false alarms (CC-4570; latest note: \"Case CC-4570: model scored a $1,962.05 transaction at 0.96. Cardholder confirmed travel to the billing region in question. Alert cleared.\")",
@@ -146,7 +146,7 @@
       "in_model": true
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "assessment",
       "p": 0.04,
       "prior": 0.034,
@@ -235,7 +235,7 @@
       }
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "evidence_request",
       "type": "customer_validation",
       "branch": "confirm",
@@ -243,7 +243,7 @@
       "asked_after_step": 15
     },
     {
-      "t": 1793264003.73,
+      "t": 1793340489.92,
       "kind": "decision",
       "verdict": "legitimate",
       "p": 0.04,
@@ -265,7 +265,7 @@
       "episode": []
     },
     {
-      "t": 1793264004.26,
+      "t": 1793340490.46,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
@@ -275,8 +275,8 @@
         "CC-0399",
         "CC-1139",
         "CC-1137",
-        "CC-1147",
-        "CC-2533"
+        "CC-3931",
+        "CC-1147"
       ],
       "knowledge": [
         "Glossary",
@@ -288,15 +288,15 @@
       ]
     },
     {
-      "t": 1793264043.34,
+      "t": 1793340507.81,
       "kind": "review",
       "agent": "compliance",
       "agree": true,
       "issues": [],
-      "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering a card block and case escalation."
+      "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, requiring a BLOCK_CARD action under rule R2."
     },
     {
-      "t": 1793264058.52,
+      "t": 1793340547.45,
       "kind": "final",
       "problems": [],
       "written": {
@@ -317,7 +317,7 @@
         "txn": "3612011"
       },
       "rows": 2,
-      "ms": 123.3,
+      "ms": 136.1,
       "via": "mcp",
       "ok": true
     },
@@ -332,7 +332,7 @@
         "end_ts": "2017-01-01 18:29:48"
       },
       "rows": 14,
-      "ms": 130.2,
+      "ms": 133.0,
       "via": "mcp",
       "ok": true
     },
@@ -347,7 +347,7 @@
         "recent_days": 30
       },
       "rows": 110,
-      "ms": 121.8,
+      "ms": 125.7,
       "via": "mcp",
       "ok": true
     },
@@ -363,7 +363,7 @@
         "before_ts": "2017-01-01 15:29:48"
       },
       "rows": 1,
-      "ms": 130.9,
+      "ms": 120.6,
       "via": "mcp",
       "ok": true
     },
@@ -377,7 +377,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 135.5,
+      "ms": 126.9,
       "via": "mcp",
       "ok": true
     },
@@ -392,7 +392,7 @@
         "end_ts": "2017-01-01 18:29:48"
       },
       "rows": 135,
-      "ms": 434.7,
+      "ms": 271.4,
       "via": "mcp",
       "ok": true
     },
@@ -406,7 +406,7 @@
         "before_ts": "2017-01-01 18:29:48"
       },
       "rows": 4,
-      "ms": 136.8,
+      "ms": 128.8,
       "via": "mcp",
       "ok": true
     },
@@ -421,7 +421,7 @@
         "end_ts": "2017-01-01 18:29:48"
       },
       "rows": 22,
-      "ms": 133.2,
+      "ms": 135.9,
       "via": "mcp",
       "ok": true
     },
@@ -438,7 +438,7 @@
         "max_detail": 200
       },
       "rows": 1375,
-      "ms": 301.0,
+      "ms": 221.4,
       "via": "mcp",
       "ok": true
     },
@@ -455,7 +455,7 @@
         "max_detail": 200
       },
       "rows": 823,
-      "ms": 190.8,
+      "ms": 166.8,
       "via": "mcp",
       "ok": true
     },
@@ -472,7 +472,7 @@
         "max_detail": 200
       },
       "rows": 461,
-      "ms": 160.1,
+      "ms": 147.8,
       "via": "mcp",
       "ok": true
     },
@@ -485,7 +485,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 219.2,
+      "ms": 281.9,
       "via": "mcp",
       "ok": true
     },
@@ -500,7 +500,7 @@
         "end_ts": "2017-01-01 18:29:48"
       },
       "rows": 22,
-      "ms": 130.0,
+      "ms": 147.5,
       "via": "mcp",
       "ok": true
     },
@@ -516,7 +516,7 @@
         "before_ts": "2017-01-01 15:29:48"
       },
       "rows": 1,
-      "ms": 131.9,
+      "ms": 131.6,
       "via": "mcp",
       "ok": true
     },
@@ -537,7 +537,7 @@
         "before_ts": "2017-01-01 18:29:48"
       },
       "rows": 17,
-      "ms": 261.0,
+      "ms": 310.7,
       "via": "mcp",
       "ok": true
     },
@@ -558,7 +558,7 @@
         "before_ts": "2017-01-01 18:29:48"
       },
       "rows": 21,
-      "ms": 242.7,
+      "ms": 258.2,
       "via": "mcp",
       "ok": true
     },
@@ -571,7 +571,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 276.8,
+      "ms": 275.9,
       "via": "mcp",
       "ok": true
     },
@@ -579,7 +579,7 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0848', 'CC-1887', 'CC-4570', 'CC-0399', 'CC-1139', 'CC-1137', 'CC-1147', 'CC-2533'], customer_ids=['C02753'])",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-0848', 'CC-1887', 'CC-4570', 'CC-0399', 'CC-1139', 'CC-1137', 'CC-3931', 'CC-1147'], customer_ids=['C02753'])",
       "params": {
         "txn_ids": [],
         "card_ids": [],
@@ -590,15 +590,15 @@
           "CC-0399",
           "CC-1139",
           "CC-1137",
-          "CC-1147",
-          "CC-2533"
+          "CC-3931",
+          "CC-1147"
         ],
         "customer_ids": [
           "C02753"
         ]
       },
       "rows": 9,
-      "ms": 514.2,
+      "ms": 519.9,
       "via": "mcp",
       "ok": true
     }
@@ -647,16 +647,16 @@
       "suggested_pattern": "none"
     },
     "precedent": {
-      "assessment": "The alert concerns transaction 3612011 ($34.22) flagged with a real-time risk score of 0.8. The customer (C02753) has a mixed history, including two confirmed fraud cases (CC-1739 and CC-4010) involving out-of-region card-present use on card C02753-K1, as well as a cleared high-value alert (CC-4570) where travel was confirmed. Given the customer's history of both genuine out-of-region travel and confirmed card-present fraud, further verification is required to determine if this transaction is legitimate.",
+      "assessment": "The alert flags transaction 3612011 for $34.22 with a real-time risk score of 0.8. The customer has a mixed history of both confirmed out-of-region fraud and cleared travel-related alerts on the same card, making verification necessary to determine if this is another unauthorized out-of-region transaction or legitimate travel.",
       "risk": "medium",
       "key_points": [
-        "Customer C02753 has two prior confirmed fraud cases (CC-1739 and CC-4010) on card C02753-K1, both involving unauthorized card-present transactions in an unfamiliar billing region.",
-        "The customer also has a cleared case (CC-4570) where a high-value transaction of $1,962.05 was confirmed as legitimate travel.",
-        "Prior similar alerts in the bank's memory (such as CC-0848, CC-0399, and CC-0037) were frequently cleared after the cardholder confirmed travel to the billing region in question."
+        "The customer's card C02753-K1 has been associated with two prior confirmed fraud cases, CC-1739 and CC-4010, both involving unauthorized card-present transactions in unfamiliar billing regions.",
+        "The same card was also involved in case CC-4570, which was cleared after the cardholder confirmed legitimate travel to the billing region in question.",
+        "Prior case CASE-2016-013 shows a similar scenario where a transaction flagged by the real-time risk score was ultimately determined to be legitimate."
       ],
       "open_questions": [
-        "Is transaction 3612011 an online (card-not-present) transaction or an in-person (card-present) transaction?",
-        "Does the location or billing region of transaction 3612011 match the customer's established home region, their confirmed travel history, or the fraudulent regions identified in CC-1739 and CC-4010?"
+        "Is the current transaction 3612011 a card-present or card-not-present transaction, and does its billing region match the customer's established history or recent travel?",
+        "Has the customer confirmed travel or authorized this specific transaction of $34.22?"
       ],
       "suggested_pattern": "out_of_region_use"
     }
@@ -683,7 +683,7 @@
   "critic": {
     "agree": true,
     "issues": [],
-    "what_would_change_verdict": "If the customer had denied the transaction or failed to respond within 24 hours, the verdict would change to fraud or suspected fraud, triggering a card block and case escalation."
+    "what_would_change_verdict": "If the customer had denied the transaction instead of confirming it, the verdict would change to fraud, requiring a BLOCK_CARD action under rule R2."
   },
   "problems": [],
   "written": {

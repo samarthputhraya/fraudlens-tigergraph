@@ -86,10 +86,10 @@
       "CC-0399",
       "CC-1139",
       "CC-1137",
-      "CC-1147",
-      "CC-2533"
+      "CC-3931",
+      "CC-1147"
     ],
-    "summary": "This alert was triggered because the bank's real-time model scored transaction 3612011 on card C02753-K1 at 0.8. Graph evidence showed that the transaction model scored the event very low at 0.002, despite the session being routed through an anonymous proxy. The card also had a prior alert that was cleared as a false alarm. A simulated customer reply confirmed that the cardholder made the purchase. The final verdict is legitimate, resulting in the automated final actions to ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
+    "summary": "This case was opened because the bank's real-time model flagged transaction 3612011 for $34.22 on card C02753-K1 with a score of 0.8. Graph evidence showed that the transaction model scored the event very low at 0.002, despite the use of an anonymous proxy, and noted a prior false alarm on this card. A simulated customer outreach resulted in an assumed response where the cardholder confirmed making the purchase. Based on this confirmation, the verdict is legitimate and the final actions are ALLOW_TRANSACTION and CLOSE_NO_FRAUD.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-018"
   },
@@ -137,8 +137,8 @@
   },
   "stop_reason": "Section 6: the verification response settled the question - the cardholder confirmed the transaction, so further investigation would not change the decision.",
   "tool_calls": 18,
-  "tokens": 9423,
-  "latency_s": 71.4,
+  "tokens": 9248,
+  "latency_s": 66.2,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -148,7 +148,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:23:07+0530",
+    "started_at": "2026-10-30T11:38:01+0530",
     "complete": true,
     "failures": []
   }

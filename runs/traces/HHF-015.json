@@ -2,7 +2,7 @@
   "case_id": "HHF-015",
   "events": [
     {
-      "t": 1793264506.06,
+      "t": 1793340869.27,
       "kind": "trigger",
       "case_id": "HHF-015",
       "trigger_type": "risk_score",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-22 12:21:48"
     },
     {
-      "t": 1793264506.06,
+      "t": 1793340869.27,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264511.04,
+      "t": 1793340870.78,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -39,14 +39,14 @@
       ]
     },
     {
-      "t": 1793264513.37,
+      "t": 1793340871.35,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793264519.66,
+      "t": 1793340873.74,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "medium",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "t": 1793264519.66,
+      "t": 1793340873.74,
       "kind": "specialist",
       "agent": "identity",
       "risk": "medium",
@@ -70,7 +70,7 @@
       ]
     },
     {
-      "t": 1793264519.66,
+      "t": 1793340873.74,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -83,18 +83,19 @@
       ]
     },
     {
-      "t": 1793264519.66,
+      "t": 1793340873.74,
       "kind": "specialist",
       "agent": "precedent",
-      "risk": "medium",
-      "assessment": "The alert flags transaction 3601725 for $112.75 with a real-time risk score of 0.71. Historical precedents suggest that similar high-scoring alerts are frequently resolved as legitimate once cardholder travel or transaction details are verified.",
+      "risk": "low",
+      "assessment": "The alert was triggered by a real-time risk score of 0.71 on transaction 3601725 for $112.75. Historical precedents show a consistent pattern where high real-time risk scores triggered by cardholders traveling to different billing regions were cleared as legitimate after cardholder confirmation. Similar cases such as CASE-2016-013, CASE-2016-HHF-008, and CASE-2016-012 were also resolved as legitimate with low transaction model scores.",
       "key_points": [
-        "A series of historical cases, including CC-1212, CC-1251, CC-1205, CC-1254, CC-1257, and CC-1201, involved high risk scores that were cleared after cardholders confirmed travel to the billing region.",
-        "Earlier investigations such as CASE-2016-013 and CASE-2016-012 show a pattern of real-time model alerts being resolved as legitimate after confirming the transaction model score was low or verifying directly with the customer."
+        "The alert is based on transaction 3601725 ($112.75) scored at 0.71 by the real-time model.",
+        "Multiple historical cases (CC-1212, CC-1251, CC-1205, CC-1254, CC-1257, CC-1201) involving high model scores were cleared after cardholders confirmed travel to the billing region in question.",
+        "Prior investigations CASE-2016-013, CASE-2016-HHF-008, and CASE-2016-012 were closed as legitimate with no fraud pattern identified after customer confirmation."
       ]
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.001, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -108,7 +109,7 @@
       "model_p": 0.000657
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "finding",
       "key": "trigger_mismatch",
       "claim": "The alert's score (0.71, as in the case record) differs from the score stored on the transaction (0.07). Two bank sources disagree, and neither moves the decision: the bank warns its model is near useless for January, so its score is not used as evidence",
@@ -121,7 +122,7 @@
       "in_model": false
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "finding",
       "key": "amount_typical",
       "claim": "$112.75 is a typical amount for this card (percentile 21%)",
@@ -134,7 +135,7 @@
       "in_model": true
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "finding",
       "key": "region_known",
       "claim": "This card has 9 earlier purchases billed to region 485 (first on 2016-07-10)",
@@ -147,7 +148,7 @@
       "in_model": true
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "assessment",
       "p": 0.03,
       "prior": 0.034,
@@ -236,7 +237,7 @@
       }
     },
     {
-      "t": 1793264519.68,
+      "t": 1793340873.75,
       "kind": "decision",
       "verdict": "legitimate",
       "p": 0.03,
@@ -258,7 +259,7 @@
       "episode": []
     },
     {
-      "t": 1793264520.22,
+      "t": 1793340874.2,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
@@ -266,35 +267,36 @@
         "CC-4577",
         "CC-4235",
         "CC-4697",
-        "CC-1257",
-        "CC-1254"
+        "CC-4735",
+        "CC-1254",
+        "CC-0575"
       ],
       "knowledge": [
         "Glossary",
         "No fraud",
-        "R3 Customer confirms the transaction",
-        "R5 Card testing",
         "Things to know",
+        "R5 Card testing",
+        "R3 Customer confirms the transaction",
         "Notes"
       ]
     },
     {
-      "t": 1793264525.23,
+      "t": 1793340887.2,
       "kind": "review",
       "agent": "compliance",
       "agree": true,
       "issues": [],
-      "what_would_change_verdict": "The verdict would change if the transaction model indicated a high probability of fraud, or if the transaction amount and region were atypical for the customer's history, which would increase the fraud probability and require verification or escalation."
+      "what_would_change_verdict": "A customer dispute, evidence of a shared device profile with a known fraudulent account, or a sudden spike in high-value transactions in a new region would increase the fraud probability and change the verdict."
     },
     {
-      "t": 1793264536.37,
+      "t": 1793340908.36,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-015",
-        "n_vertices": 6,
-        "n_edges": 14
+        "n_vertices": 5,
+        "n_edges": 15
       }
     }
   ],
@@ -308,7 +310,7 @@
         "txn": "3601725"
       },
       "rows": 2,
-      "ms": 123.1,
+      "ms": 161.0,
       "via": "mcp",
       "ok": true
     },
@@ -323,7 +325,7 @@
         "end_ts": "2017-01-22 12:21:48"
       },
       "rows": 13,
-      "ms": 129.9,
+      "ms": 140.8,
       "via": "mcp",
       "ok": true
     },
@@ -338,7 +340,7 @@
         "recent_days": 30
       },
       "rows": 116,
-      "ms": 154.1,
+      "ms": 141.2,
       "via": "mcp",
       "ok": true
     },
@@ -354,7 +356,7 @@
         "before_ts": "2017-01-22 09:21:48"
       },
       "rows": 1,
-      "ms": 136.5,
+      "ms": 129.3,
       "via": "mcp",
       "ok": true
     },
@@ -368,7 +370,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 105.2,
+      "ms": 119.9,
       "via": "mcp",
       "ok": true
     },
@@ -384,7 +386,7 @@
         "max_cards": 50
       },
       "rows": 0,
-      "ms": 112.9,
+      "ms": 150.2,
       "via": "mcp",
       "ok": true
     },
@@ -398,7 +400,7 @@
         "before_ts": "2017-01-22 12:21:48"
       },
       "rows": 1,
-      "ms": 120.5,
+      "ms": 137.6,
       "via": "mcp",
       "ok": true
     },
@@ -413,7 +415,7 @@
         "end_ts": "2017-01-22 12:21:48"
       },
       "rows": 31,
-      "ms": 249.1,
+      "ms": 237.1,
       "via": "mcp",
       "ok": true
     },
@@ -426,7 +428,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 221.8,
+      "ms": 267.0,
       "via": "mcp",
       "ok": true
     },
@@ -441,7 +443,7 @@
         "end_ts": "2017-01-22 12:21:48"
       },
       "rows": 31,
-      "ms": 140.7,
+      "ms": 166.7,
       "via": "mcp",
       "ok": true
     },
@@ -457,7 +459,7 @@
         "before_ts": "2017-01-22 09:21:48"
       },
       "rows": 1,
-      "ms": 111.6,
+      "ms": 144.0,
       "via": "mcp",
       "ok": true
     },
@@ -476,7 +478,7 @@
         "before_ts": "2017-01-22 12:21:48"
       },
       "rows": 17,
-      "ms": 244.3,
+      "ms": 236.7,
       "via": "mcp",
       "ok": true
     },
@@ -495,7 +497,7 @@
         "before_ts": "2017-01-22 12:21:48"
       },
       "rows": 21,
-      "ms": 259.3,
+      "ms": 224.1,
       "via": "mcp",
       "ok": true
     },
@@ -508,7 +510,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 222.3,
+      "ms": 212.8,
       "via": "mcp",
       "ok": true
     },
@@ -516,7 +518,7 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-5411', 'CC-4577', 'CC-4235', 'CC-4697', 'CC-1257', 'CC-1254'], customer_ids=['C00543'])",
+      "ref": "query:ids_exist(txn_ids=[], card_ids=[], case_ids=['CC-5411', 'CC-4577', 'CC-4235', 'CC-4697', 'CC-4735', 'CC-1254', 'CC-0575'], customer_ids=['C00543'])",
       "params": {
         "txn_ids": [],
         "card_ids": [],
@@ -525,15 +527,16 @@
           "CC-4577",
           "CC-4235",
           "CC-4697",
-          "CC-1257",
-          "CC-1254"
+          "CC-4735",
+          "CC-1254",
+          "CC-0575"
         ],
         "customer_ids": [
           "C00543"
         ]
       },
-      "rows": 7,
-      "ms": 106.9,
+      "rows": 8,
+      "ms": 538.8,
       "via": "mcp",
       "ok": true
     }
@@ -583,17 +586,18 @@
       "suggested_pattern": "undocumented"
     },
     "precedent": {
-      "assessment": "The alert flags transaction 3601725 for $112.75 with a real-time risk score of 0.71. Historical precedents suggest that similar high-scoring alerts are frequently resolved as legitimate once cardholder travel or transaction details are verified.",
-      "risk": "medium",
+      "assessment": "The alert was triggered by a real-time risk score of 0.71 on transaction 3601725 for $112.75. Historical precedents show a consistent pattern where high real-time risk scores triggered by cardholders traveling to different billing regions were cleared as legitimate after cardholder confirmation. Similar cases such as CASE-2016-013, CASE-2016-HHF-008, and CASE-2016-012 were also resolved as legitimate with low transaction model scores.",
+      "risk": "low",
       "key_points": [
-        "A series of historical cases, including CC-1212, CC-1251, CC-1205, CC-1254, CC-1257, and CC-1201, involved high risk scores that were cleared after cardholders confirmed travel to the billing region.",
-        "Earlier investigations such as CASE-2016-013 and CASE-2016-012 show a pattern of real-time model alerts being resolved as legitimate after confirming the transaction model score was low or verifying directly with the customer."
+        "The alert is based on transaction 3601725 ($112.75) scored at 0.71 by the real-time model.",
+        "Multiple historical cases (CC-1212, CC-1251, CC-1205, CC-1254, CC-1257, CC-1201) involving high model scores were cleared after cardholders confirmed travel to the billing region in question.",
+        "Prior investigations CASE-2016-013, CASE-2016-HHF-008, and CASE-2016-012 were closed as legitimate with no fraud pattern identified after customer confirmation."
       ],
       "open_questions": [
-        "Has the cardholder for transaction 3601725 recently traveled to the billing region of this transaction?",
-        "What is the transaction model's score for transaction 3601725?"
+        "Has the cardholder for transaction 3601725 been contacted to confirm if they are currently traveling or if they authorized this transaction?",
+        "What is the transaction model score for transaction 3601725 compared to its real-time risk score?"
       ],
-      "suggested_pattern": "out_of_region_use"
+      "suggested_pattern": "none"
     }
   },
   "lead": {
@@ -619,13 +623,13 @@
   "critic": {
     "agree": true,
     "issues": [],
-    "what_would_change_verdict": "The verdict would change if the transaction model indicated a high probability of fraud, or if the transaction amount and region were atypical for the customer's history, which would increase the fraud probability and require verification or escalation."
+    "what_would_change_verdict": "A customer dispute, evidence of a shared device profile with a known fraudulent account, or a sudden spike in high-value transactions in a new region would increase the fraud probability and change the verdict."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-015",
-    "n_vertices": 6,
-    "n_edges": 14
+    "n_vertices": 5,
+    "n_edges": 15
   }
 }

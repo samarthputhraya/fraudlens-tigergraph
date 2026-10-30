@@ -5,7 +5,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "The undocumented pattern involves fraudsters using sophisticated device spoofing techniques, specifically combining Android handset identifiers with Windows operating systems, while hiding behind anonymous proxies. This pattern affects customers targeted by actors attempting to evade standard device fingerprinting controls. It was discovered following an analyst's request to investigate commonalities across multiple cards experiencing losses without sharing a legitimate device profile.",
+    "pattern_description": "This undocumented pattern involves fraudsters using impossible device fingerprints, specifically combining Android hardware identifiers with Windows operating systems, to bypass standard device tracking. It affects customer C05061 and was discovered following an analyst request to investigate cards showing losses without shared devices.",
     "affected_txn_ids": [
       "3660106",
       "3660107",
@@ -55,13 +55,13 @@
         "as_of": "2017-01-15 01:25:19"
       },
       {
-        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2985; CC-2971; CC-3035; CC-2649 (confirmed_fraud, undocumented)",
+        "claim": "Case memory: similar closed cases retrieved by graph-filtered vector search and account lineage: CC-2985; CC-3035; CC-2971; CC-2649 (confirmed_fraud, undocumented)",
         "source": "graph",
         "ref": "query:similar_cases(devices=['RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop | '], cards=['C05061-K1'], k=8, pattern=, before_ts=2017-01-15 01:25:19)",
         "entity_ids": [
           "CC-2985",
-          "CC-2971",
           "CC-3035",
+          "CC-2971",
           "CC-2649",
           "CC-0889"
         ],
@@ -77,12 +77,12 @@
     ],
     "similar_prior_cases": [
       "CC-2985",
-      "CC-2971",
       "CC-3035",
+      "CC-2971",
       "CC-2649",
       "CC-0889"
     ],
-    "summary": "An alert was triggered by the following analyst request: \"Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.\" The graph evidence showed three online purchases made from a spoofed device fingerprint that combined an Android handset identifier with Windows operating systems, routed through an anonymous proxy. The final verdict is fraud. The final actions are to automatically create a case and escalate to an analyst, along with recommendations awaiting human approval to block the card (L1) and file a report (L2).",
+    "summary": "An analyst requested a review of transaction 3660108 on card C05061-K1 to investigate recent losses with no shared device. Evidence revealed a series of online purchases made from a device spoofing its fingerprint by combining an Android handset model with Windows operating systems, routed through an anonymous proxy. The policy engine reached a final verdict of fraud. The automated actions taken were CREATE_CASE and ESCALATE_TO_ANALYST, while BLOCK_CARD and FILE_REPORT were recommended and await L1 and L2 human approval respectively.",
     "written_to_graph": true,
     "graph_case_id": "CASE-2016-HHF-001"
   },
@@ -137,7 +137,7 @@
   "sar": {
     "file": true,
     "reason": "Section 3a: fraud confirmed or strongly suspected and exposure $2,189.02 exceeds $1,000; the pattern is undocumented (R9).",
-    "narrative": "This report details suspicious online activity involving customer C05061 and card C05061-K1. Between January 12 and January 14, 2017, three unauthorized online transactions totaling $2,189.02 were conducted. The sequence began with transaction 3660106 for $850.28 on January 12, 2017. This was followed by transaction 3660107 for $890.79 on January 13, 2017, and concluded with transaction 3660108 for $447.95 on January 14, 2017. The activity is highly suspicious because the transactions were initiated from a new device utilizing an anonymous proxy to mask its origin. Furthermore, the device signature was spoofed, presenting an impossible combination of an Android handset model (RCT6303W87M7 Build/MRA58K) running Windows 7 and Windows 10 operating systems. This sophisticated device spoofing indicates an intentional effort to bypass security controls. The total exposure for this fraudulent activity is $2,189.02.",
+    "narrative": "This report details suspected fraudulent online activity involving customer C05061 and card C05061-K1. Between January 12 and January 14, 2017, three unauthorized online transactions were conducted. The episode began with transaction 3660106 on January 12, 2017, for $850.28. This was followed by transaction 3660107 on January 13, 2017, for $890.79, and transaction 3660108 on January 14, 2017, for $447.95. The total exposure for this sequence of events is $2189.02. The transactions were executed using a device marked as new for this account and routed through an anonymous proxy. The activity is highly suspicious because the device fingerprint is impossible for a real device, reporting an Android handset model but running Windows 7 and Windows 10 operating systems. This indicates the use of spoofing software to mask the true origin of the transactions. The transaction model scored the final transaction at 0.292, but the impossible device signature strongly points to intentional evasion.",
     "subjects": [
       "C05061",
       "C05061-K1"
@@ -150,8 +150,8 @@
   },
   "stop_reason": "Section 6: fraud probability 0.97 >= 0.85 on independent evidence (device, model); further queries would not change the actions.",
   "tool_calls": 21,
-  "tokens": 11172,
-  "latency_s": 67.3,
+  "tokens": 13285,
+  "latency_s": 75.5,
   "run": {
     "graph": "tigergraph-mcp",
     "official": true,
@@ -161,7 +161,7 @@
       "fast": "gemini-3.5-flash",
       "embedding": "text-embedding-005"
     },
-    "started_at": "2026-10-29T14:26:41+0530",
+    "started_at": "2026-10-30T11:40:55+0530",
     "complete": true,
     "failures": []
   }

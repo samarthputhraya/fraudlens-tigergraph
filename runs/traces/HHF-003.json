@@ -2,7 +2,7 @@
   "case_id": "HHF-003",
   "events": [
     {
-      "t": 1793264990.03,
+      "t": 1793341143.51,
       "kind": "trigger",
       "case_id": "HHF-003",
       "trigger_type": "customer_report",
@@ -10,14 +10,14 @@
       "opened_at": "2017-01-31 20:31:28"
     },
     {
-      "t": 1793264990.03,
+      "t": 1793341143.51,
       "kind": "stage",
       "stage": "gather",
       "agent": "lead",
       "msg": "Core toolkit: flagged transaction, card window, card baseline, recurring charges, resolved account history, device neighbours, region activity and prior cases"
     },
     {
-      "t": 1793264997.96,
+      "t": 1793341146.56,
       "kind": "plan",
       "agent": "lead",
       "hypotheses": [
@@ -44,14 +44,14 @@
       ]
     },
     {
-      "t": 1793265000.18,
+      "t": 1793341147.09,
       "kind": "stage",
       "stage": "specialists",
       "agent": "lead",
       "msg": "Four specialist analysts reviewing their evidence in parallel"
     },
     {
-      "t": 1793265014.7,
+      "t": 1793341155.16,
       "kind": "specialist",
       "agent": "transaction",
       "risk": "high",
@@ -63,7 +63,7 @@
       ]
     },
     {
-      "t": 1793265014.7,
+      "t": 1793341155.16,
       "kind": "specialist",
       "agent": "identity",
       "risk": "high",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "t": 1793265014.7,
+      "t": 1793341155.16,
       "kind": "specialist",
       "agent": "network",
       "risk": "low",
@@ -88,19 +88,19 @@
       ]
     },
     {
-      "t": 1793265014.7,
+      "t": 1793341155.16,
       "kind": "specialist",
       "agent": "precedent",
-      "risk": "high",
-      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. Historical precedents show strong patterns of confirmed fraud involving either out-of-region card-present transactions or rapid, sub-threshold online purchases designed to evade detection.",
+      "risk": "medium",
+      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. While there are no direct connected cases or previous history for this customer, historical precedents show recurring patterns of undocumented online fraud structured under authorization thresholds, as well as out-of-region card-present fraud.",
       "key_points": [
-        "Prior cases CC-4124, CC-4086, CC-3748, and CC-3907 established a pattern of unauthorized online purchases kept just under a $500 authorization threshold within a short timeframe.",
-        "Cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where cardholders retained physical possession of their cards.",
-        "Autonomous case CASE-2016-AUTO-007 highlights previous card-not-present fraud involving shared rare device profiles across multiple accounts."
+        "Customer C11663 reported unrecognized activity regarding transaction 3660153, stating they did not make the charges.",
+        "Prior cases CC-3748, CC-4124, CC-4086, and CC-3907 document a pattern of multiple online purchases under a $500 threshold within a short timeframe.",
+        "Prior cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where the cardholder still retained the physical card."
       ]
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "finding",
       "key": "model_score",
       "claim": "The transaction model, trained on the bank's own closed cases from July to October (its July-September version scored AUC 0.972 on October), scores this transaction 0.001, against a 2.0% base rate. It reads the unnamed Vesta C/D/M/V columns, the identity record, running aggregates of the resolved account and the graph's memory of earlier closed cases, all as known at transaction time. January activity is newer than anything the model learned from and carries patterns it has never seen, so a low score counts at most as weak evidence of innocence: its weight is bounded to between 0.5 and 8",
@@ -114,7 +114,7 @@
       "model_p": 0.000657
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "finding",
       "key": "escalating_ramp",
       "claim": "7 online purchases between 2017-01-22 and 2017-01-31 climbing from $181.73 to $1,800.00 ($181.73 -> $357.82 -> $811.92 -> $1,800.00 -> $1,800.00 -> $1,800.00 -> $1,800.00), with 4 charges at the top amount: the pattern of someone probing the card's limit",
@@ -133,7 +133,7 @@
       "in_model": false
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "finding",
       "key": "coordinated",
       "claim": "The same escalating-value ramp signature appears on 13 other card(s) in the same 30 days: coordinated activity across customers, not one cardholder's habit; all of them on weaker evidence of their own, so they are monitored and not named here",
@@ -153,7 +153,7 @@
       "in_model": false
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "finding",
       "key": "containment_plan",
       "claim": "Containment plan for the analyst (this case's own actions cover only its card): the 14-card ring has $42,760.11 at risk. Blocking 1 card(s) (C11663-K1) would cut 20.0% of it, and the other 13 would be monitored. Blocking every ring card would cut 100.0% but is expected to block 6.5 customer(s) who are not compromised, against 0.1 for this plan.",
@@ -166,7 +166,7 @@
       "in_model": false
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "assessment",
       "p": 0.97,
       "prior": 0.86,
@@ -315,7 +315,7 @@
       }
     },
     {
-      "t": 1793265014.72,
+      "t": 1793341155.2,
       "kind": "decision",
       "verdict": "fraud",
       "p": 0.97,
@@ -360,7 +360,7 @@
       ]
     },
     {
-      "t": 1793265036.58,
+      "t": 1793341155.95,
       "kind": "memory",
       "agent": "precedent",
       "similar": [
@@ -368,38 +368,38 @@
         "CC-3035",
         "CC-2971",
         "CC-2649",
+        "CC-3841",
         "CC-4086",
-        "CC-3841"
+        "CC-3748"
       ],
       "knowledge": [
         "The five known fraud patterns",
-        "The five known fraud patterns",
-        "Out-of-region use",
         "Card-not-present fraud",
-        "Card testing",
-        "Undocumented pattern"
+        "Out-of-region use",
+        "The five known fraud patterns",
+        "Undocumented pattern",
+        "Card testing"
       ]
     },
     {
-      "t": 1793265054.13,
+      "t": 1793341170.8,
       "kind": "review",
       "agent": "compliance",
       "agree": false,
       "issues": [
-        "The action MONITOR_CONNECTED_CARDS cites R9, but R9 does not authorize this action (R6 does, but requires naming the shared origin, which is explicitly not done here).",
-        "The draft includes ESCALATE_TO_ANALYST, but Section 6 requires stopping the investigation because verification settles it (the customer explicitly denied the charges) and the probability is >= 0.85."
+        "The action MONITOR_CONNECTED_CARDS is applied citing R9, but R9 does not authorize this action (it is part of R6), and there are no connected cards identified in the case to monitor."
       ],
-      "what_would_change_verdict": "Remove MONITOR_CONNECTED_CARDS and ESCALATE_TO_ANALYST, ensuring the case stops as dictated by Section 6."
+      "what_would_change_verdict": "If the customer had confirmed the transactions instead of denying them, rule R3 would apply, leading to CLOSE_NO_FRAUD."
     },
     {
-      "t": 1793265092.49,
+      "t": 1793341217.69,
       "kind": "final",
       "problems": [],
       "written": {
         "ok": true,
         "graph_case_id": "CASE-2016-HHF-003",
-        "n_vertices": 12,
-        "n_edges": 41
+        "n_vertices": 11,
+        "n_edges": 42
       }
     }
   ],
@@ -413,7 +413,7 @@
         "txn": "3660153"
       },
       "rows": 2,
-      "ms": 107.6,
+      "ms": 386.6,
       "via": "mcp",
       "ok": true
     },
@@ -428,7 +428,7 @@
         "end_ts": "2017-01-31 20:31:28"
       },
       "rows": 9,
-      "ms": 113.9,
+      "ms": 160.8,
       "via": "mcp",
       "ok": true
     },
@@ -443,7 +443,7 @@
         "recent_days": 30
       },
       "rows": 57,
-      "ms": 101.0,
+      "ms": 155.8,
       "via": "mcp",
       "ok": true
     },
@@ -459,7 +459,7 @@
         "before_ts": "2017-01-31 17:31:28"
       },
       "rows": 3,
-      "ms": 122.0,
+      "ms": 165.2,
       "via": "mcp",
       "ok": true
     },
@@ -473,7 +473,7 @@
         "lookback_days": 200
       },
       "rows": 1,
-      "ms": 107.1,
+      "ms": 145.7,
       "via": "mcp",
       "ok": true
     },
@@ -487,7 +487,7 @@
         "before_ts": "2017-01-31 20:31:28"
       },
       "rows": 1,
-      "ms": 122.5,
+      "ms": 125.6,
       "via": "mcp",
       "ok": true
     },
@@ -502,7 +502,7 @@
         "end_ts": "2017-01-31 20:31:28"
       },
       "rows": 9,
-      "ms": 108.5,
+      "ms": 173.3,
       "via": "mcp",
       "ok": true
     },
@@ -520,7 +520,7 @@
         "ramp_min": 500.0
       },
       "rows": 2147,
-      "ms": 1563.6,
+      "ms": 1421.2,
       "via": "mcp",
       "ok": true
     },
@@ -533,7 +533,7 @@
         "query_name": "all"
       },
       "rows": 21,
-      "ms": 219.3,
+      "ms": 258.8,
       "via": "mcp",
       "ok": true
     },
@@ -548,7 +548,7 @@
         "end_ts": "2017-01-31 20:31:28"
       },
       "rows": 9,
-      "ms": 136.9,
+      "ms": 147.5,
       "via": "mcp",
       "ok": true
     },
@@ -564,7 +564,7 @@
         "max_cards": 50
       },
       "rows": 0,
-      "ms": 122.9,
+      "ms": 139.9,
       "via": "mcp",
       "ok": true
     },
@@ -583,7 +583,7 @@
         "before_ts": "2017-01-31 20:31:28"
       },
       "rows": 17,
-      "ms": 263.8,
+      "ms": 229.4,
       "via": "mcp",
       "ok": true
     },
@@ -612,7 +612,7 @@
         "before_ts": "2017-01-31 20:31:28"
       },
       "rows": 21,
-      "ms": 5326.9,
+      "ms": 244.6,
       "via": "mcp",
       "ok": true
     },
@@ -625,7 +625,7 @@
         "k": 6
       },
       "rows": 6,
-      "ms": 276.5,
+      "ms": 232.0,
       "via": "mcp",
       "ok": true
     },
@@ -644,7 +644,7 @@
         "before_ts": "2017-01-31 20:31:28"
       },
       "rows": 21,
-      "ms": 3967.0,
+      "ms": 230.5,
       "via": "mcp",
       "ok": true
     },
@@ -652,7 +652,7 @@
       "agent": "lead",
       "tool": "tigergraph__run_installed_query",
       "query": "ids_exist",
-      "ref": "query:ids_exist(txn_ids=['3660147', '3660148', '3660149', '3660150', '3660151', '3660152', '3660153'], card_ids=['C03040-K2', 'C03080-K2', 'C04096-K1', 'C06026-K2', 'C07847-K1', 'C07871-K1', 'C08563-K1', 'C08943-K2', 'C09026-K1', 'C09148-K1', 'C09274-K1', 'C09918-K1', 'C10320-K1'], case_ids=['CC-2985', 'CC-3035', 'CC-2971', 'CC-2649', 'CC-4086', 'CC-3841'], customer_ids=['C11663'])",
+      "ref": "query:ids_exist(txn_ids=['3660147', '3660148', '3660149', '3660150', '3660151', '3660152', '3660153'], card_ids=['C03040-K2', 'C03080-K2', 'C04096-K1', 'C06026-K2', 'C07847-K1', 'C07871-K1', 'C08563-K1', 'C08943-K2', 'C09026-K1', 'C09148-K1', 'C09274-K1', 'C09918-K1', 'C10320-K1'], case_ids=['CC-2985', 'CC-3035', 'CC-2971', 'CC-2649', 'CC-3841', 'CC-4086', 'CC-3748'], customer_ids=['C11663'])",
       "params": {
         "txn_ids": [
           "3660147",
@@ -683,15 +683,16 @@
           "CC-3035",
           "CC-2971",
           "CC-2649",
+          "CC-3841",
           "CC-4086",
-          "CC-3841"
+          "CC-3748"
         ],
         "customer_ids": [
           "C11663"
         ]
       },
-      "rows": 27,
-      "ms": 421.1,
+      "rows": 28,
+      "ms": 610.5,
       "via": "mcp",
       "ok": true
     }
@@ -741,17 +742,16 @@
       "suggested_pattern": "undocumented"
     },
     "precedent": {
-      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. Historical precedents show strong patterns of confirmed fraud involving either out-of-region card-present transactions or rapid, sub-threshold online purchases designed to evade detection.",
-      "risk": "high",
+      "assessment": "Customer C11663 has reported unauthorized charges on transaction 3660153. While there are no direct connected cases or previous history for this customer, historical precedents show recurring patterns of undocumented online fraud structured under authorization thresholds, as well as out-of-region card-present fraud.",
+      "risk": "medium",
       "key_points": [
-        "Prior cases CC-4124, CC-4086, CC-3748, and CC-3907 established a pattern of unauthorized online purchases kept just under a $500 authorization threshold within a short timeframe.",
-        "Cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where cardholders retained physical possession of their cards.",
-        "Autonomous case CASE-2016-AUTO-007 highlights previous card-not-present fraud involving shared rare device profiles across multiple accounts."
+        "Customer C11663 reported unrecognized activity regarding transaction 3660153, stating they did not make the charges.",
+        "Prior cases CC-3748, CC-4124, CC-4086, and CC-3907 document a pattern of multiple online purchases under a $500 threshold within a short timeframe.",
+        "Prior cases CC-4776 and CC-4518 represent confirmed out-of-region card-present fraud where the cardholder still retained the physical card."
       ],
       "open_questions": [
-        "What are the specific transaction details, merchant category, and amount for transaction 3660153?",
-        "Was transaction 3660153 conducted online (card-not-present) or physically out-of-region?",
-        "Does the device profile or IP address used in transaction 3660153 link to any known fraudulent devices or prior cases?"
+        "What are the specific details of transaction 3660153, such as the amount, merchant, and channel (card-present vs. card-not-present)?",
+        "Are there other concurrent transactions on C11663's account that suggest a multi-purchase fraud pattern?"
       ],
       "suggested_pattern": "undocumented"
     }
@@ -784,16 +784,15 @@
   "critic": {
     "agree": false,
     "issues": [
-      "The action MONITOR_CONNECTED_CARDS cites R9, but R9 does not authorize this action (R6 does, but requires naming the shared origin, which is explicitly not done here).",
-      "The draft includes ESCALATE_TO_ANALYST, but Section 6 requires stopping the investigation because verification settles it (the customer explicitly denied the charges) and the probability is >= 0.85."
+      "The action MONITOR_CONNECTED_CARDS is applied citing R9, but R9 does not authorize this action (it is part of R6), and there are no connected cards identified in the case to monitor."
     ],
-    "what_would_change_verdict": "Remove MONITOR_CONNECTED_CARDS and ESCALATE_TO_ANALYST, ensuring the case stops as dictated by Section 6."
+    "what_would_change_verdict": "If the customer had confirmed the transactions instead of denying them, rule R3 would apply, leading to CLOSE_NO_FRAUD."
   },
   "problems": [],
   "written": {
     "ok": true,
     "graph_case_id": "CASE-2016-HHF-003",
-    "n_vertices": 12,
-    "n_edges": 41
+    "n_vertices": 11,
+    "n_edges": 42
   }
 }
