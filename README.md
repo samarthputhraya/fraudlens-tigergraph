@@ -25,7 +25,7 @@ The Final Round asks whether a bank can **run** the agent: on 18 unseen January 
 |---|---|
 | Answer files | [`cases_r2/`](cases_r2/): HHF-001 to HHF-018, produced by `python run_cases.py` |
 | One command, one case | `python run_cases.py HHF-007` (setup: [Run it](#run-it), then [the morning runbook](docs/MORNING_RUNBOOK.md)) |
-| Resilience statement | [docs/RESILIENCE.md](docs/RESILIENCE.md) |
+| Resilience statement | [docs/RESILIENCE.md](docs/RESILIENCE.md), one page (full detail: [docs/RESILIENCE_DETAIL.md](docs/RESILIENCE_DETAIL.md)) |
 | Innovation claim | [docs/INNOVATION.md](docs/INNOVATION.md): finding the fraud no model can see |
 | Diagrams | [architecture](docs/diagrams/architecture.png) and [sequence](docs/diagrams/sequence.png) |
 
