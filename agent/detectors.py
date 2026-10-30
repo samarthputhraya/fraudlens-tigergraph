@@ -541,8 +541,8 @@ def _typology_findings(ep: EvidencePack, f: list[Finding], facts: dict) -> None:
         acted = typ.key in HIGH_PRECISION
         f.append(Finding("card_other_typology",
                          f"Other charges on this card, not the flagged transaction, match the {typ.name} pattern: {typ.claim}. "
-                         + ("They go to an analyst as a separate concern and don't change the assessment of the flagged "
-                            "transaction" if acted else
+                         + ("This signature never touched a cleared customer in July-December, so it conflicts with the "
+                            "clean flagged purchase: the case goes to an analyst under R8 instead of being closed" if acted else
                             "This signature is confirmed only about 1 time in 3 in July-October, so it is noted, not acted on"),
                          1.0, "integrity", ref=ref(typ), entity_ids=typ.txns[:12], data={"txns": typ.txns, "typology": typ.key}))
         if acted:

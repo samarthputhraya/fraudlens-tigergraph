@@ -50,6 +50,14 @@ class Situation:
     side_concern: str = ""             # other charges on the card match a fraud typology (not the flagged one)
     signature: str = ""                # connected cards show the same typology signature but share nothing (R9, not R6)
     side_shared: str = ""              # the element the card's other charges share with a ring (R6), if any
+    side_conflict: bool = False        # a clean flagged purchase on a card whose own other charges carry a ring signature
+    side_txns: list = field(default_factory=list)   # those other charges, in time order
+    side_ring: list = field(default_factory=list)   # the other cards carrying the same ring signature
+
+
+# R8: when the evidence conflicts, the case goes to an analyst as `uncertain` instead of being resolved by a guess, and
+# the reported probability is the point of no knowledge. A value near 0 or 1 would claim we know which side is right.
+CONFLICT_P = 0.5
 
 
 def sar_required(s: Situation, verdict: str) -> bool:
@@ -128,9 +136,39 @@ def _plan(s: Situation) -> dict:
                    act("VERIFY_WITH_CUSTOMER", "R1: confirm the purchase with the cardholder before any block", e),
                    act("ESCALATE_TO_ANALYST", "R8: the evidence conflicts - the case record and the bank's transaction "
                                               "record name different cards; an analyst must reconcile them", e)]
-        res.update(initial=initial, verdict_override="uncertain",
+        res.update(initial=initial, verdict_override="uncertain", p_override=CONFLICT_P,
                    evidence_request=("analyst_info", "Analyst asked to reconcile the case record's card with the bank's "
                                                      "transaction record; no answer yet, so the case stays with the analyst"))
+        res["branches"] = {"confirm": initial, "deny": initial, "no_reply": initial}
+        return res
+
+    # ------------------------------------------------------------------ clean purchase, compromised-looking card
+    if s.side_conflict:
+        # The flagged purchase is clean on its own evidence, but this card's other charges carry a ring signature that
+        # never touched a cleared customer in July-December (spoofed fingerprints, recipient surges). Closing the alert
+        # would clear a card the ring evidence implicates; blocking would act on charges the case isn't about. R8: the
+        # evidence conflicts, so verify, protect and hand it to an analyst. Every action here is auto and costs a
+        # legitimate customer nothing.
+        initial = [act("CREATE_CASE", "Section 3a: evidence is being requested and the card carries a fraud-ring signature; "
+                                      "record the investigation and write it to the graph", e),
+                   act("VERIFY_WITH_CUSTOMER", f"R1: ask the cardholder about the other charges ({', '.join(s.side_txns[:4])}) "
+                                               f"before any block", e),
+                   act("MONITOR_CARD", (f"R6: other charges on this card went to {s.side_shared}, which a fraud ring shares"
+                                        if s.side_shared else "R9: other charges on this card match a fraud-ring signature")
+                                       + "; raise monitoring for 72 hours", e)]
+        if s.side_ring:
+            initial.append(act("MONITOR_CONNECTED_CARDS", (f"R6: {len(s.side_ring)} other card(s) share {s.side_shared}"
+                                                           if s.side_shared else
+                                                           f"R9: {len(s.side_ring)} other card(s) carry the same signature")
+                                                          + " in the same 30 days", e))
+        initial.append(act("ESCALATE_TO_ANALYST", "R8: the evidence conflicts - the flagged purchase is clean on its own, but "
+                                                  "the card's other charges carry a fraud-ring signature; an analyst decides "
+                                                  "with the evidence", e))
+        res.update(initial=initial, verdict_override="uncertain", p_override=CONFLICT_P, episode_override=list(s.side_txns),
+                   connected_override=list(s.side_ring),
+                   evidence_request=("analyst_info", "Analyst asked to review this card's other charges ("
+                                     + ", ".join(s.side_txns[:4]) + ") against the ring evidence; no answer yet, so the "
+                                     "case stays with the analyst"))
         res["branches"] = {"confirm": initial, "deny": initial, "no_reply": initial}
         return res
 

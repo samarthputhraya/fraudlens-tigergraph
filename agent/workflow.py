@@ -268,7 +268,12 @@ class Investigator:
         final = pl["initial"]
         p_final, verdict, pattern, desc = led["p"], verdict0, pattern0, desc0
         if pl.get("verdict_override"):
-            verdict = pl["verdict_override"]
+            # the evidence conflicts (R8): the request stays open with the analyst, and nothing is assumed about its answer
+            verdict, p_final = pl["verdict_override"], pl.get("p_override", p_final)
+            if pl.get("episode_override") is not None:
+                facts["episode"] = list(pl["episode_override"])
+                exposure0, dates0 = amount_of(ep, facts["episode"])
+            facts["connected_cards"] |= set(pl.get("connected_override") or [])
             rtype, rtext = pl["evidence_request"]
             reqs.append({"type": rtype, "asked_after_step": steps_so_far, "assumed_response": rtext})
             self.emit("evidence_request", {"type": rtype, "branch": "pending", "assumed_response": rtext,
@@ -433,6 +438,9 @@ class Investigator:
             if r["verdict"] == "fraud" and _asserts(low, r"legitimate purchase|\bno fraud\b|closed as legitimate",
                                                     negatable=False, skip_before=_EARLIER):
                 return "describes a legitimate outcome but the verdict is fraud"
+            if r["verdict"] == "uncertain" and _asserts(low, r"verdict is (?:legitimate|fraud)|closed as (?:legitimate|fraud)"
+                                                             r"|\bconfirmed fraud\b"):
+                return "settles a case whose verdict is uncertain"
             if "BLOCK_CARD" not in final and _asserts(low, r"block the card|\bwill block\b|card will be blocked|blocks the card"):
                 return "mentions a card block that is not recommended"
             if "ESCALATE_TO_ANALYST" not in final and _asserts(_ESCALATING_PATTERN.sub("rising", low), r"\bescalat"):
@@ -638,9 +646,15 @@ class Investigator:
         elif r["verdict"] == "uncertain":
             sit = r["situation"]
             if sit.integrity_conflict:
-                stop = (f"On the bank's own record the activity scores a fraud probability of {r['p_final']:.2f}, but the case "
+                stop = (f"On the bank's own record the activity scores a fraud probability of {p0:.2f}, but the case "
                         f"record names a different card or customer than the bank's record, so the case goes to an analyst "
-                        f"under R8 instead of being guessed.")
+                        f"under R8 instead of being guessed; the probability is reported as {r['p_final']:.2f} because we "
+                        f"can't tell which record is right.")
+            elif sit.side_conflict:
+                stop = (f"The evidence conflicts: on its own the flagged purchase scores a fraud probability of {p0:.2f}, but "
+                        f"this card's other charges ({', '.join(sit.side_txns[:4])}) carry a fraud-ring signature. Further "
+                        f"queries would not resolve which side is right, so the case goes to an analyst under R8 instead of "
+                        f"being guessed, and the probability is reported as {r['p_final']:.2f}.")
             elif sit.conflict:
                 stop = "The graph evidence conflicts with the customer's report, so the case goes to an analyst under R8 instead of being guessed."
             else:

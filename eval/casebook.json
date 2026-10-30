@@ -1,0 +1,56 @@
+{
+  "runs\\dev_all": {
+    "summary": {
+      "high": 0,
+      "high_seen_at_open": 0,
+      "low": 2,
+      "linked_reports": 1
+    },
+    "findings": [
+      {
+        "severity": "low",
+        "card": "C02502-K2",
+        "cleared_in": "HHF-016",
+        "other_case": "HHF-005",
+        "other_role": "ring",
+        "seen_at_open": true,
+        "cleared_opened_at": "2017-01-01 03:07:47",
+        "other_opened_at": "2017-01-28 23:45:16",
+        "side_evidence": [
+          "3545630",
+          "3573192",
+          "3584605",
+          "3584646"
+        ],
+        "action": "note: monitored ring member, nothing to undo"
+      },
+      {
+        "severity": "low",
+        "card": "C07871-K1",
+        "cleared_in": "HHF-008",
+        "other_case": "HHF-003",
+        "other_role": "ring",
+        "seen_at_open": true,
+        "cleared_opened_at": "2017-01-21 13:23:58",
+        "other_opened_at": "2017-01-31 20:31:28",
+        "side_evidence": [
+          "3634894",
+          "3634890",
+          "3634871",
+          "3634869",
+          "3634874"
+        ],
+        "action": "note: monitored ring member, nothing to undo"
+      },
+      {
+        "severity": "linked",
+        "card": "C05061-K1",
+        "cases": [
+          "HHF-001",
+          "HHF-002"
+        ],
+        "action": "continuing activity: HHF-002 should cite HHF-001's report"
+      }
+    ]
+  }
+}

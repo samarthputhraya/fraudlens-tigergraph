@@ -53,7 +53,13 @@ def situation(ep: EvidencePack, findings: list[Finding], facts: dict, led: dict,
         single_signal=fraud_fams <= 1 and not led["strong"], conflict=conflict, legit_explanation=explanation,
         integrity_conflict=bool(facts.get("card_mismatch")), signature=signature,
         side_concern="; ".join(f"{x.name} on {', '.join(x.txns[:4])}" for x in facts.get("side_typologies", [])),
-        side_shared="; ".join(f"{x.shared[0]} {x.shared[1]}" for x in facts.get("side_typologies", []) if x.shared))
+        side_shared="; ".join(f"{x.shared[0]} {x.shared[1]}" for x in facts.get("side_typologies", []) if x.shared),
+        # A clean flagged purchase on a card whose other charges carry a high-precision ring signature: the evidence
+        # conflicts (R8). A customer's own denial is R2 and outranks it; so does a flagged purchase that is itself fraud.
+        side_conflict=bool(facts.get("side_typologies")) and ep.case["trigger_type"] != "customer_report" and led["p"] < 0.70,
+        side_txns=sorted({i for x in facts.get("side_typologies", []) for i in x.txns},
+                         key=lambda i: next((w["ts"] for w in ep.window + (ep.extra.get("window_30d") or []) if w["id"] == i), i)),
+        side_ring=sorted({c for x in facts.get("side_typologies", []) for c in x.ring} - {facts.get("card_id")}))
 
 
 def choose_reply(s: Situation) -> str:
@@ -108,7 +114,16 @@ def investigate(case: dict, g: Any, emit: Emit = _noop) -> dict:
     customer_evidence = None
     final = pl["initial"]
     p_final, verdict, pattern, desc = led["p"], verdict0, pattern0, desc0
-    if pl.get("evidence_request"):
+    if pl.get("verdict_override"):
+        # the evidence conflicts (R8): the request stays open with the analyst, and nothing is assumed about its answer
+        verdict, p_final = pl["verdict_override"], pl.get("p_override", p_final)
+        rtype, rtext = pl["evidence_request"]
+        evidence_requests.append({"type": rtype, "asked_after_step": 0, "assumed_response": rtext})
+        if pl.get("episode_override") is not None:
+            episode = list(pl["episode_override"])
+            exposure0, dates0 = amount_of(ep, episode)
+        facts["connected_cards"] |= set(pl.get("connected_override") or [])
+    elif pl.get("evidence_request"):
         reply = choose_reply(s)
         rtype, rtext = pl["evidence_request"]
         if reply == "confirm":
