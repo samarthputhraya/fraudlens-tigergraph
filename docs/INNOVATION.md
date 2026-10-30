@@ -81,6 +81,26 @@ Precision on the labelled months (August to October) sets how far the containmen
 | Micro-charges (HHF-004) | Block the case card, monitor the other 15 (none is named in the report) |
 | Escalating ramps (HHF-003) | Block the case card, monitor the other 13 (none is named in the report) |
 
+## Reading the answers as one case book (`agent/casebook.py`, `eval/casebook.py`)
+
+Each investigation sees only its own case at its own open time. A bank reads the queue as one book, and one rule
+matters above the rest: **no card may be cleared in one case while another case reports it or plans to block it.**
+
+- The gate links every answer to the cards it touches, with a role: cleared, open, fraud, reported, planned block or
+  monitored ring member. These are the same case-to-card edges the case writer stores in TigerGraph (CASE_CARD).
+- **Measured on the 29 Oct freeze:** 1 decision error. HHF-013 cleared card C06115-K1 (p = 0.03) although its own
+  evidence showed that card paying sc.rr.com twice, while HHF-006 named the same card in its report and its containment
+  plan. The gate also lists 2 weak notes (cleared cards that are only monitored members of a micro-charge or ramp ring)
+  and 1 pair of reports to cross-reference (HHF-002 should cite HHF-001's report as continuing activity).
+- **The fix is a general rule, not a case patch** (R8, `agent/policy.py`): a clean flagged purchase on a card whose
+  own other charges carry a high-precision ring signature (recipient surge or spoofed fingerprint: 0 hits on cleared
+  cases July–December) is `uncertain` at 0.5 and escalated, with verification and monitoring and no block or report.
+  On the 18 cases it changes only HHF-013. The organisers' grader stays 18/18 clean, and the gate now finds 0
+  decision errors.
+- Uncertain verdicts that come from conflicting evidence (HHF-011, HHF-013) now report 0.5, the point of no
+  knowledge, instead of the 0.03 the one-sided evidence gives. The probability is scored for calibration, and a
+  conflict is exactly where a confident number is least honest.
+
 ## Every claim can be checked (`eval/attest_check.py`)
 
 We re-ran the query behind every evidence claim in all 18 answers:

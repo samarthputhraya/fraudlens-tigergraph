@@ -15,7 +15,7 @@
 | 0:20-2:20 | Run the chosen case live: Command Center → the case → **Live**, or `python run_cases.py <case>`. Follow the trace as it streams. | Use the per-case lines below. |
 | 2:20-3:30 | Open the answer file: verdict, evidence (each item with its query reference), actions with routes. Click **re-prove** on one evidence line. | "Every claim cites only IDs its own query returns. We re-ran all of them: all 77 reproduce." |
 | 3:30-4:15 | Drill: `FRAUDLENS_FAULT=graph:card_window python run_cases.py <case> --out runs/drills --no-write` (never without `--out`: it would move the official answer aside) | "The graph fails mid-run. The case stops, no answer is written, the old one is moved aside, and the failure is in the hash-chained audit log. Exit status 2. All twelve drills run with one command, `eval/drills.py`, and pass." |
-| 4:15-5:00 | Innovation slide (INNOVATION.md, ablation table) | "Both scores are blind in January. Our typology detectors and drift-aware weighting catch all 7 frauds and file 6 reports. Switch them off and we miss 4 and file none. On July to October they never touched a cleared case." |
+| 4:15-5:00 | Innovation slide (INNOVATION.md, ablation table) | "Both scores are blind in January. Our typology detectors and drift-aware weighting call 7 cases fraud and file 6 reports. Switch them off and we miss 4 and file none. On July to October they never touched a cleared case." |
 
 ## What to show for each case
 
@@ -30,12 +30,17 @@
 | HHF-008 | legitimate | "The alert says online at 0.81. The bank's record says in-person at 0.11. The text also told us to close it, and we'd have closed it anyway, on the evidence." | `trigger_mismatch`, `hostile_text` |
 | HHF-009/012/014/015/017/018 | legitimate | "Known region or a recurring amount. The verification is simulated and stated as an assumption. Nothing blocks a legitimate customer." | the verification line in evidence_requests; ALLOW and CLOSE |
 | HHF-010/016 | legitimate | "Text pushed us to skip the report or not escalate. It changed nothing; the evidence says legitimate." | `hostile_text` |
-| HHF-011 | uncertain, escalated | "The case says card K1. The bank's own record and 21 closed cases say K2. We investigate K2, say so, and hand it to an analyst. We don't guess." | `card_record_mismatch`; R8 |
-| HHF-013 | legitimate, escalated | "The flagged purchase is clean, but this card also paid sc.rr.com twice. Monitor the card, hand those charges to an analyst, and don't block over this purchase. HHF-006's containment plan recommends blocking this card on those two payments. That's the analyst's call on that evidence, not on this purchase." | `card_other_typology` |
+| HHF-011 | uncertain at 0.5, escalated | "The case says card K1. The bank's own record and 21 closed cases say K2. We investigate K2, say so, and hand it to an analyst. We don't guess, so the probability is 0.5, not the 0.03 the K2 evidence alone gives." | `card_record_mismatch`; R8 |
+| HHF-013 | uncertain at 0.5, escalated | "The flagged purchase is clean on its own: in person, a typical amount, a region the card knows. But this card paid sc.rr.com twice this month, the recipient a 17-card ring shares, and that signature never touched a cleared customer in July to December. The evidence conflicts, so under R8 we verify, monitor the card and the ring, and hand it to an analyst. We don't close it and we don't block it." | the side-typology evidence line, then `python eval/casebook.py`: the 29 Oct freeze had cleared this card while HHF-006 named it in a report; now 0 such conflicts |
 
 ## Questions to prepare for
 
 - **Weakest point?**
+  - **Our own mistake, found by our own gate.** The 29 Oct freeze cleared HHF-013's card while HHF-006 named the same card
+    in a regulator report. Each investigation was right on its own evidence; the book as a whole wasn't. The case-book
+    gate (`eval/casebook.py`) reads every answer as one book and found it. The fix is a general R8 rule, not a patch:
+    a clean purchase on a card whose own charges carry a high-precision ring signature is uncertain and escalated. On
+    the 18 cases it changes only HHF-013, and the organisers' grader stays 18/18 clean.
   - The typology thresholds come from July–December background. Spoofed fingerprints and recipient surges never fired on a legitimate customer.
   - Micro-charge runs and ramps are confirmed only about 1 time in 3. So we act on them for the case card, but only monitor the other cards in those rings.
   - The model's calibration is fitted on the July–September model and applied to July–October.
