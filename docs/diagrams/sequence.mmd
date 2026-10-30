@@ -1,0 +1,62 @@
+sequenceDiagram
+    autonumber
+    actor Op as Operator / judge
+    participant R as run_cases.py
+    participant A as Agent (LangGraph)
+    participant M as TigerGraph MCP<br/>(read-only)
+    participant T as TigerGraph Savanna
+    participant G as Gemini on Vertex
+    participant D as Decision core<br/>(code only)
+    participant W as Case writer
+    participant L as Audit log
+
+    Op->>R: python run_cases.py HHF-013
+    R->>R: check the case row (fields, timestamp, trigger type)
+    R->>A: investigate (trigger_text fenced as untrusted data)
+
+    rect rgb(255, 243, 230)
+    Note over A,T: 2 gather: everything read only up to the case's opened_at (no look-ahead)
+    A->>M: run_installed_query: txn_context, card_window, card_profile,<br/>recurring_match, account_history, device_neighbors,<br/>region_activity, prior_cases
+    M->>T: GSQL (read)
+    T-->>A: rows. Each call is recorded: query, params, rows, latency
+    A->>M: ring scans: typology_scan, recipient_activity
+    T-->>A: cards with the same signature in the same 30 days
+    end
+
+    A->>G: 3 lead_plan (Flash): hypotheses, up to 3 extra queries
+    A->>M: extra queries (wider windows, similar cases by pattern)
+    A->>G: 4 specialists x4 in parallel (Flash): transaction, identity, network, precedent
+
+    rect rgb(233, 247, 239)
+    Note over A,D: 5 decide: verdict, probability, IDs, exposure, actions, routes and the SAR decision come from code
+    A->>D: evidence pack
+    D->>D: detectors + typologies (micro_run, recipient_surge,<br/>spoofed_device, escalating_ramp)
+    D->>D: log-odds ledger (drift-aware for January)
+    D->>D: Fraud Policy as code: R1-R10, 3a case vs report,<br/>6 stop rule, R8 conflict -> uncertain + escalate
+    D->>D: containment plan: block a ring card only on its own evidence
+    D-->>A: initial actions, evidence request + stated assumption, final actions
+    end
+
+    A->>M: 6 recall: similar_cases (vectorSearch on closed and earlier cases,<br/>filtered by the case's cards and devices)
+    A->>G: 7 review: compliance critic (Pro) checks the decision against policy text
+    A->>G: 8 write: summary, SAR narrative (Pro)
+    A->>A: guards: unknown IDs, text that contradicts the decision,<br/>monitored ring cards named in a report -> template, marked incomplete
+    A->>M: 9 finalize: ids_exist for every cited ID
+    A->>W: write the case
+    W->>T: upsert InvestigationCase + CASE_TXN, CASE_CARD, CASE_RULE ... edges<br/>(case memory for the next investigation)
+    W->>W: auto actions executed (simulated), L1/L2 stored pending approval
+    A-->>R: answer + trace
+    R->>L: case_answered (hash-chained, HMAC)
+    R-->>Op: cases_r2/HHF-013.json
+
+    alt the graph or MCP fails mid-run
+        A--xR: DependencyFailure
+        R->>R: no answer written, an older answer moves to stale/
+        R->>L: dependency_failure
+        R-->>Op: STOPPED, exit status 2
+    else a model call fails or times out
+        A->>A: the code's decision stands, template text, case escalated
+        R-->>Op: answer marked incomplete, exit status 3
+    end
+
+    Note over Op,L: Before the freeze: organisers' grader, attestation re-run of every query claim,<br/>and the case-book gate (no card cleared in one case and reported in another)

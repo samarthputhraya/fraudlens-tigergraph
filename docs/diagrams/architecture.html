@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FraudLens architecture</title>
+<style>
+  :root { --tg:#f58220; --tg-bg:#fff4e8; --ai:#3f63c9; --ai-bg:#edf2ff; --code:#23824f; --code-bg:#e8f6ee;
+          --ctl:#b8372b; --ctl-bg:#fdeeec; --ink:#1d2330; --mute:#5b6476; --line:#d5d9e2; --panel:#fafbfc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; font-family:"Segoe UI", Inter, Arial, sans-serif; color:var(--ink); }
+  #canvas { position:relative; width:1800px; height:1090px; background:#fff; }
+  .title { position:absolute; left:30px; top:22px; font-size:30px; font-weight:700; letter-spacing:-0.3px; }
+  .title span { color:var(--tg); }
+  .sub { position:absolute; left:30px; top:66px; font-size:15px; color:var(--mute); width:1740px; }
+  .panel { position:absolute; border:1.5px solid var(--line); border-radius:14px; background:var(--panel); }
+  .panel > .ph { position:absolute; left:16px; top:-12px; background:#fff; padding:0 8px; font-size:13px; font-weight:700;
+                 letter-spacing:0.6px; text-transform:uppercase; color:var(--mute); }
+  .panel.tg { border-color:var(--tg); background:var(--tg-bg); } .panel.tg > .ph { color:var(--tg); }
+  .panel.ai { border-color:var(--ai); background:var(--ai-bg); } .panel.ai > .ph { color:var(--ai); }
+  .panel.ctl { border-color:var(--ctl); background:var(--ctl-bg); } .panel.ctl > .ph { color:var(--ctl); }
+  .box { position:absolute; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; }
+  .box h4 { margin:0 0 4px; font-size:15px; line-height:1.2; }
+  .box p { margin:0; font-size:12.5px; line-height:1.38; color:var(--mute); }
+  .box p b { color:var(--ink); font-weight:600; }
+  .n { font-size:12px; font-weight:700; color:#fff; background:var(--ink); border-radius:9px; padding:1px 7px; margin-right:6px; }
+  .tag { display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:0.3px; border-radius:6px; padding:1px 6px;
+         margin:0 3px 5px 0; text-transform:uppercase; }
+  .t-tg { color:#8a4300; background:#ffe3c7; } .t-ai { color:#1f3a8a; background:#d9e4ff; } .t-code { color:#0f5a32; background:#cdeedb; }
+  .decide { border:2.5px solid var(--code); background:var(--code-bg); }
+  .boundary { border:1.5px dashed var(--code); background:#f5fbf7; }
+  .tgbox { border-color:#f3b37a; }
+  .aibox { border-color:#a9bdf2; }
+  .ctlbox { border-color:#eba59d; }
+  .db { border-radius:10px 10px 22px 22px; }
+  .lbl { position:absolute; font-size:12px; font-weight:600; color:var(--ink); background:#fff; padding:1px 6px; border-radius:6px;
+         border:1px solid var(--line); white-space:nowrap; }
+  svg { position:absolute; left:0; top:0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="canvas">
+  <div class="title">FraudLens <span>·</span> architecture</div>
+  <div class="sub">TigerGraph × Hacker House Goa 2026, Final Round. Every verdict, probability, ID, exposure, action, approval route and
+    report decision comes from code reading TigerGraph. The model plans queries and writes text, nothing else.</div>
+
+  <!-- ===================== inputs + entry ===================== -->
+  <div class="panel" style="left:30px; top:120px; width:270px; height:330px;"><div class="ph">Inputs</div></div>
+  <div class="box" style="left:46px; top:140px; width:238px;">
+    <h4>Case pack</h4><p>18 alerts, HHF-001 to HHF-018: 11 risk score, 4 customer report, 3 analyst request. <b>trigger_text is treated as data, never as instructions.</b></p></div>
+  <div class="box" style="left:46px; top:258px; width:238px;">
+    <h4>Fraud Policy v1.0</h4><p>R1–R10, 3a case vs report, 3b, stop rule 6. Encoded as code, and stored as PolicyRule + DocChunk vertices.</p></div>
+  <div class="box" style="left:46px; top:356px; width:238px;">
+    <h4>Bank data</h4><p>650,938 transactions, Jul 2016 – Jan 2017, identity records, 5,585 closed cases. Loaded once into TigerGraph.</p></div>
+
+  <div class="panel" style="left:30px; top:480px; width:270px; height:230px;"><div class="ph">Entry points</div></div>
+  <div class="box" style="left:46px; top:500px; width:238px;">
+    <h4>run_cases.py</h4><p>One command: <b>python run_cases.py HHF-007</b>. Exit 0 answered, 2 stopped, 3 incomplete.</p></div>
+  <div class="box" style="left:46px; top:600px; width:238px;">
+    <h4>Command Center</h4><p>FastAPI + React: live trace, approvals queue, audit verify, re-prove any evidence line.</p></div>
+
+  <!-- ===================== agent ===================== -->
+  <div class="panel" style="left:330px; top:120px; width:920px; height:440px;"><div class="ph">Investigation agent · LangGraph, 9 nodes (agent/workflow.py)</div></div>
+  <!-- row 1 -->
+  <div class="box" style="left:350px; top:150px; width:160px; height:150px;">
+    <span class="tag t-code">code</span><h4><span class="n">1</span>intake</h4><p>Check the case row. Fence all free text as untrusted data.</p></div>
+  <div class="box tgbox" style="left:530px; top:150px; width:160px; height:150px;">
+    <span class="tag t-tg">TigerGraph</span><h4><span class="n">2</span>gather</h4><p>8 core queries + ring scans, read only up to the case's open time.</p></div>
+  <div class="box aibox" style="left:710px; top:150px; width:160px; height:150px;">
+    <span class="tag t-ai">Gemini Flash</span><h4><span class="n">3</span>lead_plan</h4><p>Hypotheses; picks up to 3 extra queries from the catalog.</p></div>
+  <div class="box aibox" style="left:890px; top:150px; width:160px; height:150px;">
+    <span class="tag t-ai">Gemini Flash</span><h4><span class="n">4</span>specialists ×4</h4><p>Transaction, identity, network, precedent, in parallel.</p></div>
+  <div class="box decide" style="left:1070px; top:150px; width:160px; height:150px;">
+    <span class="tag t-code">code only</span><h4><span class="n">5</span>decide</h4><p>Detectors + 4 new typologies, log-odds ledger, policy as code, containment plan.</p></div>
+  <!-- row 2 (right to left) -->
+  <div class="box tgbox" style="left:1070px; top:390px; width:160px; height:150px;">
+    <span class="tag t-tg">vectorSearch</span><h4><span class="n">6</span>recall</h4><p>Similar closed and earlier cases, filtered by the case's cards and devices.</p></div>
+  <div class="box aibox" style="left:890px; top:390px; width:160px; height:150px;">
+    <span class="tag t-ai">Gemini Pro</span><h4><span class="n">7</span>review</h4><p>Compliance critic checks the decision against the policy text.</p></div>
+  <div class="box aibox" style="left:710px; top:390px; width:160px; height:150px;">
+    <span class="tag t-ai">Gemini Pro</span><h4><span class="n">8</span>write</h4><p>Summary + SAR narrative. Guards reject unknown IDs and contradictions.</p></div>
+  <div class="box tgbox" style="left:530px; top:390px; width:160px; height:150px;">
+    <span class="tag t-tg">TigerGraph</span><h4><span class="n">9</span>finalize</h4><p>Every cited ID checked in the graph; answer validated; case written back.</p></div>
+  <div class="box boundary" style="left:350px; top:390px; width:160px; height:150px;">
+    <h4>Decision boundary</h4><p>The model never sets numbers, IDs, routes or thresholds. A failed model call keeps the code's decision and escalates the case.</p></div>
+
+  <!-- ===================== gemini ===================== -->
+  <div class="panel ai" style="left:330px; top:590px; width:920px; height:120px;"><div class="ph">Gemini on Vertex AI (agent/llm.py)</div></div>
+  <div class="box aibox" style="left:350px; top:615px; width:280px;"><h4>Flash</h4><p>Lead planner and the 4 specialists: fast, cheap reasoning over evidence.</p></div>
+  <div class="box aibox" style="left:650px; top:615px; width:280px;"><h4>Pro</h4><p>Compliance critic and the writer (summary, SAR narrative).</p></div>
+  <div class="box aibox" style="left:950px; top:615px; width:280px;"><h4>text-embedding, 768-d</h4><p>Case and query embeddings for TigerGraph vectorSearch.</p></div>
+
+  <!-- ===================== tigergraph ===================== -->
+  <div class="panel tg" style="left:1300px; top:120px; width:470px; height:590px;"><div class="ph">TigerGraph Savanna · source of truth</div></div>
+  <div class="box tgbox" style="left:1320px; top:150px; width:430px;">
+    <h4>TigerGraph MCP server</h4><p><b>Read-only allowlist of 12 tools</b> (run_installed_query, search_top_k_similarity, get_neighbors ...). No silent REST fallback: if MCP fails, the case stops.</p></div>
+  <div class="box tgbox" style="left:1320px; top:262px; width:208px; height:132px;">
+    <h4>20 GSQL queries</h4><p>card_window, device_neighbors, account_history, typology_scan, recipient_activity, ids_exist ...</p></div>
+  <div class="box tgbox" style="left:1542px; top:262px; width:208px; height:132px;">
+    <h4>vectorSearch + traversal</h4><p>ClosedCase.emb and InvestigationCase.emb, restricted to cases sharing cards or devices.</p></div>
+  <div class="box tgbox db" style="left:1320px; top:420px; width:430px; height:270px;">
+    <h4>Graph</h4>
+    <p><b>Bank:</b> Transaction, Card, Account, Customer, DeviceProfile, BillingRegion, EmailDomain</p>
+    <p style="margin-top:6px"><b>Memory:</b> ClosedCase (5,585), InvestigationCase, EvidenceRequest, ActionRecord</p>
+    <p style="margin-top:6px"><b>Policy:</b> PolicyRule, FraudPattern, DocChunk</p>
+    <p style="margin-top:10px">A case written today is evidence for tomorrow's investigation: recall reads InvestigationCase back through the same vectorSearch.</p></div>
+
+  <!-- ===================== case writer ===================== -->
+  <div class="box ctlbox" style="left:1300px; top:745px; width:470px; height:120px;">
+    <h4>Case writer · the only component that writes</h4>
+    <p>InvestigationCase + EvidenceRequest + ActionRecord, with CASE_TXN, CASE_CARD, CASE_DEVICE, CASE_RULE, CASE_CITES ... edges.
+      <b>auto</b> actions are executed (simulated); <b>L1 / L2</b> actions wait for a human.</p></div>
+
+  <!-- ===================== controls ===================== -->
+  <div class="panel ctl" style="left:30px; top:745px; width:1240px; height:140px;"><div class="ph">Bank controls</div></div>
+  <div class="box ctlbox" style="left:46px; top:770px; width:290px; height:98px;">
+    <h4>Fail closed</h4><p>Graph or MCP down: the case stops, no answer is written, an older answer moves to stale/. Exit 2.</p></div>
+  <div class="box ctlbox" style="left:350px; top:770px; width:290px; height:98px;">
+    <h4>Approvals</h4><p>The server maps a token to a role; the request body can't. Append-only, one decision per action.</p></div>
+  <div class="box ctlbox" style="left:654px; top:770px; width:290px; height:98px;">
+    <h4>Audit log</h4><p>Hash-chained and HMAC-keyed; personal data redacted. <b>/api/audit/verify</b> re-checks the chain.</p></div>
+  <div class="box ctlbox" style="left:958px; top:770px; width:296px; height:98px;">
+    <h4>Case-book gate</h4><p>No card may be cleared in one case and reported or blocked in another. Run before every freeze.</p></div>
+
+  <!-- ===================== outputs ===================== -->
+  <div class="panel" style="left:30px; top:915px; width:1740px; height:150px;"><div class="ph">Outputs and proof</div></div>
+  <div class="box" style="left:46px; top:940px; width:400px; height:106px;">
+    <h4>cases_r2/HHF-xxx.json</h4><p>Case, suspicious activity report and next best actions (initial, final, what changed). Every evidence line cites its query and IDs.</p></div>
+  <div class="box" style="left:460px; top:940px; width:400px; height:106px;">
+    <h4>runs/traces</h4><p>Every tool call (query, parameters, rows, latency), finding, decision and refused model text, per case.</p></div>
+  <div class="box" style="left:874px; top:940px; width:880px; height:106px;">
+    <h4>eval/ · measured, not claimed</h4><p>Organisers' grader 18/18 clean · 13 resilience drills pass · 14 prompt-injection attacks, 0 decisions changed ·
+      every query claim re-run (77/77 reproduce) · ablation: without the typology detectors 4 cases flip and 5 of 6 reports vanish ·
+      typology backtest: 0 hits on cleared cases Aug–Oct · case-book gate.</p></div>
+
+  <!-- ===================== arrows ===================== -->
+  <svg width="1800" height="1090" viewBox="0 0 1800 1090">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#1d2330"/></marker>
+      <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f58220"/></marker>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#b8372b"/></marker>
+    </defs>
+    <g stroke="#1d2330" stroke-width="2" fill="none" marker-end="url(#a)">
+      <!-- case pack to entry -->
+      <path d="M165,450 L165,478"/>
+      <!-- entry to intake -->
+      <path d="M300,595 L316,595 L316,225 L348,225"/>
+      <!-- row 1 -->
+      <path d="M510,225 L528,225"/><path d="M690,225 L708,225"/><path d="M870,225 L888,225"/><path d="M1050,225 L1068,225"/>
+      <!-- 5 down to 6 -->
+      <path d="M1150,300 L1150,388"/>
+      <!-- row 2, right to left -->
+      <path d="M1070,465 L1052,465"/><path d="M890,465 L872,465"/><path d="M710,465 L692,465"/>
+    </g>
+    <!-- reads: agent to MCP -->
+    <g stroke="#f58220" stroke-width="3" fill="none" marker-end="url(#ao)">
+      <path d="M1250,195 L1318,195"/>
+    </g>
+    <!-- writes: finalize to case writer to graph -->
+    <g stroke="#b8372b" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+      <path d="M610,540 L610,575 L1280,575 L1280,805 L1298,805"/>
+      <path d="M1535,745 L1535,693"/>
+    </g>
+  </svg>
+  <div class="lbl" style="left:1254px; top:166px; border-color:#f3b37a; color:#8a4300; padding:1px 4px;">reads</div>
+  <div class="lbl" style="left:832px; top:563px; border-color:#eba59d; color:#8a2318;">write the case</div>
+  <div class="lbl" style="left:1546px; top:708px; border-color:#eba59d; color:#8a2318;">upsert vertices + edges</div>
+</div>
+</body>
+</html>
